@@ -1,0 +1,7 @@
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.log
+
+# Config serveur de dev local (non nécessaire au déploiement)
+serve.json
