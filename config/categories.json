@@ -1,0 +1,11 @@
+{
+  "politique": { "name": "Politique", "order": 1 },
+  "economie":  { "name": "Économie", "order": 2 },
+  "societe":   { "name": "Société", "order": 3 },
+  "culture":   { "name": "Culture", "order": 4 },
+  "sport":     { "name": "Sport", "order": 5 },
+  "diaspora":  { "name": "Diaspora", "order": 6 },
+  "monde":     { "name": "Monde", "order": 7 },
+  "tourisme":  { "name": "Tourisme", "order": 8 },
+  "annonces":  { "name": "Annonces", "order": 9 }
+}
