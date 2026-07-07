@@ -37,6 +37,8 @@
   .msg.err { background:#fde8e8; color:#a12; border:1px solid #f5c2c2; }
   .msg.ok { background:#e7f6ec; color:#1a7f37; border:1px solid #b7e0c4; }
   .hint { font-size:12px; color:#999; margin-top:4px; }
+  .navbtn { background:#fff; border:1px solid #ccc; padding:8px 14px; border-radius:5px; cursor:pointer; font-size:14px; }
+  .navbtn:hover { background:#f0f0f0; }
   a { color:var(--rouge); }
   @media (max-width:800px){ .cols{ flex-direction:column; } }
 </style>
@@ -60,8 +62,14 @@
     <button id="btnLogout">Se déconnecter</button>
   </header>
   <div class="wrap">
+    <div class="navbar" style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="navbtn" id="navEdit">✍ Rédiger</button>
+      <button class="navbtn" id="navList">🗂 Mes articles</button>
+    </div>
     <div class="msg err" id="formErr"></div>
     <div class="msg ok" id="okMsg"></div>
+    <div id="view-list" style="display:none"></div>
+    <div id="view-edit">
     <div class="cols">
       <div class="col">
         <h2>Rédaction</h2>
@@ -83,7 +91,14 @@
         <textarea id="f-excerpt" rows="2"></textarea>
         <label>Corps (Markdown)</label>
         <textarea id="f-body" rows="14" placeholder="Écris ton article en Markdown…"></textarea>
-        <label>Date de publication</label>
+        <label>Publication</label>
+        <div style="margin:2px 0 8px;font-size:14px;">
+          <label style="display:inline;text-transform:none;font-weight:400;letter-spacing:0;margin:0 14px 0 0;">
+            <input type="radio" name="pubmode" value="now" checked> Publier maintenant</label>
+          <label style="display:inline;text-transform:none;font-weight:400;letter-spacing:0;margin:0;">
+            <input type="radio" name="pubmode" value="schedule"> Programmer</label>
+        </div>
+        <label id="dateLabel">Date de publication</label>
         <input type="date" id="f-date">
         <p style="margin-top:18px"><button class="btn" id="btnPublish">Publier</button></p>
       </div>
@@ -95,12 +110,13 @@
         <div class="preview-body" id="pvBody"></div>
       </div>
     </div>
+    </div>
   </div>
 </div>
 
 <script src="./vendor/markdown-it.min.js"></script>
 <script type="module">
-import { slugify, articleUrl, imageUploadPath, buildFrontmatter, validateArticle } from './lib.mjs';
+import { slugify, articleUrl, imageUploadPath, buildFrontmatter, validateArticle, parseFiche, statusFor } from './lib.mjs';
 import { ghClient, toBase64 } from './github.mjs';
 
 const REPO = 'Yvesrubens/comoresnews';
@@ -112,6 +128,74 @@ const md = window.markdownit({ html:false, linkify:true, typographer:true });
 const $ = (id) => document.getElementById(id);
 const state = { imageFileBase64:null, imageFileName:null };
 let gh = null;
+let editing = null; // { path, sha } en mode édition, sinon null
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+// ---- Navigation vues ----
+function showEdit() { $('view-edit').style.display=''; $('view-list').style.display='none'; }
+async function showList() {
+  $('view-edit').style.display='none'; $('view-list').style.display='block';
+  const box = $('view-list');
+  box.innerHTML = '<p style="color:#888">Chargement…</p>';
+  try {
+    const files = (await gh.listDir('content/articles')).filter(f => f.name.endsWith('.md'));
+    const items = [];
+    for (const f of files) {
+      const { text } = await gh.getFile(f.path);
+      const a = parseFiche(text);
+      items.push({ ...a, path: f.path });
+    }
+    items.sort((x,y) => (y.date||'').localeCompare(x.date||''));
+    const stLabel = (a) => a.status==='scheduled' ? `<span style="color:#b06a00">Programmé ${a.date}</span>`
+      : a.status==='draft' ? '<span style="color:#888">Brouillon</span>' : '<span style="color:#1a7f37">Publié</span>';
+    box.innerHTML = `<div class="col"><h2>Mes articles (${items.length})</h2>` + items.map(a => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;">${escapeHtml(a.title)}</div>
+          <div style="font-size:12px;color:#777;">${a.category} · ${a.date} · ${stLabel(a)}</div>
+        </div>
+        <button class="navbtn" data-edit="${a.path}">Modifier</button>
+        <button class="navbtn" data-del="${a.path}" data-title="${escapeHtml(a.title)}" style="color:#a12;border-color:#e0b4b4;">Supprimer</button>
+      </div>`).join('') + '</div>';
+    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => loadForEdit(b.dataset.edit));
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteArticle(b.dataset.del, b.dataset.title));
+  } catch (e) { box.innerHTML = `<p style="color:#a12">Erreur: ${e.message}</p>`; }
+}
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+async function loadForEdit(path) {
+  try {
+    const { text, sha } = await gh.getFile(path);
+    const a = parseFiche(text);
+    editing = { path, sha };
+    $('f-title').value=a.title; $('f-slug').value=a.slug; $('f-slug').readOnly=true;
+    $('f-category').value=a.category; $('f-author').value=a.author||'Comoresnews';
+    $('f-excerpt').value=a.excerpt; $('f-body').value=a.body; $('f-date').value=a.date;
+    $('f-imageurl').value = /^https?:/.test(a.image) ? a.image : (a.image ? '../'+a.image : '');
+    state.imageFileBase64=null; state.imageFileName=null; state.editImage=a.image;
+    document.querySelector('input[name=pubmode][value=now]').checked = true;
+    $('btnPublish').textContent='Enregistrer';
+    showEdit(); renderPreview(); window.scrollTo(0,0);
+  } catch(e){ showErr(['Chargement impossible: '+e.message]); }
+}
+async function deleteArticle(path, title) {
+  if (!confirm(`Supprimer définitivement « ${title} » ?`)) return;
+  try {
+    const { sha } = await gh.getFile(path);
+    await gh.deleteFile(path, sha, `Suppression: ${title}`);
+    alert('Article supprimé. Le site se met à jour dans ~1-2 min.');
+    showList();
+  } catch(e){ alert('Suppression impossible: '+e.message); }
+}
+function resetForm() {
+  editing=null;
+  ['f-title','f-slug','f-author','f-excerpt','f-body','f-imageurl'].forEach(id=>$(id).value='');
+  $('f-author').value='Comoresnews'; $('f-slug').readOnly=false; $('f-date').value=todayISO();
+  state.imageFileBase64=null; state.imageFileName=null; state.editImage=null;
+  $('drop').textContent='Glisse une image ici, ou clique pour choisir un fichier';
+  document.querySelector('input[name=pubmode][value=now]').checked=true;
+  $('btnPublish').textContent='Publier'; renderPreview();
+}
 
 // ---- Auth ----
 function showAuth(msg) {
@@ -137,6 +221,8 @@ function startApp() {
   const sel = $('f-category'); sel.innerHTML = '';
   for (const [v, n] of CATEGORIES) { const o = document.createElement('option'); o.value = v; o.textContent = n; sel.appendChild(o); }
   $('f-date').value = new Date().toISOString().slice(0,10);
+  $('navEdit').onclick = () => { resetForm(); showEdit(); };
+  $('navList').onclick = showList;
   bindForm();
   renderPreview();
 }
@@ -193,7 +279,11 @@ function readFile(f) {
 function showErr(errs) { const e = $('formErr'); e.innerHTML = errs.join('<br>'); e.style.display = 'block'; $('okMsg').style.display='none'; window.scrollTo(0,0); }
 function showOk(url) {
   const e = $('okMsg');
-  e.innerHTML = `✅ Article publié ! Il sera en ligne dans ~1-2 min : <a href="../${url}" target="_blank">voir l'article</a>.`;
+  e.innerHTML = `✅ Enregistré ! En ligne dans ~1-2 min : <a href="../${url}" target="_blank">voir l'article</a>.`;
+  e.style.display = 'block'; $('formErr').style.display='none'; window.scrollTo(0,0);
+}
+function showOkText(txt) {
+  const e = $('okMsg'); e.textContent = '✅ ' + txt;
   e.style.display = 'block'; $('formErr').style.display='none'; window.scrollTo(0,0);
 }
 
@@ -202,23 +292,34 @@ async function publish() {
   const s = collect();
   const v = validateArticle(s);
   if (!v.ok) return showErr(v.errors);
-  $('btnPublish').disabled = true; $('btnPublish').textContent = 'Publication…';
+  const mode = document.querySelector('input[name=pubmode]:checked').value;
+  s.status = statusFor(mode, s.date, todayISO());
+  const label = editing ? 'Enregistrer' : 'Publier';
+  $('btnPublish').disabled = true; $('btnPublish').textContent = 'En cours…';
   try {
-    if (await gh.fileExists(`content/articles/${s.slug}.md`))
+    const path = `content/articles/${s.slug}.md`;
+    if (!editing && await gh.fileExists(path))
       { showErr([`Un article avec le slug « ${s.slug} » existe déjà.`]); return; }
-    let image = s.imageUrl || '';
+    // image : upload fichier > url saisie > image existante (édition)
+    let image = state.editImage || '';
+    if (s.imageUrl) image = s.imageUrl.replace(/^\.\.\//, '');
     if (state.imageFileBase64) {
       const p = imageUploadPath(s.date, state.imageFileName);
       await gh.putFile(p, state.imageFileBase64, `Image: ${s.slug}`);
       image = p;
     }
     const fiche = buildFrontmatter({ ...s, image });
-    await gh.putFile(`content/articles/${s.slug}.md`, toBase64(fiche), `Publication: ${s.title}`);
-    showOk(articleUrl(s.date, s.slug));
+    let sha = editing?.sha;
+    if (editing) { const cur = await gh.getFile(path); sha = cur.sha; } // sha frais
+    const msg = editing ? `Mise à jour: ${s.title}` : `Publication: ${s.title}`;
+    await gh.putFile(path, toBase64(fiche), msg, sha);
+    if (s.status === 'scheduled') { showOkText(`Article programmé pour le ${s.date}. Il sera publié automatiquement ce jour-là.`); }
+    else showOk(articleUrl(s.date, s.slug));
+    editing = null; $('f-slug').readOnly = false;
   } catch (err) {
-    showErr(['Échec de la publication : ' + err.message]);
+    showErr(['Échec : ' + err.message]);
   } finally {
-    $('btnPublish').disabled = false; $('btnPublish').textContent = 'Publier';
+    $('btnPublish').disabled = false; $('btnPublish').textContent = label;
   }
 }
 
