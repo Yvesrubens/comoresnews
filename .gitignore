@@ -3,5 +3,13 @@
 Thumbs.db
 *.log
 
-# Config serveur de dev local (non nécessaire au déploiement)
+# Dépendances et sorties de build
+node_modules/
+_site/
+_site_test/
+
+# Scratch orchestration
+.superpowers/
+
+# Config serveur de dev local
 serve.json
