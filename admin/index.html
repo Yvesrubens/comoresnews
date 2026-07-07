@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin — Comoresnews</title>
+<style>
+  :root { --rouge:#e50914; --noir:#111; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#222; background:#f4f4f4; }
+  header { background:var(--noir); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; }
+  header b { letter-spacing:.5px; }
+  header button { background:transparent; color:#bbb; border:1px solid #444; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; }
+  .wrap { max-width:1200px; margin:24px auto; padding:0 16px; }
+  .auth { max-width:520px; margin:60px auto; background:#fff; padding:32px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  .auth h1 { margin:0 0 8px; font-size:22px; }
+  .auth p { color:#666; font-size:14px; line-height:1.6; }
+  label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:#333; margin:14px 0 5px; }
+  input[type=text], input[type=password], input[type=date], select, textarea {
+    width:100%; padding:10px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; font-family:inherit; }
+  textarea { resize:vertical; }
+  .btn { background:var(--rouge); color:#fff; border:0; padding:12px 26px; font-size:15px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.5px; border-radius:5px; cursor:pointer; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .cols { display:flex; gap:28px; align-items:flex-start; }
+  .col { flex:1; min-width:0; background:#fff; padding:22px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+  .col h2 { margin:0 0 6px; font-size:15px; text-transform:uppercase; letter-spacing:.5px; color:#888; }
+  .drop { border:2px dashed #bbb; border-radius:6px; padding:16px; text-align:center; color:#888; font-size:14px; cursor:pointer; }
+  .drop.over { border-color:var(--rouge); color:var(--rouge); }
+  .preview-badge { display:inline-block; background:var(--noir); color:#fff; font-size:11px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.5px; padding:3px 8px; }
+  .preview-body h1,.preview-body h2,.preview-body h3 { line-height:1.25; }
+  .preview-body img { max-width:100%; height:auto; }
+  #pvImg { width:100%; max-height:280px; object-fit:cover; border-radius:5px; margin:0 0 14px; display:none; }
+  .msg { padding:12px 14px; border-radius:5px; margin:14px 0; font-size:14px; display:none; }
+  .msg.err { background:#fde8e8; color:#a12; border:1px solid #f5c2c2; }
+  .msg.ok { background:#e7f6ec; color:#1a7f37; border:1px solid #b7e0c4; }
+  .hint { font-size:12px; color:#999; margin-top:4px; }
+  a { color:var(--rouge); }
+  @media (max-width:800px){ .cols{ flex-direction:column; } }
+</style>
+</head>
+<body>
+
+<div id="app-auth" class="auth" style="display:none">
+  <h1>Espace de publication</h1>
+  <p>Connecte-toi avec un <b>jeton GitHub fine-grained</b> limité au dépôt <code>Yvesrubens/comoresnews</code>, droit <em>Contents : Read and write</em>.
+  <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Créer un jeton</a>.</p>
+  <label for="tok">Jeton d'accès</label>
+  <input type="password" id="tok" placeholder="github_pat_...">
+  <p class="hint">⚠️ Le jeton reste uniquement dans ce navigateur (localStorage). Ne l'utilise que sur un appareil de confiance.</p>
+  <div class="msg err" id="authErr"></div>
+  <p><button class="btn" id="btnLogin">Se connecter</button></p>
+</div>
+
+<div id="app-main" style="display:none">
+  <header>
+    <b>COMORES NEWS — Publication</b>
+    <button id="btnLogout">Se déconnecter</button>
+  </header>
+  <div class="wrap">
+    <div class="msg err" id="formErr"></div>
+    <div class="msg ok" id="okMsg"></div>
+    <div class="cols">
+      <div class="col">
+        <h2>Rédaction</h2>
+        <label>Titre</label>
+        <input type="text" id="f-title" placeholder="Titre de l'article">
+        <label>Slug (URL)</label>
+        <input type="text" id="f-slug" placeholder="auto-genere">
+        <div class="hint">Généré depuis le titre, modifiable. a-z, 0-9, tirets.</div>
+        <label>Catégorie</label>
+        <select id="f-category"></select>
+        <label>Auteur</label>
+        <input type="text" id="f-author" value="Comoresnews">
+        <label>Image de une</label>
+        <div class="drop" id="drop">Glisse une image ici, ou clique pour choisir un fichier</div>
+        <input type="file" id="f-file" accept="image/*" style="display:none">
+        <div class="hint">…ou colle une URL d'image :</div>
+        <input type="text" id="f-imageurl" placeholder="https://...">
+        <label>Chapô (résumé)</label>
+        <textarea id="f-excerpt" rows="2"></textarea>
+        <label>Corps (Markdown)</label>
+        <textarea id="f-body" rows="14" placeholder="Écris ton article en Markdown…"></textarea>
+        <label>Date de publication</label>
+        <input type="date" id="f-date">
+        <p style="margin-top:18px"><button class="btn" id="btnPublish">Publier</button></p>
+      </div>
+      <div class="col">
+        <h2>Aperçu</h2>
+        <img id="pvImg" alt="">
+        <div><span class="preview-badge" id="pvCat">Catégorie</span></div>
+        <h1 id="pvTitle" style="font-size:26px;margin:10px 0;">Titre de l'article</h1>
+        <div class="preview-body" id="pvBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { slugify, articleUrl, imageUploadPath, buildFrontmatter, validateArticle } from './lib.mjs';
+import { ghClient, toBase64 } from './github.mjs';
+
+const REPO = 'Yvesrubens/comoresnews';
+const CATEGORIES = [
+  ['politique','Politique'],['economie','Économie'],['societe','Société'],['culture','Culture'],
+  ['sport','Sport'],['diaspora','Diaspora'],['monde','Monde'],['tourisme','Tourisme'],['annonces','Annonces'],
+];
+const md = window.markdownit({ html:false, linkify:true, typographer:true });
+const $ = (id) => document.getElementById(id);
+const state = { imageFileBase64:null, imageFileName:null };
+let gh = null;
+
+// ---- Auth ----
+function showAuth(msg) {
+  $('app-auth').style.display = 'block'; $('app-main').style.display = 'none';
+  if (msg) { $('authErr').textContent = msg; $('authErr').style.display = 'block'; }
+}
+async function tryLogin(token) {
+  gh = ghClient({ token, repo: REPO });
+  await gh.getRepo(); // jette si invalide
+  localStorage.setItem('cn_gh_token', token);
+  startApp();
+}
+$('btnLogin').onclick = async () => {
+  const t = $('tok').value.trim();
+  if (!t) return;
+  try { await tryLogin(t); } catch { showAuth('Jeton invalide ou droits insuffisants.'); }
+};
+$('btnLogout').onclick = () => { localStorage.removeItem('cn_gh_token'); location.reload(); };
+
+// ---- App ----
+function startApp() {
+  $('app-auth').style.display = 'none'; $('app-main').style.display = 'block';
+  const sel = $('f-category'); sel.innerHTML = '';
+  for (const [v, n] of CATEGORIES) { const o = document.createElement('option'); o.value = v; o.textContent = n; sel.appendChild(o); }
+  $('f-date').value = new Date().toISOString().slice(0,10);
+  bindForm();
+  renderPreview();
+}
+
+function collect() {
+  return {
+    title: $('f-title').value, slug: $('f-slug').value, category: $('f-category').value,
+    author: $('f-author').value, date: $('f-date').value, excerpt: $('f-excerpt').value,
+    body: $('f-body').value, imageUrl: $('f-imageurl').value.trim(),
+  };
+}
+function currentImageSrc() {
+  if (state.imageFileBase64) return 'data:image/*;base64,' + state.imageFileBase64;
+  if ($('f-imageurl').value.trim()) return $('f-imageurl').value.trim();
+  return '';
+}
+function renderPreview() {
+  const s = collect();
+  $('pvTitle').textContent = s.title || "Titre de l'article";
+  const catName = (CATEGORIES.find(c => c[0] === s.category) || [,''])[1];
+  $('pvCat').textContent = catName;
+  $('pvBody').innerHTML = md.render(s.body || '');
+  const img = currentImageSrc();
+  const el = $('pvImg');
+  if (img) { el.src = img; el.style.display = 'block'; } else { el.style.display = 'none'; }
+}
+function bindForm() {
+  ['f-title','f-slug','f-category','f-author','f-excerpt','f-body','f-imageurl','f-date']
+    .forEach(id => $(id).addEventListener('input', renderPreview));
+  // slug auto depuis titre tant que l'utilisateur n'a pas édité le slug
+  let slugTouched = false;
+  $('f-slug').addEventListener('input', () => { slugTouched = true; });
+  $('f-title').addEventListener('input', () => { if (!slugTouched) $('f-slug').value = slugify($('f-title').value); });
+  // image fichier
+  const drop = $('drop'), file = $('f-file');
+  drop.onclick = () => file.click();
+  file.onchange = () => file.files[0] && readFile(file.files[0]);
+  ['dragover','dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) readFile(f); });
+  $('btnPublish').onclick = publish;
+}
+function readFile(f) {
+  const r = new FileReader();
+  r.onload = () => {
+    state.imageFileBase64 = String(r.result).split(',')[1];
+    state.imageFileName = f.name;
+    $('f-imageurl').value = '';
+    $('drop').textContent = '✓ ' + f.name + ' (clique pour changer)';
+    renderPreview();
+  };
+  r.readAsDataURL(f);
+}
+function showErr(errs) { const e = $('formErr'); e.innerHTML = errs.join('<br>'); e.style.display = 'block'; $('okMsg').style.display='none'; window.scrollTo(0,0); }
+function showOk(url) {
+  const e = $('okMsg');
+  e.innerHTML = `✅ Article publié ! Il sera en ligne dans ~1-2 min : <a href="../${url}" target="_blank">voir l'article</a>.`;
+  e.style.display = 'block'; $('formErr').style.display='none'; window.scrollTo(0,0);
+}
+
+async function publish() {
+  $('formErr').style.display='none'; $('okMsg').style.display='none';
+  const s = collect();
+  const v = validateArticle(s);
+  if (!v.ok) return showErr(v.errors);
+  $('btnPublish').disabled = true; $('btnPublish').textContent = 'Publication…';
+  try {
+    if (await gh.fileExists(`content/articles/${s.slug}.md`))
+      { showErr([`Un article avec le slug « ${s.slug} » existe déjà.`]); return; }
+    let image = s.imageUrl || '';
+    if (state.imageFileBase64) {
+      const p = imageUploadPath(s.date, state.imageFileName);
+      await gh.putFile(p, state.imageFileBase64, `Image: ${s.slug}`);
+      image = p;
+    }
+    const fiche = buildFrontmatter({ ...s, image });
+    await gh.putFile(`content/articles/${s.slug}.md`, toBase64(fiche), `Publication: ${s.title}`);
+    showOk(articleUrl(s.date, s.slug));
+  } catch (err) {
+    showErr(['Échec de la publication : ' + err.message]);
+  } finally {
+    $('btnPublish').disabled = false; $('btnPublish').textContent = 'Publier';
+  }
+}
+
+// ---- Démarrage ----
+const saved = localStorage.getItem('cn_gh_token');
+if (saved) { tryLogin(saved).catch(() => showAuth('Session expirée, reconnecte-toi.')); }
+else showAuth();
+</script>
+</body>
+</html>
