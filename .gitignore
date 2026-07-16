@@ -13,3 +13,4 @@ _site_test/
 
 # Config serveur de dev local
 serve.json
+.vercel
