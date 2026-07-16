@@ -5,6 +5,7 @@ import { loadArticles, isPublishable } from './lib/content.mjs';
 import { renderMarkdown, articleCard } from './lib/render.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix } from './lib/paths.mjs';
+import { optimizeImages } from './lib/images.mjs';
 
 const ROOT = process.cwd();
 const TPL = (n) => fs.readFileSync(path.join(ROOT, 'templates', n), 'utf8');
@@ -20,7 +21,7 @@ export function buildArticlePage(a, catsCfg) {
   const P = relPrefix(rel);
   const catName = catsCfg[a.category].name;
   const img = a.image
-    ? `<img src="${P}${a.image}" alt="${esc(a.title)}" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
+    ? `<img src="${P}${a.image}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
     : '';
   const breadcrumb = `<span><a class="entry-crumb" href="${P}index.html">Accueil</a></span> <i class="td-icon-right td-bread-sep"></i> <span><a class="entry-crumb" href="${P}${categoryPath(a.category)}">${catName}</a></span>`;
   let html = applyTemplate(TPL('article.html'), {
@@ -97,7 +98,7 @@ function write(outDir, rel, content) {
   fs.writeFileSync(p, content);
 }
 
-export function main({ now, outDir = '_site' }) {
+export async function main({ now, outDir = '_site' }) {
   const validCats = Object.keys(cats);
   const all = loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
   fs.rmSync(outDir, { recursive: true, force: true });
@@ -111,10 +112,14 @@ export function main({ now, outDir = '_site' }) {
   write(outDir, 'index.html', buildHome(all, cats));
   write(outDir, AUTHOR_PAGE, buildAuthor(all, cats));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
+  await optimizeImages(outDir);
   console.log(`Build OK: ${all.length} articles -> ${outDir}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('generate.mjs')) {
   const nowArg = (process.argv.find(a => a.startsWith('--now=')) || '').split('=')[1];
-  main({ now: nowArg || new Date().toISOString().slice(0, 10) });
+  main({ now: nowArg || new Date().toISOString().slice(0, 10) }).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }

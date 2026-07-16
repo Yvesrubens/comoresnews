@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "turndown": "^7.2.0"
