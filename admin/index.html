@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<script src="./vendor/markdown-it.min.js"></script>
+<script src="./vendor/markdown-it.min.js" defer></script>
 <script type="module">
 import { slugify, articleUrl, imageUploadPath, buildFrontmatter, validateArticle, parseFiche, statusFor } from './lib.mjs';
 import { ghClient, toBase64 } from './github.mjs';
@@ -139,12 +139,10 @@ async function showList() {
   box.innerHTML = '<p style="color:#888">Chargement…</p>';
   try {
     const files = (await gh.listDir('content/articles')).filter(f => f.name.endsWith('.md'));
-    const items = [];
-    for (const f of files) {
+    const items = await Promise.all(files.map(async (f) => {
       const { text } = await gh.getFile(f.path);
-      const a = parseFiche(text);
-      items.push({ ...a, path: f.path });
-    }
+      return { ...parseFiche(text), path: f.path };
+    }));
     items.sort((x,y) => (y.date||'').localeCompare(x.date||''));
     const stLabel = (a) => a.status==='scheduled' ? `<span style="color:#b06a00">Programmé ${a.date}</span>`
       : a.status==='draft' ? '<span style="color:#888">Brouillon</span>' : '<span style="color:#1a7f37">Publié</span>';
@@ -324,9 +322,18 @@ async function publish() {
 }
 
 // ---- Démarrage ----
+// Affichage optimiste : si un jeton est déjà enregistré, on montre l'interface
+// tout de suite (pas d'écran blanc pendant la latence réseau) et on valide le
+// jeton en arrière-plan ; en cas d'échec, on bascule sur l'écran de connexion.
 const saved = localStorage.getItem('cn_gh_token');
-if (saved) { tryLogin(saved).catch(() => showAuth('Session expirée, reconnecte-toi.')); }
-else showAuth();
+if (saved) {
+  gh = ghClient({ token: saved, repo: REPO });
+  startApp();
+  gh.getRepo().catch(() => {
+    localStorage.removeItem('cn_gh_token');
+    showAuth('Session expirée, reconnecte-toi.');
+  });
+} else showAuth();
 </script>
 </body>
 </html>
