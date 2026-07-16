@@ -3,5 +3,5 @@
   "buildCommand": "node build/generate.mjs",
   "outputDirectory": "_site",
   "cleanUrls": false,
-  "trailingSlash": false
+  "trailingSlash": true
 }
