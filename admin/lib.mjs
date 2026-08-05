@@ -48,3 +48,45 @@ export function validateArticle(a) {
   if (!a.body?.trim()) errors.push('Corps requis');
   return { ok: errors.length === 0, errors };
 }
+
+// ---- CMS Supabase (base de données) ----
+
+// Renvoie la liste des champs manquants/invalides (vide = OK).
+export function validateArticleDB(f) {
+  const errs = [];
+  if (!f.titre?.trim()) errs.push('titre');
+  if (!/^[a-z0-9-]+$/.test(f.slug || '')) errs.push('slug');
+  if (!f.categorie?.trim()) errs.push('categorie');
+  if (!f.corps?.trim()) errs.push('corps');
+  return errs;
+}
+
+// Traduit une action UI en statut de workflow DB.
+export function nextStatus(action) {
+  if (action === 'soumettre') return 'en_attente';
+  if (action === 'publier') return 'publie';
+  if (action === 'programmer') return 'programme';
+  return 'brouillon';
+}
+
+// Construit la ligne `articles` à écrire selon l'action et l'auteur.
+export function formToRow(f, auteurId) {
+  const statut = nextStatus(f.action);
+  return {
+    titre: f.titre,
+    slug: f.slug,
+    categorie: f.categorie,
+    auteur_id: auteurId,
+    corps: f.corps,
+    excerpt: f.excerpt || '',
+    image_couverture: f.image_couverture || '',
+    seo_titre: f.seo_titre || '',
+    seo_description: f.seo_description || '',
+    og_image: f.og_image || '',
+    mots_cles: Array.isArray(f.mots_cles) ? f.mots_cles : [],
+    statut,
+    date_programmee: statut === 'programme' ? f.date_programmee : null,
+    date_publication: statut === 'publie' ? new Date().toISOString() : null,
+    commentaire_relecture: f.commentaire_relecture ?? null,
+  };
+}
