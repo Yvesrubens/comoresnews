@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "comoresnews-site", "runtimeExecutable": "npx", "runtimeArgs": ["--yes", "serve", "_site", "-l", "5055"], "port": 5055 }
+  ]
+}
