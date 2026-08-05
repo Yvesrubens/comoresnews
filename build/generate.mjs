@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
+import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs';
 import { renderMarkdown, articleCard } from './lib/render.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix } from './lib/paths.mjs';
@@ -100,7 +101,9 @@ function write(outDir, rel, content) {
 
 export async function main({ now, outDir = '_site' }) {
   const validCats = Object.keys(cats);
-  const all = loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
+  const all = process.env.CONTENT_SOURCE === 'supabase'
+    ? await loadArticlesFromSupabase(makeClient(), now)
+    : loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
   fs.rmSync(outDir, { recursive: true, force: true });
   for (const rel of PASSTHROUGH) {
     const src = path.join(ROOT, rel);
