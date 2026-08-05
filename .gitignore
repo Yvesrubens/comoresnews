@@ -14,3 +14,8 @@ _site_test/
 # Config serveur de dev local
 serve.json
 .vercel
+
+# Secrets & Supabase
+.env
+supabase/.temp/
+supabase/.branches/

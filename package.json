@@ -9,6 +9,7 @@
     "migrate": "node build/migrate.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.1",
     "gray-matter": "^4.0.3",
     "markdown-it": "^14.1.0",
     "sharp": "^0.35.3"
