@@ -4,11 +4,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 import { loadArticles } from '../build/lib/content.mjs';
 
 const AUTEUR_EMAIL = 'redaction@comoresnews.com';
 const AUTEUR_NOM = 'Comoresnews';
-const CT = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
+const MAX_WIDTH = 1200;   // aligné sur build/lib/images.mjs
+const WEBP_QUALITY = 74;
+
+// Convertit un buffer image en WebP (≤1200px), comme le pipeline du build.
+async function toWebp(buf) {
+  return sharp(buf).resize({ width: MAX_WIDTH, withoutEnlargement: true }).webp({ quality: WEBP_QUALITY }).toBuffer();
+}
 
 // Pur : convertit une fiche (forme content.mjs) en ligne de la table articles (statut publié).
 export function ficheToRow(a, auteurId) {
@@ -52,13 +59,12 @@ async function main() {
 
   for (const a of arts) {
     if (a.image && fs.existsSync(a.image)) {
-      const base = path.basename(a.image);
-      const buf = fs.readFileSync(a.image);
-      const ct = CT[path.extname(a.image).toLowerCase()] || 'application/octet-stream';
-      const { error: upErr } = await sb.storage.from('medias').upload(base, buf, { upsert: true, contentType: ct });
-      if (upErr) throw new Error(`upload ${base}: ${upErr.message}`);
-      const { data: pub } = sb.storage.from('medias').getPublicUrl(base);
-      a.image = pub.publicUrl; // URL publique absolue
+      const webpName = path.basename(a.image).replace(/\.(png|jpe?g|gif)$/i, '.webp');
+      const buf = await toWebp(fs.readFileSync(a.image));
+      const { error: upErr } = await sb.storage.from('medias').upload(webpName, buf, { upsert: true, contentType: 'image/webp' });
+      if (upErr) throw new Error(`upload ${webpName}: ${upErr.message}`);
+      const { data: pub } = sb.storage.from('medias').getPublicUrl(webpName);
+      a.image = pub.publicUrl; // URL publique absolue (WebP optimisé)
     }
     const { error } = await sb.from('articles').upsert(ficheToRow(a, auteurId), { onConflict: 'slug' });
     if (error) throw new Error(`${a.slug}: ${error.message}`);
