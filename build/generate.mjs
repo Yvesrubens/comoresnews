@@ -3,6 +3,9 @@ import path from 'node:path';
 import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
 import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs';
+import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
+
+const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard } from './lib/render.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix } from './lib/paths.mjs';
@@ -33,8 +36,9 @@ export function buildArticlePage(a, catsCfg) {
     DATE: a.date,
     IMAGE: img,
     BODY: renderMarkdown(a.body),
+    SEO: metaTags(a, `${BASE}/${rel}`) + '\n' + jsonLdArticle(a, `${BASE}/${rel}`),
   });
-  return setTitle(html, a.title);
+  return setTitle(html, a.seoTitle || a.title);
 }
 
 export function buildCategoryPage(slug, articles, catsCfg) {
@@ -115,6 +119,10 @@ export async function main({ now, outDir = '_site' }) {
   write(outDir, 'index.html', buildHome(all, cats));
   write(outDir, AUTHOR_PAGE, buildAuthor(all, cats));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
+  const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }]
+    .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))
+    .concat(all.map(a => ({ loc: `${BASE}/${articlePath(a.date, a.slug)}`, lastmod: a.date })));
+  write(outDir, 'sitemap.xml', sitemapXml(sitemapEntries));
   await optimizeImages(outDir);
   console.log(`Build OK: ${all.length} articles -> ${outDir}`);
 }
