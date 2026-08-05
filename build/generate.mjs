@@ -8,7 +8,7 @@ import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard } from './lib/render.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
-import { articlePath, categoryPath, relPrefix } from './lib/paths.mjs';
+import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
 
 const ROOT = process.cwd();
@@ -25,7 +25,7 @@ export function buildArticlePage(a, catsCfg) {
   const P = relPrefix(rel);
   const catName = catsCfg[a.category].name;
   const img = a.image
-    ? `<img src="${P}${a.image}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
+    ? `<img src="${resolveImg(P, a.image)}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
     : '';
   const breadcrumb = `<span><a class="entry-crumb" href="${P}index.html">Accueil</a></span> <i class="td-icon-right td-bread-sep"></i> <span><a class="entry-crumb" href="${P}${categoryPath(a.category)}">${catName}</a></span>`;
   let html = applyTemplate(TPL('article.html'), {
