@@ -2,7 +2,7 @@
 // session utilisateur ; la RLS applique les droits. Aucune clé secrète ici.
 import { createClient } from './vendor/supabase.js';
 
-export function createApi({ url, anonKey }) {
+export function createApi({ url, anonKey, deployHook }) {
   const sb = createClient(url, anonKey);
 
   async function currentProfile() {
@@ -61,6 +61,11 @@ export function createApi({ url, anonKey }) {
     inviteUser: (email, nom) => sb.functions.invoke('invite-user', { body: { email, nom } }),
 
     // --- Déclenchement du rebuild du site public ---
-    triggerDeploy: () => sb.functions.invoke('trigger-deploy'),
+    // Appelle directement le Deploy Hook Vercel si configuré (URL de capacité :
+    // déclenche seulement un build, n'expose aucune donnée), sinon Edge Function.
+    triggerDeploy: async () => {
+      if (deployHook) return fetch(deployHook, { method: 'POST' });
+      return sb.functions.invoke('trigger-deploy');
+    },
   };
 }

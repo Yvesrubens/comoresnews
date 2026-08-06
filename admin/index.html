@@ -179,6 +179,7 @@ import { slugify, validateArticleDB, formToRow } from './lib.mjs';
 const CONFIG = {
   url: 'https://flednhvntwyxirepijyn.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ',
+  deployHook: 'https://api.vercel.com/v1/integrations/deploy/prj_Dj6Yemh2ZfekpjA41t58WbkRpuUi/3NLAq3Fe4l',
 };
 const api = createApi(CONFIG);
 const $ = (id) => document.getElementById(id);
