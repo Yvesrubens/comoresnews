@@ -1,339 +1,365 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Admin — Comoresnews</title>
+<title>Comoresnews — Back-office</title>
 <style>
-  :root { --rouge:#e50914; --noir:#111; }
+  :root { --brand:#111; --accent:#c0392b; --ok:#1e824c; --border:#e3e3e3; --muted:#777; }
   * { box-sizing:border-box; }
-  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:#222; background:#f4f4f4; }
-  header { background:var(--noir); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; }
-  header b { letter-spacing:.5px; }
-  header button { background:transparent; color:#bbb; border:1px solid #444; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; }
-  .wrap { max-width:1200px; margin:24px auto; padding:0 16px; }
-  .auth { max-width:520px; margin:60px auto; background:#fff; padding:32px; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
-  .auth h1 { margin:0 0 8px; font-size:22px; }
-  .auth p { color:#666; font-size:14px; line-height:1.6; }
-  label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:#333; margin:14px 0 5px; }
-  input[type=text], input[type=password], input[type=date], select, textarea {
-    width:100%; padding:10px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; font-family:inherit; }
-  textarea { resize:vertical; }
-  .btn { background:var(--rouge); color:#fff; border:0; padding:12px 26px; font-size:15px; font-weight:700;
-    text-transform:uppercase; letter-spacing:.5px; border-radius:5px; cursor:pointer; }
-  .btn:disabled { opacity:.5; cursor:not-allowed; }
-  .cols { display:flex; gap:28px; align-items:flex-start; }
-  .col { flex:1; min-width:0; background:#fff; padding:22px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,.06); }
-  .col h2 { margin:0 0 6px; font-size:15px; text-transform:uppercase; letter-spacing:.5px; color:#888; }
-  .drop { border:2px dashed #bbb; border-radius:6px; padding:16px; text-align:center; color:#888; font-size:14px; cursor:pointer; }
-  .drop.over { border-color:var(--rouge); color:var(--rouge); }
-  .preview-badge { display:inline-block; background:var(--noir); color:#fff; font-size:11px; font-weight:600;
-    text-transform:uppercase; letter-spacing:.5px; padding:3px 8px; }
-  .preview-body h1,.preview-body h2,.preview-body h3 { line-height:1.25; }
-  .preview-body img { max-width:100%; height:auto; }
-  #pvImg { width:100%; max-height:280px; object-fit:cover; border-radius:5px; margin:0 0 14px; display:none; }
-  .msg { padding:12px 14px; border-radius:5px; margin:14px 0; font-size:14px; display:none; }
-  .msg.err { background:#fde8e8; color:#a12; border:1px solid #f5c2c2; }
-  .msg.ok { background:#e7f6ec; color:#1a7f37; border:1px solid #b7e0c4; }
-  .hint { font-size:12px; color:#999; margin-top:4px; }
-  .navbtn { background:#fff; border:1px solid #ccc; padding:8px 14px; border-radius:5px; cursor:pointer; font-size:14px; }
-  .navbtn:hover { background:#f0f0f0; }
-  a { color:var(--rouge); }
-  @media (max-width:800px){ .cols{ flex-direction:column; } }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:#222; background:#f4f5f7; }
+  header.top { background:#111; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:12px 20px; }
+  header.top .brand { font-weight:800; letter-spacing:.5px; }
+  header.top .who { font-size:13px; color:#ccc; }
+  header.top button { margin-left:12px; }
+  button { cursor:pointer; border:1px solid var(--border); background:#fff; padding:7px 12px; border-radius:6px; font-size:14px; }
+  button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
+  button.accent { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.ok { background:var(--ok); color:#fff; border-color:var(--ok); }
+  .wrap { max-width:960px; margin:0 auto; padding:20px; }
+  .auth { max-width:420px; margin:70px auto; background:#fff; padding:32px; border-radius:10px; box-shadow:0 2px 14px rgba(0,0,0,.08); }
+  .auth h1 { margin:0 0 18px; font-size:20px; }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+  input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:6px; font-size:14px; font-family:inherit; }
+  textarea { min-height:220px; resize:vertical; }
+  .tabs { display:flex; gap:6px; margin:16px 0; flex-wrap:wrap; }
+  .tabs button.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .card { background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > * { flex:1; min-width:180px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--border); }
+  .badge { font-size:11px; padding:2px 8px; border-radius:20px; font-weight:700; text-transform:uppercase; }
+  .b-brouillon { background:#eee; color:#666; }
+  .b-en_attente { background:#fdebd0; color:#a15b00; }
+  .b-programme { background:#d6eaf8; color:#1f6391; }
+  .b-publie { background:#d5f5e3; color:#1e824c; }
+  .msg { padding:10px 12px; border-radius:6px; margin:10px 0; font-size:14px; }
+  .msg.err { background:#fdecea; color:#a12; }
+  .msg.ok { background:#eafaf1; color:#186a3b; }
+  .muted { color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; }
+  .grid img { width:100%; height:90px; object-fit:cover; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
+  .preview { border:1px solid var(--border); border-radius:6px; padding:12px; background:#fafafa; min-height:80px; }
+  .hidden { display:none; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
 </style>
+<script src="./vendor/markdown-it.min.js" defer></script>
 </head>
 <body>
 
-<div id="app-auth" class="auth" style="display:none">
-  <h1>Espace de publication</h1>
-  <p>Connecte-toi avec un <b>jeton GitHub fine-grained</b> limité au dépôt <code>Yvesrubens/comoresnews</code>, droit <em>Contents : Read and write</em>.
-  <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Créer un jeton</a>.</p>
-  <label for="tok">Jeton d'accès</label>
-  <input type="password" id="tok" placeholder="github_pat_...">
-  <p class="hint">⚠️ Le jeton reste uniquement dans ce navigateur (localStorage). Ne l'utilise que sur un appareil de confiance.</p>
-  <div class="msg err" id="authErr"></div>
-  <p><button class="btn" id="btnLogin">Se connecter</button></p>
-</div>
-
-<div id="app-main" style="display:none">
-  <header>
-    <b>COMORES NEWS — Publication</b>
-    <button id="btnLogout">Se déconnecter</button>
-  </header>
-  <div class="wrap">
-    <div class="navbar" style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="navbtn" id="navEdit">✍ Rédiger</button>
-      <button class="navbtn" id="navList">🗂 Mes articles</button>
-    </div>
-    <div class="msg err" id="formErr"></div>
-    <div class="msg ok" id="okMsg"></div>
-    <div id="view-list" style="display:none"></div>
-    <div id="view-edit">
-    <div class="cols">
-      <div class="col">
-        <h2>Rédaction</h2>
-        <label>Titre</label>
-        <input type="text" id="f-title" placeholder="Titre de l'article">
-        <label>Slug (URL)</label>
-        <input type="text" id="f-slug" placeholder="auto-genere">
-        <div class="hint">Généré depuis le titre, modifiable. a-z, 0-9, tirets.</div>
-        <label>Catégorie</label>
-        <select id="f-category"></select>
-        <label>Auteur</label>
-        <input type="text" id="f-author" value="Comoresnews">
-        <label>Image de une</label>
-        <div class="drop" id="drop">Glisse une image ici, ou clique pour choisir un fichier</div>
-        <input type="file" id="f-file" accept="image/*" style="display:none">
-        <div class="hint">…ou colle une URL d'image :</div>
-        <input type="text" id="f-imageurl" placeholder="https://...">
-        <label>Chapô (résumé)</label>
-        <textarea id="f-excerpt" rows="2"></textarea>
-        <label>Corps (Markdown)</label>
-        <textarea id="f-body" rows="14" placeholder="Écris ton article en Markdown…"></textarea>
-        <label>Publication</label>
-        <div style="margin:2px 0 8px;font-size:14px;">
-          <label style="display:inline;text-transform:none;font-weight:400;letter-spacing:0;margin:0 14px 0 0;">
-            <input type="radio" name="pubmode" value="now" checked> Publier maintenant</label>
-          <label style="display:inline;text-transform:none;font-weight:400;letter-spacing:0;margin:0;">
-            <input type="radio" name="pubmode" value="schedule"> Programmer</label>
-        </div>
-        <label id="dateLabel">Date de publication</label>
-        <input type="date" id="f-date">
-        <p style="margin-top:18px"><button class="btn" id="btnPublish">Publier</button></p>
-      </div>
-      <div class="col">
-        <h2>Aperçu</h2>
-        <img id="pvImg" alt="">
-        <div><span class="preview-badge" id="pvCat">Catégorie</span></div>
-        <h1 id="pvTitle" style="font-size:26px;margin:10px 0;">Titre de l'article</h1>
-        <div class="preview-body" id="pvBody"></div>
-      </div>
-    </div>
-    </div>
+<!-- CONNEXION -->
+<div id="auth" class="auth hidden">
+  <h1>Comoresnews — Connexion</h1>
+  <div id="authMsg"></div>
+  <label>Email</label>
+  <input id="email" type="email" autocomplete="username">
+  <label>Mot de passe</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <div class="actions">
+    <button class="primary" id="btnLogin">Se connecter</button>
+    <button id="btnForgot">Mot de passe oublié</button>
   </div>
 </div>
 
-<script src="./vendor/markdown-it.min.js" defer></script>
-<script type="module">
-import { slugify, articleUrl, imageUploadPath, buildFrontmatter, validateArticle, parseFiche, statusFor } from './lib.mjs';
-import { ghClient, toBase64 } from './github.mjs';
+<!-- APP -->
+<div id="app" class="hidden">
+  <header class="top">
+    <span class="brand">COMORESNEWS · Admin</span>
+    <span><span class="who" id="who"></span><button id="btnLogout">Déconnexion</button></span>
+  </header>
+  <div class="wrap">
+    <div class="tabs" id="tabs">
+      <button data-view="list" class="active">Articles</button>
+      <button data-view="media">Médiathèque</button>
+      <button data-view="users" class="adminOnly hidden">Utilisateurs</button>
+      <button data-view="cats" class="adminOnly hidden">Catégories</button>
+    </div>
+    <div id="globalMsg"></div>
 
-const REPO = 'Yvesrubens/comoresnews';
-const CATEGORIES = [
-  ['politique','Politique'],['economie','Économie'],['societe','Société'],['culture','Culture'],
-  ['sport','Sport'],['diaspora','Diaspora'],['monde','Monde'],['tourisme','Tourisme'],['annonces','Annonces'],
-];
-const md = window.markdownit({ html:false, linkify:true, typographer:true });
-const $ = (id) => document.getElementById(id);
-const state = { imageFileBase64:null, imageFileName:null };
-let gh = null;
-let editing = null; // { path, sha } en mode édition, sinon null
-const todayISO = () => new Date().toISOString().slice(0,10);
-
-// ---- Navigation vues ----
-function showEdit() { $('view-edit').style.display=''; $('view-list').style.display='none'; }
-async function showList() {
-  $('view-edit').style.display='none'; $('view-list').style.display='block';
-  const box = $('view-list');
-  box.innerHTML = '<p style="color:#888">Chargement…</p>';
-  try {
-    const files = (await gh.listDir('content/articles')).filter(f => f.name.endsWith('.md'));
-    const items = await Promise.all(files.map(async (f) => {
-      const { text } = await gh.getFile(f.path);
-      return { ...parseFiche(text), path: f.path };
-    }));
-    items.sort((x,y) => (y.date||'').localeCompare(x.date||''));
-    const stLabel = (a) => a.status==='scheduled' ? `<span style="color:#b06a00">Programmé ${a.date}</span>`
-      : a.status==='draft' ? '<span style="color:#888">Brouillon</span>' : '<span style="color:#1a7f37">Publié</span>';
-    box.innerHTML = `<div class="col"><h2>Mes articles (${items.length})</h2>` + items.map(a => `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eee;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;">${escapeHtml(a.title)}</div>
-          <div style="font-size:12px;color:#777;">${a.category} · ${a.date} · ${stLabel(a)}</div>
+    <!-- LISTE ARTICLES -->
+    <section id="view-list">
+      <div class="row" style="align-items:flex-end;">
+        <div>
+          <label>Statut</label>
+          <select id="fStatut"><option value="">Tous</option>
+            <option value="brouillon">Brouillon</option><option value="en_attente">En attente</option>
+            <option value="programme">Programmé</option><option value="publie">Publié</option></select>
         </div>
-        <button class="navbtn" data-edit="${a.path}">Modifier</button>
-        <button class="navbtn" data-del="${a.path}" data-title="${escapeHtml(a.title)}" style="color:#a12;border-color:#e0b4b4;">Supprimer</button>
-      </div>`).join('') + '</div>';
-    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => loadForEdit(b.dataset.edit));
-    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteArticle(b.dataset.del, b.dataset.title));
-  } catch (e) { box.innerHTML = `<p style="color:#a12">Erreur: ${e.message}</p>`; }
-}
-function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+        <div><label>Catégorie</label><select id="fCat"><option value="">Toutes</option></select></div>
+        <div style="flex:0 0 auto;"><label>&nbsp;</label><button class="primary" id="btnNew">+ Nouvel article</button></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+        <tbody id="listBody"></tbody></table></div>
+    </section>
 
-async function loadForEdit(path) {
-  try {
-    const { text, sha } = await gh.getFile(path);
-    const a = parseFiche(text);
-    editing = { path, sha };
-    $('f-title').value=a.title; $('f-slug').value=a.slug; $('f-slug').readOnly=true;
-    $('f-category').value=a.category; $('f-author').value=a.author||'Comoresnews';
-    $('f-excerpt').value=a.excerpt; $('f-body').value=a.body; $('f-date').value=a.date;
-    $('f-imageurl').value = /^https?:/.test(a.image) ? a.image : (a.image ? '../'+a.image : '');
-    state.imageFileBase64=null; state.imageFileName=null; state.editImage=a.image;
-    document.querySelector('input[name=pubmode][value=now]').checked = true;
-    $('btnPublish').textContent='Enregistrer';
-    showEdit(); renderPreview(); window.scrollTo(0,0);
-  } catch(e){ showErr(['Chargement impossible: '+e.message]); }
-}
-async function deleteArticle(path, title) {
-  if (!confirm(`Supprimer définitivement « ${title} » ?`)) return;
-  try {
-    const { sha } = await gh.getFile(path);
-    await gh.deleteFile(path, sha, `Suppression: ${title}`);
-    alert('Article supprimé. Le site se met à jour dans ~1-2 min.');
-    showList();
-  } catch(e){ alert('Suppression impossible: '+e.message); }
-}
-function resetForm() {
-  editing=null;
-  ['f-title','f-slug','f-author','f-excerpt','f-body','f-imageurl'].forEach(id=>$(id).value='');
-  $('f-author').value='Comoresnews'; $('f-slug').readOnly=false; $('f-date').value=todayISO();
-  state.imageFileBase64=null; state.imageFileName=null; state.editImage=null;
-  $('drop').textContent='Glisse une image ici, ou clique pour choisir un fichier';
-  document.querySelector('input[name=pubmode][value=now]').checked=true;
-  $('btnPublish').textContent='Publier'; renderPreview();
-}
+    <!-- EDITEUR -->
+    <section id="view-edit" class="hidden">
+      <div id="editMsg"></div>
+      <div class="card">
+        <div class="row">
+          <div><label>Titre</label><input id="e-titre"></div>
+          <div><label>Slug (URL)</label><input id="e-slug"></div>
+        </div>
+        <div class="row">
+          <div><label>Catégorie</label><select id="e-cat"></select></div>
+          <div><label>Image de couverture (URL)</label><input id="e-image" placeholder="via Médiathèque ou URL"></div>
+        </div>
+        <label>Chapô (excerpt)</label><textarea id="e-excerpt" style="min-height:70px"></textarea>
+        <div class="row">
+          <div><label>Corps (Markdown)</label><textarea id="e-body"></textarea></div>
+          <div><label>Aperçu</label><div class="preview" id="e-preview"></div></div>
+        </div>
+        <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">SEO</summary>
+          <label>Titre SEO</label><input id="e-seotitre">
+          <label>Meta description</label><textarea id="e-seodesc" style="min-height:60px"></textarea>
+          <label>Image de partage (OG, URL)</label><input id="e-ogimage">
+          <label>Mots-clés (séparés par des virgules)</label><input id="e-keywords">
+        </details>
+        <div class="row" style="margin-top:10px">
+          <div><label>Date de programmation (si programmé)</label><input id="e-datep" type="datetime-local"></div>
+        </div>
+        <div id="reviewBox" class="msg hidden"></div>
+        <div class="actions">
+          <button id="a-brouillon">Enregistrer brouillon</button>
+          <button class="primary" id="a-soumettre">Soumettre à validation</button>
+          <button class="ok adminOnly hidden" id="a-publier">Publier</button>
+          <button class="adminOnly hidden" id="a-programmer">Programmer</button>
+          <button class="adminOnly hidden" id="a-renvoyer">Renvoyer en brouillon…</button>
+          <button class="accent hidden" id="a-supprimer">Supprimer</button>
+          <button id="a-annuler">Annuler</button>
+        </div>
+      </div>
+    </section>
 
-// ---- Auth ----
-function showAuth(msg) {
-  $('app-auth').style.display = 'block'; $('app-main').style.display = 'none';
-  if (msg) { $('authErr').textContent = msg; $('authErr').style.display = 'block'; }
+    <!-- MEDIATHEQUE -->
+    <section id="view-media" class="hidden">
+      <div class="card">
+        <label>Ajouter une image</label>
+        <input id="m-file" type="file" accept="image/*">
+        <div id="mediaMsg"></div>
+      </div>
+      <div class="card"><div class="grid" id="mediaGrid"></div></div>
+    </section>
+
+    <!-- UTILISATEURS -->
+    <section id="view-users" class="hidden">
+      <div class="card">
+        <label>Inviter un rédacteur (email)</label>
+        <div class="row"><input id="u-email" type="email" placeholder="prenom@exemple.fr">
+          <input id="u-nom" placeholder="Nom affiché">
+          <button class="primary" id="btnInvite" style="flex:0 0 auto">Inviter</button></div>
+        <div id="userMsg"></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Nom</th><th>Rôle</th><th></th></tr></thead>
+        <tbody id="usersBody"></tbody></table></div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section id="view-cats" class="hidden">
+      <div class="card">
+        <div class="row"><input id="c-slug" placeholder="slug (ex: culture)">
+          <input id="c-nom" placeholder="Nom (ex: Culture)">
+          <input id="c-ordre" type="number" placeholder="ordre" style="max-width:100px">
+          <button class="primary" id="btnCat" style="flex:0 0 auto">Ajouter / MàJ</button></div>
+        <div id="catMsg"></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Slug</th><th>Nom</th><th>Ordre</th><th></th></tr></thead>
+        <tbody id="catsBody"></tbody></table></div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { createApi } from './supabase.mjs';
+import { slugify, validateArticleDB, formToRow } from './lib.mjs';
+
+// Config publique (anon + URL — sans danger dans le navigateur)
+const CONFIG = {
+  url: 'https://flednhvntwyxirepijyn.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ',
+};
+const api = createApi(CONFIG);
+const $ = (id) => document.getElementById(id);
+const md = window.markdownit({ html:false, linkify:true, typographer:true });
+let PROFILE = null, CATS = [], EDITING = null; // EDITING = ligne article ou null (création)
+
+function msg(el, text, kind='ok'){ el.innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : ''; }
+function show(view){
+  for (const s of ['list','edit','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
+  for (const b of $('tabs').children) b.classList.toggle('active', b.dataset.view===view);
 }
-async function tryLogin(token) {
-  gh = ghClient({ token, repo: REPO });
-  await gh.getRepo(); // jette si invalide
-  localStorage.setItem('cn_gh_token', token);
-  startApp();
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ---------- AUTH ----------
+async function boot(){
+  const { data } = await api.getSession();
+  if (data.session) await onLogged(); else { $('auth').classList.remove('hidden'); $('app').classList.add('hidden'); }
+}
+async function onLogged(){
+  PROFILE = await api.currentProfile();
+  $('auth').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('who').textContent = `${PROFILE.email} · ${PROFILE.role}`;
+  const isAdmin = PROFILE.role === 'admin';
+  for (const el of document.querySelectorAll('.adminOnly')) el.classList.toggle('hidden', !isAdmin);
+  await loadCategories();
+  show('list'); await refreshList();
 }
 $('btnLogin').onclick = async () => {
-  const t = $('tok').value.trim();
-  if (!t) return;
-  try { await tryLogin(t); } catch { showAuth('Jeton invalide ou droits insuffisants.'); }
+  const { error } = await api.signIn($('email').value.trim(), $('password').value);
+  if (error) return msg($('authMsg'), 'Connexion échouée : '+error.message, 'err');
+  await onLogged();
 };
-$('btnLogout').onclick = () => { localStorage.removeItem('cn_gh_token'); location.reload(); };
+$('btnForgot').onclick = async () => {
+  const email = $('email').value.trim(); if (!email) return msg($('authMsg'),"Saisis ton email d'abord.",'err');
+  const { error } = await api.resetPassword(email);
+  msg($('authMsg'), error ? error.message : 'Email de réinitialisation envoyé.', error?'err':'ok');
+};
+$('btnLogout').onclick = async () => { await api.signOut(); location.reload(); };
 
-// ---- App ----
-function startApp() {
-  $('app-auth').style.display = 'none'; $('app-main').style.display = 'block';
-  const sel = $('f-category'); sel.innerHTML = '';
-  for (const [v, n] of CATEGORIES) { const o = document.createElement('option'); o.value = v; o.textContent = n; sel.appendChild(o); }
-  $('f-date').value = new Date().toISOString().slice(0,10);
-  $('navEdit').onclick = () => { resetForm(); showEdit(); };
-  $('navList').onclick = showList;
-  bindForm();
+// ---------- CATEGORIES (chargement) ----------
+async function loadCategories(){
+  const { data } = await api.listCategories(); CATS = data || [];
+  const opts = CATS.map(c=>`<option value="${c.slug}">${esc(c.nom)}</option>`).join('');
+  $('fCat').innerHTML = '<option value="">Toutes</option>'+opts;
+  $('e-cat').innerHTML = opts;
+}
+
+// ---------- LISTE ----------
+async function refreshList(){
+  const { data, error } = await api.listArticles({ statut:$('fStatut').value||undefined, categorie:$('fCat').value||undefined });
+  if (error) return msg($('globalMsg'), error.message, 'err');
+  $('listBody').innerHTML = (data||[]).map(a=>{
+    const d = (a.date_publication||a.date_programmee||a.maj_le||'').slice(0,10);
+    const cat = (CATS.find(c=>c.slug===a.categorie)||{}).nom || a.categorie;
+    return `<tr><td>${esc(a.titre)}</td><td>${esc(cat)}</td><td><span class="badge b-${a.statut}">${a.statut.replace('_',' ')}</span></td>
+      <td>${d}</td><td><button data-edit="${a.id}">Ouvrir</button></td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="muted">Aucun article.</td></tr>';
+  for (const b of $('listBody').querySelectorAll('[data-edit]')) b.onclick = () => openEditor(b.dataset.edit);
+}
+$('fStatut').onchange = refreshList; $('fCat').onchange = refreshList;
+$('btnNew').onclick = () => openEditor(null);
+
+// ---------- EDITEUR ----------
+async function openEditor(id){
+  EDITING = null;
+  if (id){ const { data } = await api.getArticle(id); EDITING = data; }
+  const a = EDITING || {};
+  $('e-titre').value = a.titre||''; $('e-slug').value = a.slug||''; $('e-cat').value = a.categorie||CATS[0]?.slug||'';
+  $('e-image').value = a.image_couverture||''; $('e-excerpt').value = a.excerpt||''; $('e-body').value = a.corps||'';
+  $('e-seotitre').value = a.seo_titre||''; $('e-seodesc').value = a.seo_description||''; $('e-ogimage').value = a.og_image||'';
+  $('e-keywords').value = (a.mots_cles||[]).join(', ');
+  $('e-datep').value = a.date_programmee ? a.date_programmee.slice(0,16) : '';
   renderPreview();
+  const rb = $('reviewBox');
+  if (a.commentaire_relecture){ rb.className='msg err'; rb.textContent='Renvoyé : '+a.commentaire_relecture; rb.classList.remove('hidden'); }
+  else rb.classList.add('hidden');
+  $('a-supprimer').classList.toggle('hidden', !id);
+  msg($('editMsg'),'');
+  show('edit');
 }
+$('e-titre').oninput = () => { if (!EDITING) $('e-slug').value = slugify($('e-titre').value); };
+$('e-body').oninput = renderPreview;
+function renderPreview(){ $('e-preview').innerHTML = md.render($('e-body').value||''); }
 
-function collect() {
+function gatherForm(action){
   return {
-    title: $('f-title').value, slug: $('f-slug').value, category: $('f-category').value,
-    author: $('f-author').value, date: $('f-date').value, excerpt: $('f-excerpt').value,
-    body: $('f-body').value, imageUrl: $('f-imageurl').value.trim(),
+    action,
+    titre: $('e-titre').value.trim(), slug: $('e-slug').value.trim(), categorie: $('e-cat').value,
+    corps: $('e-body').value, excerpt: $('e-excerpt').value, image_couverture: $('e-image').value.trim(),
+    seo_titre: $('e-seotitre').value.trim(), seo_description: $('e-seodesc').value.trim(),
+    og_image: $('e-ogimage').value.trim(),
+    mots_cles: $('e-keywords').value.split(',').map(s=>s.trim()).filter(Boolean),
+    date_programmee: $('e-datep').value ? new Date($('e-datep').value).toISOString() : null,
   };
 }
-function currentImageSrc() {
-  if (state.imageFileBase64) return 'data:image/*;base64,' + state.imageFileBase64;
-  if ($('f-imageurl').value.trim()) return $('f-imageurl').value.trim();
-  return '';
+async function save(action){
+  const form = gatherForm(action);
+  const errs = validateArticleDB(form);
+  if (errs.length) return msg($('editMsg'), 'Champs à corriger : '+errs.join(', '), 'err');
+  const row = formToRow(form, PROFILE.id);
+  const res = EDITING ? await api.updateArticle(EDITING.id, row) : await api.insertArticle(row);
+  if (res.error) return msg($('editMsg'), res.error.message, 'err');
+  EDITING = res.data;
+  const published = ['publie','programme'].includes(row.statut);
+  if (published) await api.triggerDeploy().catch(()=>{});
+  msg($('editMsg'), 'Enregistré.' + (published ? ' Régénération du site déclenchée.' : ''), 'ok');
+  await refreshList();
 }
-function renderPreview() {
-  const s = collect();
-  $('pvTitle').textContent = s.title || "Titre de l'article";
-  const catName = (CATEGORIES.find(c => c[0] === s.category) || [,''])[1];
-  $('pvCat').textContent = catName;
-  $('pvBody').innerHTML = md.render(s.body || '');
-  const img = currentImageSrc();
-  const el = $('pvImg');
-  if (img) { el.src = img; el.style.display = 'block'; } else { el.style.display = 'none'; }
+$('a-brouillon').onclick = () => save('brouillon');
+$('a-soumettre').onclick = () => save('soumettre');
+$('a-publier').onclick = () => save('publier');
+$('a-programmer').onclick = () => { if (!$('e-datep').value) return msg($('editMsg'),'Choisis une date de programmation.','err'); save('programmer'); };
+$('a-renvoyer').onclick = async () => {
+  if (!EDITING) return; const c = prompt('Motif du renvoi en brouillon :'); if (c===null) return;
+  const { error } = await api.updateArticle(EDITING.id, { statut:'brouillon', commentaire_relecture:c });
+  if (error) return msg($('editMsg'), error.message,'err'); msg($('editMsg'),'Renvoyé en brouillon.','ok'); await refreshList();
+};
+$('a-supprimer').onclick = async () => {
+  if (!EDITING || !confirm('Supprimer définitivement cet article ?')) return;
+  const { error } = await api.deleteArticle(EDITING.id);
+  if (error) return msg($('editMsg'), error.message,'err');
+  await api.triggerDeploy().catch(()=>{}); show('list'); await refreshList();
+};
+$('a-annuler').onclick = () => { show('list'); };
+
+// ---------- NAVIGATION ONGLETS ----------
+$('tabs').onclick = (e) => {
+  const v = e.target.dataset.view; if (!v) return;
+  show(v);
+  if (v==='media') refreshMedia(); else if (v==='users') refreshUsers();
+  else if (v==='cats') refreshCats(); else if (v==='list') refreshList();
+};
+
+// ---------- MEDIATHEQUE ----------
+$('m-file').onchange = async () => {
+  const f = $('m-file').files[0]; if (!f) return;
+  msg($('mediaMsg'),'Envoi…');
+  const { data, error } = await api.uploadMedia(f);
+  if (error) return msg($('mediaMsg'), error.message,'err');
+  msg($('mediaMsg'), 'Ajoutée : '+data.url,'ok'); refreshMedia();
+};
+async function refreshMedia(){
+  const { data } = await api.listMedia();
+  $('mediaGrid').innerHTML = (data||[]).map(m=>`<img src="${m.url}" title="${esc(m.chemin)}" data-url="${m.url}">`).join('') || '<span class="muted">Aucune image.</span>';
+  for (const img of $('mediaGrid').querySelectorAll('img')) img.onclick = () => { navigator.clipboard?.writeText(img.dataset.url); msg($('mediaMsg'),'URL copiée : '+img.dataset.url,'ok'); };
 }
-function bindForm() {
-  ['f-title','f-slug','f-category','f-author','f-excerpt','f-body','f-imageurl','f-date']
-    .forEach(id => $(id).addEventListener('input', renderPreview));
-  // slug auto depuis titre tant que l'utilisateur n'a pas édité le slug
-  let slugTouched = false;
-  $('f-slug').addEventListener('input', () => { slugTouched = true; });
-  $('f-title').addEventListener('input', () => { if (!slugTouched) $('f-slug').value = slugify($('f-title').value); });
-  // image fichier
-  const drop = $('drop'), file = $('f-file');
-  drop.onclick = () => file.click();
-  file.onchange = () => file.files[0] && readFile(file.files[0]);
-  ['dragover','dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) readFile(f); });
-  $('btnPublish').onclick = publish;
-}
-function readFile(f) {
-  const r = new FileReader();
-  r.onload = () => {
-    state.imageFileBase64 = String(r.result).split(',')[1];
-    state.imageFileName = f.name;
-    $('f-imageurl').value = '';
-    $('drop').textContent = '✓ ' + f.name + ' (clique pour changer)';
-    renderPreview();
+
+// ---------- UTILISATEURS ----------
+async function refreshUsers(){
+  const { data } = await api.listProfiles();
+  $('usersBody').innerHTML = (data||[]).map(u=>`<tr><td>${esc(u.nom||'(sans nom)')}</td>
+    <td><select data-role="${u.id}"><option value="redacteur" ${u.role==='redacteur'?'selected':''}>redacteur</option>
+    <option value="admin" ${u.role==='admin'?'selected':''}>admin</option></select></td>
+    <td class="muted">${u.id.slice(0,8)}…</td></tr>`).join('');
+  for (const s of $('usersBody').querySelectorAll('[data-role]')) s.onchange = async () => {
+    const { error } = await api.setRole(s.dataset.role, s.value); msg($('userMsg'), error?error.message:'Rôle mis à jour.', error?'err':'ok');
   };
-  r.readAsDataURL(f);
 }
-function showErr(errs) { const e = $('formErr'); e.innerHTML = errs.join('<br>'); e.style.display = 'block'; $('okMsg').style.display='none'; window.scrollTo(0,0); }
-function showOk(url) {
-  const e = $('okMsg');
-  e.innerHTML = `✅ Enregistré ! En ligne dans ~1-2 min : <a href="../${url}" target="_blank">voir l'article</a>.`;
-  e.style.display = 'block'; $('formErr').style.display='none'; window.scrollTo(0,0);
-}
-function showOkText(txt) {
-  const e = $('okMsg'); e.textContent = '✅ ' + txt;
-  e.style.display = 'block'; $('formErr').style.display='none'; window.scrollTo(0,0);
-}
+$('btnInvite').onclick = async () => {
+  const email = $('u-email').value.trim(); if (!email) return;
+  const { error } = await api.inviteUser(email, $('u-nom').value.trim());
+  msg($('userMsg'), error ? ('Invitation impossible : '+error.message) : 'Invitation envoyée à '+email, error?'err':'ok');
+};
 
-async function publish() {
-  $('formErr').style.display='none'; $('okMsg').style.display='none';
-  const s = collect();
-  const v = validateArticle(s);
-  if (!v.ok) return showErr(v.errors);
-  const mode = document.querySelector('input[name=pubmode]:checked').value;
-  s.status = statusFor(mode, s.date, todayISO());
-  const label = editing ? 'Enregistrer' : 'Publier';
-  $('btnPublish').disabled = true; $('btnPublish').textContent = 'En cours…';
-  try {
-    const path = `content/articles/${s.slug}.md`;
-    if (!editing && await gh.fileExists(path))
-      { showErr([`Un article avec le slug « ${s.slug} » existe déjà.`]); return; }
-    // image : upload fichier > url saisie > image existante (édition)
-    let image = state.editImage || '';
-    if (s.imageUrl) image = s.imageUrl.replace(/^\.\.\//, '');
-    if (state.imageFileBase64) {
-      const p = imageUploadPath(s.date, state.imageFileName);
-      await gh.putFile(p, state.imageFileBase64, `Image: ${s.slug}`);
-      image = p;
-    }
-    const fiche = buildFrontmatter({ ...s, image });
-    let sha = editing?.sha;
-    if (editing) { const cur = await gh.getFile(path); sha = cur.sha; } // sha frais
-    const msg = editing ? `Mise à jour: ${s.title}` : `Publication: ${s.title}`;
-    await gh.putFile(path, toBase64(fiche), msg, sha);
-    if (s.status === 'scheduled') { showOkText(`Article programmé pour le ${s.date}. Il sera publié automatiquement ce jour-là.`); }
-    else showOk(articleUrl(s.date, s.slug));
-    editing = null; $('f-slug').readOnly = false;
-  } catch (err) {
-    showErr(['Échec : ' + err.message]);
-  } finally {
-    $('btnPublish').disabled = false; $('btnPublish').textContent = label;
-  }
+// ---------- CATEGORIES ----------
+async function refreshCats(){
+  await loadCategories();
+  $('catsBody').innerHTML = CATS.map(c=>`<tr><td>${c.slug}</td><td>${esc(c.nom)}</td><td>${c.ordre}</td>
+    <td><button data-delcat="${c.slug}">Suppr.</button></td></tr>`).join('');
+  for (const b of $('catsBody').querySelectorAll('[data-delcat]')) b.onclick = async () => {
+    if (!confirm('Supprimer la catégorie '+b.dataset.delcat+' ?')) return;
+    const { error } = await api.deleteCategory(b.dataset.delcat); msg($('catMsg'), error?error.message:'Supprimée.', error?'err':'ok'); refreshCats();
+  };
 }
+$('btnCat').onclick = async () => {
+  const slug = $('c-slug').value.trim(); if (!slug) return;
+  const { error } = await api.saveCategory({ slug, nom:$('c-nom').value.trim()||slug, ordre:Number($('c-ordre').value||0) });
+  msg($('catMsg'), error?error.message:'Enregistrée.', error?'err':'ok'); refreshCats();
+};
 
-// ---- Démarrage ----
-// Affichage optimiste : si un jeton est déjà enregistré, on montre l'interface
-// tout de suite (pas d'écran blanc pendant la latence réseau) et on valide le
-// jeton en arrière-plan ; en cas d'échec, on bascule sur l'écran de connexion.
-const saved = localStorage.getItem('cn_gh_token');
-if (saved) {
-  gh = ghClient({ token: saved, repo: REPO });
-  startApp();
-  gh.getRepo().catch(() => {
-    localStorage.removeItem('cn_gh_token');
-    showAuth('Session expirée, reconnecte-toi.');
-  });
-} else showAuth();
+boot();
 </script>
 </body>
 </html>
