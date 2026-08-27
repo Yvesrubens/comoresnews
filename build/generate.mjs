@@ -4,6 +4,7 @@ import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
 import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
+import { injectAds } from './lib/ads.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard } from './lib/render.mjs';
@@ -113,11 +114,12 @@ export async function main({ now, outDir = '_site' }) {
     const src = path.join(ROOT, rel);
     if (fs.existsSync(src)) copyRec(src, path.join(outDir, rel));
   }
-  for (const a of all) write(outDir, articlePath(a.date, a.slug), buildArticlePage(a, cats));
+  const ads = process.env.ADS === 'off' ? (h) => h : injectAds;
+  for (const a of all) write(outDir, articlePath(a.date, a.slug), ads(buildArticlePage(a, cats)));
   for (const slug of validCats)
-    write(outDir, categoryPath(slug), buildCategoryPage(slug, all.filter(a => a.category === slug), cats));
-  write(outDir, 'index.html', buildHome(all, cats));
-  write(outDir, AUTHOR_PAGE, buildAuthor(all, cats));
+    write(outDir, categoryPath(slug), ads(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
+  write(outDir, 'index.html', ads(buildHome(all, cats)));
+  write(outDir, AUTHOR_PAGE, ads(buildAuthor(all, cats)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
   const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }]
     .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))
