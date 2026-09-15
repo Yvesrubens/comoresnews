@@ -5,6 +5,7 @@ import { loadArticles, isPublishable } from './lib/content.mjs';
 import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 import { injectAds } from './lib/ads.mjs';
+import { injectAnalytics } from './lib/analytics.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard } from './lib/render.mjs';
@@ -115,11 +116,13 @@ export async function main({ now, outDir = '_site' }) {
     if (fs.existsSync(src)) copyRec(src, path.join(outDir, rel));
   }
   const ads = process.env.ADS === 'off' ? (h) => h : injectAds;
-  for (const a of all) write(outDir, articlePath(a.date, a.slug), ads(buildArticlePage(a, cats)));
+  const analytics = process.env.GA4 === 'off' ? (h) => h : injectAnalytics;
+  const deco = (h) => analytics(ads(h)); // pub + GA4 sur chaque page
+  for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
-    write(outDir, categoryPath(slug), ads(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
-  write(outDir, 'index.html', ads(buildHome(all, cats)));
-  write(outDir, AUTHOR_PAGE, ads(buildAuthor(all, cats)));
+    write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
+  write(outDir, 'index.html', deco(buildHome(all, cats)));
+  write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
   const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }]
     .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))
