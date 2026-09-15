@@ -6,6 +6,7 @@ import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs'
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 import { injectAds } from './lib/ads.mjs';
 import { injectAnalytics } from './lib/analytics.mjs';
+import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard } from './lib/render.mjs';
@@ -117,7 +118,9 @@ export async function main({ now, outDir = '_site' }) {
   }
   const ads = process.env.ADS === 'off' ? (h) => h : injectAds;
   const analytics = process.env.GA4 === 'off' ? (h) => h : injectAnalytics;
-  const deco = (h) => analytics(ads(h)); // pub + GA4 sur chaque page
+  const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
+  // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
+  const deco = (h) => consent(analytics(ads(h)));
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
