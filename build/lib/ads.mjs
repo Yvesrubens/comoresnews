@@ -65,7 +65,8 @@ var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 // droite). Le HTML du thème est trop imbriqué pour viser sa fermeture par texte :
 // on l'injecte dans le bloc puis on le relocalise via le DOM.
 export const AD_RELOCATE = `<script>(function(){
-function mv(){var a=document.getElementById('cn-ad-capourrait'),t=document.querySelector('[data-td-block-uid="tdi_64"]');if(a&&t&&a.parentNode===t)t.insertAdjacentElement('afterend',a);}
+var MOVES=[['cn-ad-capourrait','tdi_64'],['cn-ad-hero','tdi_51']];
+function mv(){MOVES.forEach(function(m){var a=document.getElementById(m[0]),t=document.querySelector('[data-td-block-uid="'+m[1]+'"]');if(a&&t&&a.parentNode===t)t.insertAdjacentElement('afterend',a);});}
 if(document.readyState!=='loading')mv();else document.addEventListener('DOMContentLoaded',mv);
 })();</script>`;
 
@@ -80,7 +81,17 @@ export function injectAds(html, cfg = SAS) {
   html = html.replace('</head>', `${adsSetup(cfg)}\n${AD_CSS}\n</head>`);
 
   // MegaBanniere 1 (leaderboard) juste après <body>.
-  html = html.replace(/(<body[^>]*>)/i, `$1\n${labeled('cn-ad-desktop', adSlot(45656))}`);
+  // MegaBanniere 1 : juste APRÈS la grille "À la une" (tdi_51) sur la home
+  // (injectée dans le bloc puis relocalisée), sinon tout en haut après <body>.
+  let heroPlaced = false;
+  const ANCHOR_HERO_INNER = 'data-td-block-uid="tdi_51" >';
+  if (html.includes(ANCHOR_HERO_INNER)) {
+    const mb1 = `<div id="cn-ad-hero" class="cn-ad cn-ad--empty cn-ad-desktop"><span class="cn-ad-tag">Publicité</span>${adSlot(45656)}</div>`;
+    html = html.replace(ANCHOR_HERO_INNER, `${ANCHOR_HERO_INNER}\n${mb1}`);
+    heroPlaced = true;
+  } else {
+    html = html.replace(/(<body[^>]*>)/i, `$1\n${labeled('cn-ad-desktop', adSlot(45656))}`);
+  }
 
   // GrandAngle (300x600) sous "Suivez nous" = avant le bloc tdi_64.
   let gaPlaced = false;
@@ -113,6 +124,6 @@ export function injectAds(html, cfg = SAS) {
 
   // Floor fixe (overlay bas d'écran) + script de révélation.
   const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  html = html.replace('</body>', `${floor}\n${p1Placed ? AD_RELOCATE + '\n' : ''}${AD_REVEAL}\n</body>`);
+  html = html.replace('</body>', `${floor}\n${p1Placed || heroPlaced ? AD_RELOCATE + '\n' : ''}${AD_REVEAL}\n</body>`);
   return html;
 }
