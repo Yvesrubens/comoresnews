@@ -106,6 +106,9 @@ export function injectAds(html, cfg = SAS) {
     const mb1 = `<div id="cn-ad-hero" class="cn-ad cn-ad--empty cn-ad-desktop"><span class="cn-ad-tag">Publicité</span>${adSlot(45656)}</div>`;
     html = html.replace(ANCHOR_HERO_INNER, `${ANCHOR_HERO_INNER}\n${mb1}`);
     heroPlaced = true;
+  } else if (html.includes('class="td-post-header"') && html.includes('<div class="td-crumb-container">')) {
+    // Page article : juste avant le fil d'Ariane / titre (pleine largeur du contenu).
+    html = html.replace('<div class="td-crumb-container">', `${labeled('cn-ad-desktop', adSlot(45656))}\n<div class="td-crumb-container">`);
   } else {
     html = html.replace(/(<body[^>]*>)/i, `$1\n${labeled('cn-ad-desktop', adSlot(45656))}`);
   }

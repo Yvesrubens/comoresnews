@@ -32,6 +32,14 @@ test('injectAds place le Pavé 2 après le 2e paragraphe d\'un article', () => {
   assert.ok(iAd < out.indexOf('<p>trois</p>'), 'avant le 3e paragraphe');
 });
 
+test('injectAds place la MégaBannière 1 avant le titre d\'un article', () => {
+  const page = '<html><head></head><body><div class="td-crumb-container">fil</div><div class="td-post-header"><h1>T</h1></div><div class="td-post-content"><p>a</p></div></body></html>';
+  const out = injectAds(page);
+  const iAd = out.indexOf('id="sas_45656"');
+  assert.ok(iAd > out.indexOf('<body>') + 6 && iAd < out.indexOf('<h1>'), 'avant le titre');
+  assert.ok(iAd < out.indexOf('td-crumb-container">fil'), 'avant le fil d\'Ariane');
+});
+
 test('insertInArticle ne fait rien hors article', () => {
   const html = '<body><p>a</p><p>b</p></body>';
   assert.equal(insertInArticle(html, '<AD>'), html);
