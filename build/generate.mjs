@@ -9,7 +9,7 @@ import { injectAnalytics } from './lib/analytics.mjs';
 import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
-import { renderMarkdown, articleCard } from './lib/render.mjs';
+import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
@@ -38,7 +38,7 @@ export function buildArticlePage(a, catsCfg) {
     AUTHOR: esc(a.author),
     DATE: a.date,
     IMAGE: img,
-    BODY: renderMarkdown(a.body),
+    BODY: renderMarkdown(a.body) + sourceLine(a),
     SEO: metaTags(a, `${BASE}/${rel}`) + '\n' + jsonLdArticle(a, `${BASE}/${rel}`),
   });
   return setTitle(html, a.seoTitle || a.title);

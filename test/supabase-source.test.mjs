@@ -36,3 +36,13 @@ test('mapRow: statut programme -> scheduled, date depuis date_programmee', () =>
   assert.equal(a.status, 'scheduled');
   assert.equal(a.date, '2026-09-01');
 });
+
+test('mapRow propage la source (nom + lien)', () => {
+  const a = mapRow({ titre: 'T', slug: 's', categorie: 'monde', statut: 'publie', date_publication: '2026-10-20T00:00:00Z',
+    source_nom: 'Masiwa', source_url: 'https://masiwa-comores.com/x/' });
+  assert.equal(a.sourceNom, 'Masiwa');
+  assert.equal(a.sourceUrl, 'https://masiwa-comores.com/x/');
+  const b = mapRow({ titre: 'T', slug: 's', categorie: 'monde', statut: 'publie', date_publication: '2026-10-20T00:00:00Z' });
+  assert.equal(b.sourceNom, '');
+  assert.equal(b.sourceUrl, '');
+});

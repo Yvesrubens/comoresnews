@@ -26,6 +26,8 @@ export function mapRow(row) {
     seoDescription: row.seo_description || '',
     ogImage: row.og_image || '',
     keywords: Array.isArray(row.mots_cles) ? row.mots_cles : [],
+    sourceNom: row.source_nom || '',
+    sourceUrl: row.source_url || '',
   };
 }
 

@@ -20,3 +20,11 @@ export function articleCard(a, prefix, catName) {
   </div>
 </div>`;
 }
+
+const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// Ligne « Source : <journal> » sous un article réécrit (vide si pas de source complète).
+export function sourceLine(a) {
+  if (!a.sourceNom || !a.sourceUrl) return '';
+  return `<p class="cn-source"><em>Source : <a href="${escAttr(a.sourceUrl)}" target="_blank" rel="noopener">${escAttr(a.sourceNom)}</a></em></p>`;
+}
