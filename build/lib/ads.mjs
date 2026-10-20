@@ -43,9 +43,6 @@ function labeled(cls, inner) {
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
-.td-pb-span8{position:relative;}
-.cn-ad-float{position:absolute;top:48px;right:0;margin:0;z-index:5;}
-@media(max-width:1018px){.cn-ad-float{position:static;margin:12px auto;}}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
 .cn-ad-strip .cn-ad{margin:0;}
@@ -66,7 +63,7 @@ var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 
 // Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
 const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
-const ANCHOR_AFTER_INTERESSE = '<div class="td_block_wrap td_flex_block_1 tdi_69'; // "Actu Culture" (suit "Ça pourrait vous intéresser")
+const ANCHOR_BEFORE_MONDE = '<div class="td_block_wrap td_flex_block_4 tdi_88'; // "Actu Monde" (colonne étroite)
 
 // Injecte la régie et les emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
@@ -83,11 +80,10 @@ export function injectAds(html, cfg = SAS) {
     html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
     gaPlaced = true;
   }
-  // Pavé 1 (300x250) à DROITE du bloc "Actu Culture" (tdi_69), dans la zone vide
-  // de la colonne large : flottant à droite, le contenu s'écoule à gauche.
+  // Pavé 1 (300x250) juste AU-DESSUS de "Actu Monde" (tdi_88), colonne étroite.
   let p1Placed = false;
-  if (html.includes(ANCHOR_AFTER_INTERESSE)) {
-    html = html.replace(ANCHOR_AFTER_INTERESSE, `${labeled('cn-ad-float', adSlot(45655))}\n${ANCHOR_AFTER_INTERESSE}`);
+  if (html.includes(ANCHOR_BEFORE_MONDE)) {
+    html = html.replace(ANCHOR_BEFORE_MONDE, `${labeled('', adSlot(45655))}\n${ANCHOR_BEFORE_MONDE}`);
     p1Placed = true;
   }
 
