@@ -43,6 +43,8 @@ function labeled(cls, inner) {
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
+.cn-ad-float{float:right;clear:right;margin:6px 0 16px 24px;max-width:48%;}
+@media(max-width:1018px){.cn-ad-float{float:none;clear:none;margin:12px auto;max-width:100%;}}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
 .cn-ad-strip .cn-ad{margin:0;}
@@ -80,10 +82,11 @@ export function injectAds(html, cfg = SAS) {
     html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
     gaPlaced = true;
   }
-  // Pavé 1 (300x250) sous "Ça pourrait vous intéresser" = avant le bloc tdi_69.
+  // Pavé 1 (300x250) à DROITE du bloc "Actu Culture" (tdi_69), dans la zone vide
+  // de la colonne large : flottant à droite, le contenu s'écoule à gauche.
   let p1Placed = false;
   if (html.includes(ANCHOR_AFTER_INTERESSE)) {
-    html = html.replace(ANCHOR_AFTER_INTERESSE, `${labeled('', adSlot(45655))}\n${ANCHOR_AFTER_INTERESSE}`);
+    html = html.replace(ANCHOR_AFTER_INTERESSE, `${labeled('cn-ad-float', adSlot(45655))}\n${ANCHOR_AFTER_INTERESSE}`);
     p1Placed = true;
   }
 
