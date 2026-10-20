@@ -25,6 +25,6 @@ const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').
 
 // Ligne « Source : <journal> » sous un article réécrit (vide si pas de source complète).
 export function sourceLine(a) {
-  if (!a.sourceNom || !a.sourceUrl) return '';
+  if (!a.sourceNom || !/^https?:\/\//i.test(String(a.sourceUrl || '').trim())) return '';
   return `<p class="cn-source"><em>Source : <a href="${escAttr(a.sourceUrl)}" target="_blank" rel="noopener">${escAttr(a.sourceNom)}</a></em></p>`;
 }

@@ -14,23 +14,28 @@ const withCategory = (it) => ({ ...it, categorie: guessCategory(it.categorie_sou
 async function collect(src, fetchText, db, log) {
   if (src.type === 'rss') {
     const items = parseRss(await fetchText(src.url), src);
+    if (!items.length) throw new Error('flux vide (format modifié ?)');
     const known = await db.existingUrls(items.map((i) => i.url));
     return { trouves: items.length, rows: items.filter((i) => !known.has(i.url)).map(withCategory) };
   }
   if (src.type === 'gazette') {
-    const links = parseGazetteHome(await fetchText(src.url));
+    const links = parseGazetteHome(await fetchText(src.url), src.url);
+    if (!links.length) throw new Error("aucun lien d'article sur la page d'accueil (structure du site modifiée ?)");
     const known = await db.existingUrls(links.map((l) => l.url));
     const rows = [];
-    for (const l of links.filter((x) => !known.has(x.url))) { // pages déjà connues : pas téléchargées (site lent)
+    const candidats = links.filter((x) => !known.has(x.url));
+    let sansTitre = 0;
+    for (const l of candidats) { // pages déjà connues : pas téléchargées (site lent)
       try {
         const a = parseGazetteArticle(await fetchText(l.url));
-        if (!a.titre) continue;
+        if (!a.titre) { sansTitre++; log(`  ${src.id}: page sans titre ignorée ${l.url}`); continue; }
         rows.push(withCategory({ source: src.id, source_nom: src.nom, url: l.url, titre: a.titre,
           texte: a.texte, categorie_source: l.rubrique, date_source: a.date_source }));
       } catch (e) {
         log(`  ${src.id}: page ignorée ${l.url} (${e.message})`);
       }
     }
+    if (candidats.length && !rows.length) throw new Error(`aucune page article lisible (${sansTitre}/${candidats.length} sans titre : structure modifiée ?)`);
     return { trouves: links.length, rows };
   }
   throw new Error(`type de source inconnu : ${src.type}`);
@@ -51,6 +56,11 @@ export async function importAll({ sources, fetchText, db, log = console.log }) {
     }
   }
   return results;
+}
+
+// 1 dès qu'une source a échoué : le run GitHub passe en rouge et envoie une alerte.
+export function exitCode(results) {
+  return results.some((r) => r.erreur) ? 1 : 0;
 }
 
 async function fetchText(url) {
@@ -81,7 +91,7 @@ async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const sources = JSON.parse(fs.readFileSync(new URL('../config/sources.json', import.meta.url), 'utf8'));
   const results = await importAll({ sources, fetchText, db: supabaseDb({ dryRun }) });
-  if (results.every((r) => r.erreur)) process.exit(1);
+  process.exitCode = exitCode(results);
 }
 
 if (process.argv[1] && process.argv[1].endsWith('import-sources.mjs')) {

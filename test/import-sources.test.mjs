@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { importAll } from '../scripts/import-sources.mjs';
+import { importAll, exitCode } from '../scripts/import-sources.mjs';
 
 const fx = (f) => fs.readFileSync(new URL(`./fixtures/sources/${f}`, import.meta.url), 'utf8');
 
@@ -63,7 +63,7 @@ test('importAll ignore les URL déjà connues', async () => {
 
 test('ne télécharge pas les pages Gazette déjà connues', async () => {
   const { parseGazetteHome } = await import('../scripts/lib/sources/gazette.mjs');
-  const known = parseGazetteHome(fx('gazette-home.html')).map((l) => l.url);
+  const known = parseGazetteHome(fx('gazette-home.html'), 'https://www.lagazettedescomores.com/').map((l) => l.url);
   const f = fakeFetch();
   const res = bySource(await importAll({ sources: SOURCES.slice(2), fetchText: f.fetchText, db: fakeDb(known), log: quiet }));
   assert.equal(res.gazette.nouveaux, 0);
@@ -77,4 +77,28 @@ test('importAll continue si une source échoue', async () => {
   assert.equal(res.masiwa.nouveaux, 0);
   assert.equal(res.habari.nouveaux, 25);
   assert.equal(res.gazette.nouveaux, 19);
+});
+
+test('Gazette sans aucun lien (site refait) = erreur, pas une journée calme', async () => {
+  const fetchText = async () => '<html><body><p>nouveau design</p></body></html>';
+  const res = bySource(await importAll({ sources: SOURCES.slice(2), fetchText, db: fakeDb(), log: quiet }));
+  assert.ok(res.gazette.erreur);
+});
+
+test("Gazette dont aucune page n'a de titre = erreur", async () => {
+  const fetchText = async (url) => (url === 'https://www.lagazettedescomores.com/' ? fx('gazette-home.html') : '<html><body>vide</body></html>');
+  const res = bySource(await importAll({ sources: SOURCES.slice(2), fetchText, db: fakeDb(), log: quiet }));
+  assert.ok(res.gazette.erreur);
+  assert.equal(res.gazette.nouveaux, 0);
+});
+
+test('flux RSS vide = erreur', async () => {
+  const fetchText = async () => '<rss><channel></channel></rss>';
+  const res = bySource(await importAll({ sources: SOURCES.slice(0, 1), fetchText, db: fakeDb(), log: quiet }));
+  assert.ok(res.habari.erreur);
+});
+
+test("exitCode : 1 dès qu'une source a échoué, 0 sinon", () => {
+  assert.equal(exitCode([{ erreur: null }, { erreur: null }]), 0);
+  assert.equal(exitCode([{ erreur: null }, { erreur: 'boom' }]), 1);
 });

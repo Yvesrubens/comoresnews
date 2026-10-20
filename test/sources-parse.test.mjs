@@ -37,11 +37,11 @@ test('parseRss Masiwa', () => {
 });
 
 test('parseGazetteHome dédoublonne (19 liens)', () => {
-  const links = parseGazetteHome(fx('gazette-home.html'));
+  const links = parseGazetteHome(fx('gazette-home.html'), 'https://www.lagazettedescomores.com/');
   assert.equal(links.length, 19);
   assert.equal(new Set(links.map((l) => l.url)).size, 19);
   for (const l of links) {
-    assert.ok(l.url.startsWith('https://mail.lagazettedescomores.com/'), l.url);
+    assert.ok(l.url.startsWith('https://www.lagazettedescomores.com/'), l.url);
     assert.ok(['economie', 'opinions', 'politique', 'société', 'sport'].includes(l.rubrique), l.rubrique);
   }
 });
@@ -61,4 +61,11 @@ test('guessCategory', () => {
   assert.equal(guessCategory(['société']), 'societe');
   assert.equal(guessCategory(['Tribune libre']), null);
   assert.equal(guessCategory([]), null);
+});
+
+test('parseRss écarte les liens qui ne sont pas http(s)', () => {
+  const xml = '<rss><channel><item><title>Piège</title><link>javascript:alert(1)</link><description>x</description></item>'
+    + '<item><title>Bon</title><link>https://exemple.test/a</link><description>y</description></item></channel></rss>';
+  const items = parseRss(xml, { id: 't', nom: 'T' });
+  assert.deepEqual(items.map((i) => i.url), ['https://exemple.test/a']);
 });

@@ -4,9 +4,11 @@ import { htmlToText } from './html-text.mjs';
 const DEFAULT_BASE = 'https://www.lagazettedescomores.com/';
 
 // Liens d'articles de la page d'accueil : "<rubrique>/<slug>.html", dédoublonnés.
-export function parseGazetteHome(html) {
+// Les liens sont résolus sur l'URL configurée (pas sur la balise <base> du site,
+// qui pointe vers mail.) pour garder des URL stables et éviter les doublons.
+export function parseGazetteHome(html, baseUrl = DEFAULT_BASE) {
   const root = parse(html);
-  const base = root.querySelector('base')?.getAttribute('href') || DEFAULT_BASE;
+  const base = baseUrl;
   const seen = new Set();
   const out = [];
   for (const a of root.querySelectorAll('a[href]')) {

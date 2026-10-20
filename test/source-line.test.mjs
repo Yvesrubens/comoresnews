@@ -23,3 +23,8 @@ test('sourceLine échappe le nom et l\'URL', () => {
   assert.match(html, /A&lt;b>&amp;&quot;/);
   assert.match(html, /href="https:\/\/x\.test\/\?a=1&amp;b=&quot;2&quot;"/);
 });
+
+test("sourceLine refuse un lien qui n'est pas http(s)", () => {
+  assert.equal(sourceLine({ sourceNom: 'Masiwa', sourceUrl: 'javascript:alert(1)' }), '');
+  assert.equal(sourceLine({ sourceNom: 'Masiwa', sourceUrl: ' JavaScript:alert(1)' }), '');
+});

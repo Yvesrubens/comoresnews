@@ -19,5 +19,5 @@ export function parseRss(xml, src) {
       categorie_source: list(it.category).map(text).map((c) => c.trim()).filter(Boolean).join(' | '),
       date_source: Number.isNaN(d.getTime()) ? null : d.toISOString(),
     };
-  }).filter((i) => i.url && i.titre);
+  }).filter((i) => /^https?:\/\//i.test(i.url) && i.titre);
 }
