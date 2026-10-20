@@ -92,3 +92,59 @@ export function formToRow(f, auteurId) {
     source_url: f.source_url || null,
   };
 }
+
+// ---- Tableau de bord ----
+
+// Lundi 0h (heure locale) de la semaine de `now`.
+export function startOfWeek(now) {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const offset = (d.getDay() + 6) % 7; // lundi = 0
+  d.setDate(d.getDate() - offset);
+  return d;
+}
+
+const t = (v) => (v ? new Date(v).getTime() : NaN);
+
+// Chiffres du tableau de bord à partir des lignes `articles` visibles par l'utilisateur.
+export function summarizeArticles(rows, now) {
+  const week = startOfWeek(now).getTime();
+  const n = now.getTime();
+  return {
+    enAttente: rows.filter((r) => r.statut === 'en_attente').length,
+    programmes: rows.filter((r) => r.statut === 'programme' && t(r.date_programmee) > n).length,
+    publiesSemaine: rows.filter((r) => r.statut === 'publie' && t(r.date_publication) >= week).length,
+  };
+}
+
+// Publications programmées à venir, de la plus proche à la plus lointaine.
+export function upcomingScheduled(rows, now, limit = 5) {
+  const n = now.getTime();
+  return rows
+    .filter((r) => r.statut === 'programme' && t(r.date_programmee) > n)
+    .sort((a, b) => t(a.date_programmee) - t(b.date_programmee))
+    .slice(0, limit);
+}
+
+// Pour un rédacteur : ses articles en attente ou renvoyés en brouillon avec un commentaire.
+export function myPending(rows) {
+  return rows
+    .filter((r) => r.statut === 'en_attente' || (r.statut === 'brouillon' && r.commentaire_relecture))
+    .sort((a, b) => t(b.maj_le) - t(a.maj_le));
+}
+
+// "mardi 20 octobre"
+export function formatDateLongFr(now) {
+  return new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+}
+
+// "à l'instant", "il y a 25 min", "il y a 2 h", "hier", "le 12/10"
+export function relativeTime(value, now) {
+  if (!value) return '';
+  const d = new Date(value);
+  const min = Math.floor((now.getTime() - d.getTime()) / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  if (min < 24 * 60) return `il y a ${Math.floor(min / 60)} h`;
+  if (min < 48 * 60) return 'hier';
+  return `le ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}

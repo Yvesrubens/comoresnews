@@ -30,7 +30,7 @@ export function createApi({ url, anonKey, deployHook }) {
     // --- Articles ---
     listArticles: ({ statut, categorie } = {}) => {
       let q = sb.from('articles')
-        .select('id,titre,slug,categorie,statut,date_publication,date_programmee,maj_le,auteur_id')
+        .select('id,titre,slug,categorie,statut,date_publication,date_programmee,maj_le,auteur_id,commentaire_relecture')
         .order('maj_le', { ascending: false });
       if (statut) q = q.eq('statut', statut);
       if (categorie) q = q.eq('categorie', categorie);
@@ -65,6 +65,7 @@ export function createApi({ url, anonKey, deployHook }) {
       .select('id,source_nom,url,titre,categorie,categorie_source,date_source,importe_le,statut')
       .eq('statut', statut).order('importe_le', { ascending: false }).limit(200),
     getSujet: (id) => sb.from('sujets').select('*').eq('id', id).single(),
+    countSujets: () => sb.from('sujets').select('id', { count: 'exact', head: true }).eq('statut', 'nouveau'),
     getSujetByArticle: (articleId) => sb.from('sujets').select('*').eq('article_id', articleId).maybeSingle(),
     ignorerSujet: (id) => sb.from('sujets').update({ statut: 'ignore' }).eq('id', id),
     // Réserve le sujet et crée un brouillon d'article vide (atomique côté base).

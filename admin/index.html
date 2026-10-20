@@ -9,22 +9,60 @@
   :root { --brand:#111; --accent:#c0392b; --ok:#1e824c; --border:#e3e3e3; --muted:#777; }
   * { box-sizing:border-box; }
   body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:#222; background:#f4f5f7; }
-  header.top { background:#111; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:12px 20px; }
-  header.top .brand { font-weight:800; letter-spacing:.5px; }
-  header.top .who { font-size:13px; color:#ccc; }
-  header.top button { margin-left:12px; }
   button { cursor:pointer; border:1px solid var(--border); background:#fff; padding:7px 12px; border-radius:6px; font-size:14px; }
   button.primary { background:var(--brand); color:#fff; border-color:var(--brand); }
   button.accent { background:var(--accent); color:#fff; border-color:var(--accent); }
   button.ok { background:var(--ok); color:#fff; border-color:var(--ok); }
-  .wrap { max-width:960px; margin:0 auto; padding:20px; }
+  /* Mise en page : colonne sombre à gauche */
+  .layout { display:flex; min-height:100vh; }
+  .layout.hidden { display:none; }
+  .side { width:230px; flex:0 0 230px; background:#111; color:#ddd; display:flex; flex-direction:column; padding:16px 12px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .side .logo { font-weight:800; letter-spacing:.5px; color:#fff; padding:4px 10px 18px; font-size:16px; }
+  .side .logo b { color:#e50914; }
+  .side nav button { display:flex; justify-content:space-between; align-items:center; width:100%; background:none; border:0; color:inherit; text-align:left; padding:9px 10px; border-radius:6px; margin-bottom:2px; font-size:14px; }
+  .side nav button:hover:not(:disabled) { background:#1d1d1d; }
+  .side nav button.active { background:#19471a; color:#fff; }
+  .side nav button:disabled { opacity:.45; cursor:default; }
+  .side .grp { font-size:10px; text-transform:uppercase; letter-spacing:.08em; opacity:.55; margin:14px 10px 4px; }
+  .nav-count { font-size:11px; font-weight:700; padding:1px 7px; border-radius:20px; background:#e50914; color:#fff; }
+  .side .soon { font-size:10px; font-style:italic; }
+  .side .me { margin-top:auto; padding:12px 10px 4px; font-size:12px; border-top:1px solid #2a2a2a; color:#aaa; word-break:break-all; }
+  .side .me button { margin-top:8px; width:100%; background:#1d1d1d; color:#ddd; border-color:#333; }
+  .main { flex:1; min-width:0; padding:24px 28px; max-width:1100px; }
+  @media (max-width:820px) {
+    .layout { flex-direction:column; }
+    .side { position:static; width:auto; height:auto; flex:none; padding:10px; }
+    .side .logo { padding:4px 6px 8px; }
+    .side nav { display:flex; overflow-x:auto; gap:4px; }
+    .side nav button { width:auto; white-space:nowrap; gap:6px; }
+    .side .grp { display:none; }
+    .side .me { display:flex; align-items:center; justify-content:space-between; gap:10px; border:0; margin-top:6px; padding:6px; }
+    .side .me button { width:auto; margin:0; }
+    .main { padding:16px; }
+  }
+  /* Tableau de bord */
+  .dash h1 { margin:0; font-size:22px; }
+  .dash .hello { color:var(--muted); margin:4px 0 16px; }
+  .quick { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .tile { background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; }
+  .tile:hover { border-color:#bbb; }
+  .tile b { display:block; font-size:26px; line-height:1.1; }
+  .tile small { color:var(--muted); }
+  .tile.red b { color:#e50914; } .tile.warn b { color:#a15b00; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px; }
+  .box h3 { margin:0 0 8px; font-size:14px; display:flex; justify-content:space-between; align-items:baseline; }
+  .box h3 a { font-weight:400; color:#19471a; font-size:12px; cursor:pointer; }
+  .item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid #f0f0f0; font-size:13px; }
+  .item:first-child { border-top:0; }
+  .item button { font-size:12px; padding:4px 10px; flex:0 0 auto; }
+  @media (max-width:900px) { .tiles { grid-template-columns:repeat(2,1fr); } .cols { grid-template-columns:1fr; } }
   .auth { max-width:420px; margin:70px auto; background:#fff; padding:32px; border-radius:10px; box-shadow:0 2px 14px rgba(0,0,0,.08); }
   .auth h1 { margin:0 0 18px; font-size:20px; }
   label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
   input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:6px; font-size:14px; font-family:inherit; }
   textarea { min-height:220px; resize:vertical; }
-  .tabs { display:flex; gap:6px; margin:16px 0; flex-wrap:wrap; }
-  .tabs button.active { background:var(--brand); color:#fff; border-color:var(--brand); }
   .card { background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; }
   .row { display:flex; gap:12px; flex-wrap:wrap; }
   .row > * { flex:1; min-width:180px; }
@@ -64,23 +102,51 @@
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden">
-  <header class="top">
-    <span class="brand">COMORESNEWS · Admin</span>
-    <span><span class="who" id="who"></span><button id="btnLogout">Déconnexion</button></span>
-  </header>
-  <div class="wrap">
-    <div class="tabs" id="tabs">
-      <button data-view="list" class="active">Articles</button>
-      <button data-view="sujets">Sujets</button>
+<div id="app" class="layout hidden">
+  <aside class="side">
+    <div class="logo">COMORES<b>NEWS</b> · Admin</div>
+    <nav id="tabs">
+      <button data-view="dash" class="active">Tableau de bord</button>
+      <div class="grp">Rédaction</div>
+      <button data-view="list">Articles <span class="nav-count hidden" id="cnt-attente"></span></button>
+      <button data-view="sujets">Sujets <span class="nav-count hidden" id="cnt-sujets"></span></button>
       <button data-view="media">Médiathèque</button>
-      <button data-view="users" class="adminOnly hidden">Utilisateurs</button>
+      <div class="grp">Lecteurs</div>
+      <button disabled title="Bientôt disponible">Newsletters <span class="soon">bientôt</span></button>
+      <div class="grp adminOnly hidden">Réglages</div>
       <button data-view="cats" class="adminOnly hidden">Catégories</button>
-    </div>
+      <button data-view="users" class="adminOnly hidden">Utilisateurs</button>
+    </nav>
+    <div class="me"><span id="who"></span><button id="btnLogout">Déconnexion</button></div>
+  </aside>
+  <main class="main">
     <div id="globalMsg"></div>
 
+    <!-- TABLEAU DE BORD -->
+    <section id="view-dash" class="dash">
+      <h1 id="d-hello">Bonjour</h1>
+      <p class="hello" id="d-date"></p>
+      <div class="quick">
+        <button class="primary" id="d-new">+ Nouvel article</button>
+        <button id="d-sujets">Voir les sujets du jour</button>
+        <button id="d-site">Voir le site ↗</button>
+      </div>
+      <div class="tiles">
+        <div class="tile red" data-go="sujets"><b id="t-sujets">–</b><small>sujets à traiter</small></div>
+        <div class="tile warn" data-go="list" data-statut="en_attente"><b id="t-attente">–</b><small id="t-attente-lbl">articles en attente de validation</small></div>
+        <div class="tile" data-go="list" data-statut="programme"><b id="t-prog">–</b><small>publications programmées</small></div>
+        <div class="tile" data-go="list" data-statut="publie"><b id="t-pub">–</b><small>articles publiés cette semaine</small></div>
+      </div>
+      <div class="cols">
+        <div class="box"><h3><span id="b-valider-titre">À valider</span><a data-go="list" data-statut="en_attente">tout voir</a></h3><div id="b-valider"></div></div>
+        <div class="box"><h3>Derniers sujets arrivés<a data-go="sujets">tout voir</a></h3><div id="b-sujets"></div></div>
+        <div class="box"><h3>Prochaines publications programmées</h3><div id="b-prog"></div></div>
+        <div class="box"><h3>Newsletter</h3><div class="muted">Section à venir — abonnés, dernier envoi, prochain envoi.</div></div>
+      </div>
+    </section>
+
     <!-- LISTE ARTICLES -->
-    <section id="view-list">
+    <section id="view-list" class="hidden">
       <div class="row" style="align-items:flex-end;">
         <div>
           <label>Statut</label>
@@ -195,12 +261,12 @@
       <div class="card"><table><thead><tr><th>Slug</th><th>Nom</th><th>Ordre</th><th></th></tr></thead>
         <tbody id="catsBody"></tbody></table></div>
     </section>
-  </div>
+  </main>
 </div>
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime } from './lib.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
 const CONFIG = {
@@ -215,8 +281,9 @@ let PROFILE = null, CATS = [], EDITING = null; // EDITING = ligne article ou nul
 
 function msg(el, text, kind='ok'){ el.innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : ''; }
 function show(view){
-  for (const s of ['list','edit','sujets','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
-  for (const b of $('tabs').children) b.classList.toggle('active', b.dataset.view===view);
+  for (const s of ['dash','list','edit','sujets','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
+  const navView = view === 'edit' ? 'list' : view;
+  for (const b of $('tabs').querySelectorAll('[data-view]')) b.classList.toggle('active', b.dataset.view===navView);
 }
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -232,7 +299,7 @@ async function onLogged(){
   const isAdmin = PROFILE.role === 'admin';
   for (const el of document.querySelectorAll('.adminOnly')) el.classList.toggle('hidden', !isAdmin);
   await loadCategories();
-  show('list'); await refreshList();
+  await go('dash');
 }
 $('btnLogin').onclick = async () => {
   const { error } = await api.signIn($('email').value.trim(), $('password').value);
@@ -265,6 +332,7 @@ async function refreshList(){
       <td>${d}</td><td><button data-edit="${a.id}">Ouvrir</button></td></tr>`;
   }).join('') || '<tr><td colspan="5" class="muted">Aucun article.</td></tr>';
   for (const b of $('listBody').querySelectorAll('[data-edit]')) b.onclick = () => openEditor(b.dataset.edit);
+  refreshCounts();
 }
 $('fStatut').onchange = refreshList; $('fCat').onchange = refreshList;
 $('btnNew').onclick = () => openEditor(null);
@@ -338,12 +406,76 @@ $('a-supprimer').onclick = async () => {
 $('a-annuler').onclick = () => { show('list'); };
 
 // ---------- NAVIGATION ONGLETS ----------
-$('tabs').onclick = (e) => {
-  const v = e.target.dataset.view; if (!v) return;
+// Ouvre une rubrique (et, pour les articles, un filtre de statut optionnel).
+async function go(v, statut){
+  if (v === 'list' && statut !== undefined) $('fStatut').value = statut;
   show(v);
-  if (v==='sujets') refreshSujets(); else if (v==='media') refreshMedia(); else if (v==='users') refreshUsers();
-  else if (v==='cats') refreshCats(); else if (v==='list') refreshList();
+  if (v==='dash') await refreshDashboard(); else if (v==='sujets') await refreshSujets(); else if (v==='media') await refreshMedia();
+  else if (v==='users') await refreshUsers(); else if (v==='cats') await refreshCats(); else if (v==='list') await refreshList();
+}
+$('tabs').onclick = (e) => {
+  const b = e.target.closest('[data-view]'); if (!b || b.disabled) return;
+  go(b.dataset.view, b.dataset.view === 'list' ? '' : undefined);
 };
+$('view-dash').onclick = (e) => {
+  const g = e.target.closest('[data-go]'); if (g) return go(g.dataset.go, g.dataset.statut);
+  const ed = e.target.closest('[data-edit]'); if (ed) return openEditor(ed.dataset.edit);
+  const sj = e.target.closest('[data-sujet]'); if (sj) { show('sujets'); return openSujet(sj.dataset.sujet); }
+};
+$('d-new').onclick = () => openEditor(null);
+$('d-sujets').onclick = () => go('sujets');
+$('d-site').onclick = () => window.open('https://comoresnews.com/', '_blank', 'noopener');
+
+// ---------- COMPTEURS DU MENU ----------
+function setCount(el, n){ el.textContent = n; el.classList.toggle('hidden', !n); }
+async function refreshCounts(){
+  const [{ count }, { data: att }] = await Promise.all([api.countSujets(), api.listArticles({ statut:'en_attente' })]);
+  setCount($('cnt-sujets'), count || 0);
+  setCount($('cnt-attente'), (att || []).length);
+}
+
+// ---------- TABLEAU DE BORD ----------
+const catName = (slug) => (CATS.find(c=>c.slug===slug)||{}).nom || slug || '';
+async function refreshDashboard(){
+  const now = new Date();
+  const isAdmin = PROFILE.role === 'admin';
+  const prenom = PROFILE.nom || (PROFILE.email || '').split('@')[0];
+  $('d-hello').textContent = 'Bonjour ' + prenom;
+  const jour = formatDateLongFr(now);
+  $('d-date').textContent = jour.charAt(0).toUpperCase() + jour.slice(1) + ' — voici ce qui se passe sur Comoresnews.';
+  const [arts, cnt, sujets, profs] = await Promise.all([
+    api.listArticles(), api.countSujets(), api.listSujets('nouveau'),
+    isAdmin ? api.listProfiles() : Promise.resolve({ data: [] }),
+  ]);
+  if (arts.error) return msg($('globalMsg'), arts.error.message, 'err');
+  const rows = arts.data || [];
+  const noms = Object.fromEntries((profs.data || []).map(p => [p.id, p.nom || '—']));
+  const s = summarizeArticles(rows, now);
+  $('t-sujets').textContent = cnt.count ?? 0;
+  $('t-attente').textContent = s.enAttente;
+  $('t-attente-lbl').textContent = isAdmin ? 'articles en attente de validation' : 'de mes articles en attente';
+  $('t-prog').textContent = s.programmes;
+  $('t-pub').textContent = s.publiesSemaine;
+  setCount($('cnt-sujets'), cnt.count || 0);
+  setCount($('cnt-attente'), s.enAttente);
+
+  const vide = (txt) => `<div class="muted">${txt}</div>`;
+  $('b-valider-titre').textContent = isAdmin ? 'À valider' : 'Mes articles en attente ou renvoyés';
+  const aValider = isAdmin ? rows.filter(r => r.statut === 'en_attente').slice(0, 5) : myPending(rows).slice(0, 5);
+  $('b-valider').innerHTML = aValider.map(r => `<div class="item"><span>${esc(r.titre)}<br><span class="muted">${
+      isAdmin ? esc(noms[r.auteur_id] || '—') + ' · ' : (r.statut === 'brouillon' ? 'renvoyé · ' : 'en attente · ')
+    }${esc(catName(r.categorie))} · ${relativeTime(r.maj_le, now)}</span></span>
+    <button class="ok" data-edit="${r.id}">${isAdmin ? 'Relire' : 'Ouvrir'}</button></div>`).join('')
+    || vide(isAdmin ? 'Rien à valider pour le moment.' : 'Aucun article en attente ni renvoyé.');
+
+  $('b-sujets').innerHTML = (sujets.data || []).slice(0, 4).map(sj => `<div class="item"><span>${esc(sj.titre)}<br><span class="muted">${
+      esc(sj.source_nom)}${sj.categorie ? ' · ' + esc(catName(sj.categorie)) : ''} · ${relativeTime(sj.importe_le, now)}</span></span>
+    <button class="primary" data-sujet="${sj.id}">Rédiger</button></div>`).join('') || vide('Aucun nouveau sujet.');
+
+  const fmt = (v) => new Date(v).toLocaleString('fr-FR', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  $('b-prog').innerHTML = upcomingScheduled(rows, now).map(r => `<div class="item"><span>${esc(r.titre)}</span><span class="muted">${fmt(r.date_programmee)}</span></div>`).join('')
+    || vide('Aucune publication programmée.');
+}
 
 // ---------- SUJETS ----------
 let SUJET = null;
@@ -358,6 +490,7 @@ async function refreshSujets(){
       <td><button data-sujet="${s.id}">Voir</button></td></tr>`;
   }).join('') || '<tr><td colspan="5" class="muted">Aucun nouveau sujet.</td></tr>';
   for (const b of $('sujetsBody').querySelectorAll('[data-sujet]')) b.onclick = () => openSujet(b.dataset.sujet);
+  refreshCounts();
 }
 async function openSujet(id){
   const { data, error } = await api.getSujet(id);
