@@ -56,3 +56,12 @@ test('formToRow: programmer renseigne date_programmee', () => {
   assert.equal(r.date_programmee, '2026-09-01T08:00:00Z');
   assert.equal(r.date_publication, null);
 });
+test('formToRow transporte la source (nom + lien)', () => {
+  const r = formToRow({ action:'brouillon', titre:'T', slug:'s', categorie:'monde', corps:'b',
+    source_nom:'Masiwa', source_url:'https://masiwa-comores.com/x/' }, 'uid');
+  assert.equal(r.source_nom, 'Masiwa');
+  assert.equal(r.source_url, 'https://masiwa-comores.com/x/');
+  const r2 = formToRow({ action:'brouillon', titre:'T', slug:'s', categorie:'monde', corps:'b' }, 'uid');
+  assert.equal(r2.source_nom, null);
+  assert.equal(r2.source_url, null);
+});

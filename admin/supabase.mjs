@@ -60,6 +60,17 @@ export function createApi({ url, anonKey, deployHook }) {
     // Invitation par email : Edge Function service_role (déployée en Phase 6)
     inviteUser: (email, nom) => sb.functions.invoke('invite-user', { body: { email, nom } }),
 
+    // --- Sujets importés de la presse (texte source = référence interne) ---
+    listSujets: (statut = 'nouveau') => sb.from('sujets')
+      .select('id,source_nom,url,titre,categorie,categorie_source,date_source,importe_le,statut')
+      .eq('statut', statut).order('importe_le', { ascending: false }).limit(200),
+    getSujet: (id) => sb.from('sujets').select('*').eq('id', id).single(),
+    getSujetByArticle: (articleId) => sb.from('sujets').select('*').eq('article_id', articleId).maybeSingle(),
+    ignorerSujet: (id) => sb.from('sujets').update({ statut: 'ignore' }).eq('id', id),
+    // Réserve le sujet et crée un brouillon d'article vide (atomique côté base).
+    redigerSujet: (sujetId, categorie, slug) =>
+      sb.rpc('rediger_sujet', { p_sujet: sujetId, p_categorie: categorie, p_slug: slug }),
+
     // --- Déclenchement du rebuild du site public ---
     // Appelle directement le Deploy Hook Vercel si configuré (URL de capacité :
     // déclenche seulement un build, n'expose aucune donnée), sinon Edge Function.

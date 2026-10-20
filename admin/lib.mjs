@@ -88,5 +88,7 @@ export function formToRow(f, auteurId) {
     date_programmee: statut === 'programme' ? f.date_programmee : null,
     date_publication: statut === 'publie' ? new Date().toISOString() : null,
     commentaire_relecture: f.commentaire_relecture ?? null,
+    source_nom: f.source_nom || null,
+    source_url: f.source_url || null,
   };
 }

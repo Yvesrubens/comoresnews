@@ -72,6 +72,7 @@
   <div class="wrap">
     <div class="tabs" id="tabs">
       <button data-view="list" class="active">Articles</button>
+      <button data-view="sujets">Sujets</button>
       <button data-view="media">Médiathèque</button>
       <button data-view="users" class="adminOnly hidden">Utilisateurs</button>
       <button data-view="cats" class="adminOnly hidden">Catégories</button>
@@ -106,6 +107,13 @@
           <div><label>Catégorie</label><select id="e-cat"></select></div>
           <div><label>Image de couverture (URL)</label><input id="e-image" placeholder="via Médiathèque ou URL"></div>
         </div>
+        <div class="row">
+          <div><label>Source (nom du journal)</label><input id="e-sourcenom" placeholder="ex. Masiwa"></div>
+          <div><label>Source (lien vers l'article d'origine)</label><input id="e-sourceurl" placeholder="https://…"></div>
+        </div>
+        <details id="e-sourcebox" class="hidden" style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Texte source (ne pas copier)</summary>
+          <div id="e-sourcetexte" class="preview" style="white-space:pre-wrap;background:#f1f1f1;max-height:360px;overflow:auto"></div>
+        </details>
         <label>Chapô (excerpt)</label><textarea id="e-excerpt" style="min-height:70px"></textarea>
         <div class="row">
           <div><label>Corps (Markdown)</label><textarea id="e-body"></textarea></div>
@@ -129,6 +137,25 @@
           <button class="adminOnly hidden" id="a-renvoyer">Renvoyer en brouillon…</button>
           <button class="accent hidden" id="a-supprimer">Supprimer</button>
           <button id="a-annuler">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUJETS (presse importée) -->
+    <section id="view-sujets" class="hidden">
+      <div id="sujetsMsg"></div>
+      <div id="sujetsList" class="card"><table><thead><tr><th>Journal</th><th>Titre</th><th>Date</th><th>Catégorie devinée</th><th></th></tr></thead>
+        <tbody id="sujetsBody"></tbody></table></div>
+      <div id="sujetDetail" class="card hidden">
+        <h3 id="sj-titre" style="margin-top:0"></h3>
+        <p class="muted"><span id="sj-journal"></span> · <span id="sj-date"></span> · <a id="sj-lien" href="#" target="_blank" rel="noopener">Voir l'article source</a></p>
+        <label>Texte source (référence — ne pas copier, réécrire avec vos mots)</label>
+        <div id="sj-texte" class="preview" style="white-space:pre-wrap;background:#f1f1f1;max-height:420px;overflow:auto"></div>
+        <div class="row" style="margin-top:12px;align-items:flex-end">
+          <div><label>Catégorie de l'article</label><select id="sj-cat"></select></div>
+          <div style="flex:0 0 auto"><button class="primary" id="sj-rediger">Rédiger un article</button></div>
+          <div style="flex:0 0 auto"><button id="sj-ignorer">Ignorer</button></div>
+          <div style="flex:0 0 auto"><button id="sj-retour">Retour à la liste</button></div>
         </div>
       </div>
     </section>
@@ -188,7 +215,7 @@ let PROFILE = null, CATS = [], EDITING = null; // EDITING = ligne article ou nul
 
 function msg(el, text, kind='ok'){ el.innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : ''; }
 function show(view){
-  for (const s of ['list','edit','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
+  for (const s of ['list','edit','sujets','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
   for (const b of $('tabs').children) b.classList.toggle('active', b.dataset.view===view);
 }
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -252,6 +279,10 @@ async function openEditor(id){
   $('e-seotitre').value = a.seo_titre||''; $('e-seodesc').value = a.seo_description||''; $('e-ogimage').value = a.og_image||'';
   $('e-keywords').value = (a.mots_cles||[]).join(', ');
   $('e-datep').value = a.date_programmee ? a.date_programmee.slice(0,16) : '';
+  $('e-sourcenom').value = a.source_nom||''; $('e-sourceurl').value = a.source_url||'';
+  $('e-sourcebox').classList.add('hidden');
+  if (id){ const { data: sj } = await api.getSujetByArticle(id);
+    if (sj){ $('e-sourcetexte').textContent = sj.texte; $('e-sourcebox').classList.remove('hidden'); } }
   renderPreview();
   const rb = $('reviewBox');
   if (a.commentaire_relecture){ rb.className='msg err'; rb.textContent='Renvoyé : '+a.commentaire_relecture; rb.classList.remove('hidden'); }
@@ -271,6 +302,7 @@ function gatherForm(action){
     corps: $('e-body').value, excerpt: $('e-excerpt').value, image_couverture: $('e-image').value.trim(),
     seo_titre: $('e-seotitre').value.trim(), seo_description: $('e-seodesc').value.trim(),
     og_image: $('e-ogimage').value.trim(),
+    source_nom: $('e-sourcenom').value.trim(), source_url: $('e-sourceurl').value.trim(),
     mots_cles: $('e-keywords').value.split(',').map(s=>s.trim()).filter(Boolean),
     date_programmee: $('e-datep').value ? new Date($('e-datep').value).toISOString() : null,
   };
@@ -309,8 +341,51 @@ $('a-annuler').onclick = () => { show('list'); };
 $('tabs').onclick = (e) => {
   const v = e.target.dataset.view; if (!v) return;
   show(v);
-  if (v==='media') refreshMedia(); else if (v==='users') refreshUsers();
+  if (v==='sujets') refreshSujets(); else if (v==='media') refreshMedia(); else if (v==='users') refreshUsers();
   else if (v==='cats') refreshCats(); else if (v==='list') refreshList();
+};
+
+// ---------- SUJETS ----------
+let SUJET = null;
+async function refreshSujets(){
+  $('sujetDetail').classList.add('hidden'); $('sujetsList').classList.remove('hidden');
+  const { data, error } = await api.listSujets('nouveau');
+  if (error) return msg($('sujetsMsg'), error.message, 'err');
+  $('sujetsBody').innerHTML = (data||[]).map(s=>{
+    const cat = (CATS.find(c=>c.slug===s.categorie)||{}).nom || '—';
+    const d = (s.date_source||s.importe_le||'').slice(0,10);
+    return `<tr><td>${esc(s.source_nom)}</td><td>${esc(s.titre)}</td><td>${d}</td><td>${esc(cat)}</td>
+      <td><button data-sujet="${s.id}">Voir</button></td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="muted">Aucun nouveau sujet.</td></tr>';
+  for (const b of $('sujetsBody').querySelectorAll('[data-sujet]')) b.onclick = () => openSujet(b.dataset.sujet);
+}
+async function openSujet(id){
+  const { data, error } = await api.getSujet(id);
+  if (error) return msg($('sujetsMsg'), error.message, 'err');
+  SUJET = data; msg($('sujetsMsg'), '');
+  $('sj-titre').textContent = data.titre; $('sj-journal').textContent = data.source_nom;
+  $('sj-date').textContent = (data.date_source||data.importe_le||'').slice(0,10);
+  $('sj-lien').href = data.url; $('sj-texte').textContent = data.texte || '(texte non disponible — voir l'article source)';
+  $('sj-cat').innerHTML = '<option value="">— Choisir une catégorie —</option>' + CATS.map(c=>`<option value="${c.slug}">${esc(c.nom)}</option>`).join('');
+  $('sj-cat').value = data.categorie || '';
+  syncRediger();
+  $('sujetsList').classList.add('hidden'); $('sujetDetail').classList.remove('hidden');
+}
+function syncRediger(){ $('sj-rediger').disabled = !$('sj-cat').value; }
+$('sj-cat').onchange = syncRediger;
+$('sj-retour').onclick = () => refreshSujets();
+$('sj-ignorer').onclick = async () => {
+  if (!SUJET) return;
+  const { error } = await api.ignorerSujet(SUJET.id);
+  if (error) return msg($('sujetsMsg'), error.message, 'err');
+  msg($('sujetsMsg'), 'Sujet ignoré.', 'ok'); refreshSujets();
+};
+$('sj-rediger').onclick = async () => {
+  if (!SUJET || !$('sj-cat').value) return;
+  const { data: articleId, error } = await api.redigerSujet(SUJET.id, $('sj-cat').value, slugify(SUJET.titre));
+  if (error) return msg($('sujetsMsg'), error.message, 'err');
+  await openEditor(articleId);
+  msg($('editMsg'), 'Brouillon créé à partir du sujet : réécrivez le texte avec vos propres mots.', 'ok');
 };
 
 // ---------- MEDIATHEQUE ----------
