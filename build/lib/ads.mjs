@@ -36,11 +36,13 @@ export function adSlot(id) {
 }
 
 function labeled(cls, inner) {
-  return `<div class="cn-ad ${cls}"><span class="cn-ad-tag">Publicité</span>${inner}</div>`;
+  // cn-ad--empty = masqué par défaut ; révélé par le script quand une créa charge.
+  return `<div class="cn-ad cn-ad--empty ${cls}"><span class="cn-ad-tag">Publicité</span>${inner}</div>`;
 }
 
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
+.cn-ad--empty{display:none!important;}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;margin:18px auto;}
 .cn-ad-rail{position:fixed;right:14px;top:120px;z-index:900;margin:0;}
@@ -49,6 +51,14 @@ export const AD_CSS = `<style id="cn-ads-css">
 @media(max-width:1500px){.cn-ad-rail{display:none;}}
 @media(max-width:768px){.cn-ad-desktop{display:none;}}
 </style>`;
+
+// Révèle un emplacement seulement si une vraie créa y est chargée (sinon reste masqué).
+export const AD_REVEAL = `<script>(function(){
+function filled(el){var s=el.querySelector('[id^="sas_"]');return s&&(s.querySelector('iframe,img,ins,a')||s.offsetHeight>10);}
+function check(){document.querySelectorAll('.cn-ad--empty').forEach(function(el){if(filled(el))el.classList.remove('cn-ad--empty');});}
+if(document.readyState!=='loading')check();else document.addEventListener('DOMContentLoaded',check);
+var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
+})();</script>`;
 
 // Injecte la régie et les 6 emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
@@ -60,7 +70,7 @@ export function injectAds(html, cfg = SAS) {
   const strip = `<div class="cn-ad-strip">${labeled('', adSlot(45655))}${labeled('', adSlot(49048))}</div>`
     + labeled('cn-ad-desktop', adSlot(49046)); // 2 pavés + MegaBanniere 2 (bas de contenu)
   const rail = labeled('cn-ad-rail cn-ad-desktop', adSlot(45654)); // GrandAngle (colonne droite, desktop)
-  const floor = `<div class="cn-ad cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  html = html.replace('</body>', `${strip}\n${rail}\n${floor}\n</body>`);
+  const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
+  html = html.replace('</body>', `${strip}\n${rail}\n${floor}\n${AD_REVEAL}\n</body>`);
   return html;
 }
