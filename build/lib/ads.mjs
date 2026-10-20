@@ -43,8 +43,9 @@ function labeled(cls, inner) {
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
-.cn-ad-float{float:right;clear:right;margin:6px 0 16px 24px;max-width:48%;}
-@media(max-width:1018px){.cn-ad-float{float:none;clear:none;margin:12px auto;max-width:100%;}}
+.td-pb-span8{position:relative;}
+.cn-ad-float{position:absolute;top:48px;right:0;margin:0;z-index:5;}
+@media(max-width:1018px){.cn-ad-float{position:static;margin:12px auto;}}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
 .cn-ad-strip .cn-ad{margin:0;}
