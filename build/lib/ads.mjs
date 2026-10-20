@@ -43,6 +43,9 @@ function labeled(cls, inner) {
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
+.tdi_69{position:relative;}
+.cn-ad-culture{position:absolute;top:44px;right:0;width:300px;max-width:45%;margin:0;z-index:5;}
+@media(max-width:1018px){.tdi_69{position:static;}.cn-ad-culture{position:static;width:auto;max-width:100%;margin:12px auto;}}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
 .cn-ad-strip .cn-ad{margin:0;}
@@ -63,7 +66,7 @@ var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 
 // Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
 const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
-const ANCHOR_BEFORE_MONDE = '<div class="td_block_wrap td_flex_block_4 tdi_88'; // "Actu Monde" (colonne étroite)
+const ANCHOR_CULTURE_INNER = 'data-td-block-uid="tdi_69" >'; // ouverture du bloc "Actu Culture" (pleine largeur)
 
 // Injecte la régie et les emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
@@ -80,10 +83,11 @@ export function injectAds(html, cfg = SAS) {
     html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
     gaPlaced = true;
   }
-  // Pavé 1 (300x250) juste AU-DESSUS de "Actu Monde" (tdi_88), colonne étroite.
+  // Pavé 1 (300x250) en HAUT À DROITE du bloc "Actu Culture" (pleine largeur),
+  // aligné avec ses articles (zone droite vide). Positionné en absolu dans le bloc.
   let p1Placed = false;
-  if (html.includes(ANCHOR_BEFORE_MONDE)) {
-    html = html.replace(ANCHOR_BEFORE_MONDE, `${labeled('', adSlot(45655))}\n${ANCHOR_BEFORE_MONDE}`);
+  if (html.includes(ANCHOR_CULTURE_INNER)) {
+    html = html.replace(ANCHOR_CULTURE_INNER, `${ANCHOR_CULTURE_INNER}\n${labeled('cn-ad-culture', adSlot(45655))}`);
     p1Placed = true;
   }
 
