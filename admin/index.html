@@ -365,7 +365,7 @@ async function openSujet(id){
   SUJET = data; msg($('sujetsMsg'), '');
   $('sj-titre').textContent = data.titre; $('sj-journal').textContent = data.source_nom;
   $('sj-date').textContent = (data.date_source||data.importe_le||'').slice(0,10);
-  $('sj-lien').href = data.url; $('sj-texte').textContent = data.texte || '(texte non disponible — voir l'article source)';
+  $('sj-lien').href = data.url; $('sj-texte').textContent = data.texte || '(texte non disponible — voir l’article source)';
   $('sj-cat').innerHTML = '<option value="">— Choisir une catégorie —</option>' + CATS.map(c=>`<option value="${c.slug}">${esc(c.nom)}</option>`).join('');
   $('sj-cat').value = data.categorie || '';
   syncRediger();
