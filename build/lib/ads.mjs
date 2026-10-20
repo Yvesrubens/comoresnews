@@ -70,6 +70,23 @@ function mv(){MOVES.forEach(function(m){var a=document.getElementById(m[0]),t=do
 if(document.readyState!=='loading')mv();else document.addEventListener('DOMContentLoaded',mv);
 })();</script>`;
 
+// Insère une pub dans le corps d'un article, après le 2e paragraphe (ou le 1er
+// s'il n'y en a qu'un). Ne fait rien hors des pages article.
+export function insertInArticle(html, adHtml, afterParagraph = 2) {
+  const start = html.indexOf('td-post-content');
+  if (start === -1) return html;
+  let pos = start;
+  let found = -1;
+  for (let i = 0; i < afterParagraph; i++) {
+    const next = html.indexOf('</p>', pos);
+    if (next === -1) break;
+    found = next + 4;
+    pos = found;
+  }
+  if (found === -1) return html;
+  return html.slice(0, found) + '\n' + adHtml + '\n' + html.slice(found);
+}
+
 // Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
 const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
 const ANCHOR_CAPOURRAIT_INNER = 'data-td-block-uid="tdi_64" >'; // ouverture du bloc "Ça pourrait vous intéresser"
@@ -113,8 +130,10 @@ export function injectAds(html, cfg = SAS) {
   const bottomParts = [];
   if (!gaPlaced) bottomParts.push(labeled('', adSlot(45654)));
   if (!p1Placed) bottomParts.push(labeled('', adSlot(45655)));
-  bottomParts.push(labeled('', adSlot(49048)));             // Pavé 2
   bottomParts.push(labeled('cn-ad-desktop', adSlot(49046))); // MegaBanniere 2
+
+  // Pavé 2 : uniquement dans le corps des articles (après le 2e paragraphe).
+  html = insertInArticle(html, labeled('', adSlot(49048)));
   const bottom = bottomParts.join('\n');
   if (html.includes('id="cn-legal-bar"')) {
     html = html.replace('<div id="cn-legal-bar"', `${bottom}\n<div id="cn-legal-bar"`);
