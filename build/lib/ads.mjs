@@ -43,9 +43,6 @@ function labeled(cls, inner) {
 export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
-.tdi_69{position:relative;}
-.cn-ad-culture{position:absolute;top:44px;right:0;width:300px;max-width:45%;margin:0;z-index:5;}
-@media(max-width:1018px){.tdi_69{position:static;}.cn-ad-culture{position:static;width:auto;max-width:100%;margin:12px auto;}}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
 .cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
 .cn-ad-strip .cn-ad{margin:0;}
@@ -64,9 +61,17 @@ if(document.readyState!=='loading')check();else document.addEventListener('DOMCo
 var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 })();</script>`;
 
+// Déplace le Pavé 1 juste APRÈS le bloc "Ça pourrait vous intéresser" (colonne
+// droite). Le HTML du thème est trop imbriqué pour viser sa fermeture par texte :
+// on l'injecte dans le bloc puis on le relocalise via le DOM.
+export const AD_RELOCATE = `<script>(function(){
+function mv(){var a=document.getElementById('cn-ad-capourrait'),t=document.querySelector('[data-td-block-uid="tdi_64"]');if(a&&t&&a.parentNode===t)t.insertAdjacentElement('afterend',a);}
+if(document.readyState!=='loading')mv();else document.addEventListener('DOMContentLoaded',mv);
+})();</script>`;
+
 // Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
 const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
-const ANCHOR_CULTURE_INNER = 'data-td-block-uid="tdi_69" >'; // ouverture du bloc "Actu Culture" (pleine largeur)
+const ANCHOR_CAPOURRAIT_INNER = 'data-td-block-uid="tdi_64" >'; // ouverture du bloc "Ça pourrait vous intéresser"
 
 // Injecte la régie et les emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
@@ -83,11 +88,12 @@ export function injectAds(html, cfg = SAS) {
     html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
     gaPlaced = true;
   }
-  // Pavé 1 (300x250) en HAUT À DROITE du bloc "Actu Culture" (pleine largeur),
-  // aligné avec ses articles (zone droite vide). Positionné en absolu dans le bloc.
+  // Pavé 1 (300x250) sous "Ça pourrait vous intéresser" (colonne droite) :
+  // injecté dans le bloc tdi_64 puis déplacé juste après lui par AD_RELOCATE.
   let p1Placed = false;
-  if (html.includes(ANCHOR_CULTURE_INNER)) {
-    html = html.replace(ANCHOR_CULTURE_INNER, `${ANCHOR_CULTURE_INNER}\n${labeled('cn-ad-culture', adSlot(45655))}`);
+  if (html.includes(ANCHOR_CAPOURRAIT_INNER)) {
+    const pave1 = `<div id="cn-ad-capourrait" class="cn-ad cn-ad--empty"><span class="cn-ad-tag">Publicité</span>${adSlot(45655)}</div>`;
+    html = html.replace(ANCHOR_CAPOURRAIT_INNER, `${ANCHOR_CAPOURRAIT_INNER}\n${pave1}`);
     p1Placed = true;
   }
 
@@ -107,6 +113,6 @@ export function injectAds(html, cfg = SAS) {
 
   // Floor fixe (overlay bas d'écran) + script de révélation.
   const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  html = html.replace('</body>', `${floor}\n${AD_REVEAL}\n</body>`);
+  html = html.replace('</body>', `${floor}\n${p1Placed ? AD_RELOCATE + '\n' : ''}${AD_REVEAL}\n</body>`);
   return html;
 }
