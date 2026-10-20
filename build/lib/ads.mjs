@@ -61,24 +61,48 @@ if(document.readyState!=='loading')check();else document.addEventListener('DOMCo
 var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 })();</script>`;
 
-// Injecte la régie et les 6 emplacements dans une page HTML complète.
+// Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
+const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
+const ANCHOR_AFTER_INTERESSE = '<div class="td_block_wrap td_flex_block_1 tdi_69'; // "Actu Culture" (suit "Ça pourrait vous intéresser")
+
+// Injecte la régie et les emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
 export function injectAds(html, cfg = SAS) {
   if (/id="sas_/.test(html)) return html;
   html = html.replace('</head>', `${adsSetup(cfg)}\n${AD_CSS}\n</head>`);
-  const top = labeled('cn-ad-desktop', adSlot(45656)); // MegaBanniere 1 (haut)
-  html = html.replace(/(<body[^>]*>)/i, `$1\n${top}`);
-  const strip = `<div class="cn-ad-strip">${labeled('', adSlot(45655))}${labeled('', adSlot(49048))}</div>`
-    + labeled('cn-ad-desktop', adSlot(49046)); // 2 pavés + MegaBanniere 2 (bas de contenu)
-  const rail = labeled('cn-ad-rail cn-ad-desktop', adSlot(45654)); // GrandAngle (colonne droite, desktop)
-  const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  // Le strip (pavés + MegaBanniere 2) va AVANT le pied de page légal (sinon il
-  // s'affiche sous le footer). rail + floor sont des overlays fixes.
-  if (html.includes('id="cn-legal-bar"')) {
-    html = html.replace('<div id="cn-legal-bar"', `${strip}\n<div id="cn-legal-bar"`);
-  } else {
-    html = html.replace('</body>', `${strip}\n</body>`);
+
+  // MegaBanniere 1 (leaderboard) juste après <body>.
+  html = html.replace(/(<body[^>]*>)/i, `$1\n${labeled('cn-ad-desktop', adSlot(45656))}`);
+
+  // GrandAngle (300x600) sous "Suivez nous" = avant le bloc tdi_64.
+  let gaPlaced = false;
+  if (html.includes(ANCHOR_AFTER_SUIVEZ)) {
+    html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
+    gaPlaced = true;
   }
-  html = html.replace('</body>', `${rail}\n${floor}\n${AD_REVEAL}\n</body>`);
+  // Pavé 1 (300x250) sous "Ça pourrait vous intéresser" = avant le bloc tdi_69.
+  let p1Placed = false;
+  if (html.includes(ANCHOR_AFTER_INTERESSE)) {
+    html = html.replace(ANCHOR_AFTER_INTERESSE, `${labeled('', adSlot(45655))}\n${ANCHOR_AFTER_INTERESSE}`);
+    p1Placed = true;
+  }
+
+  // Bloc bas (avant le footer) : Pavé 2 + MegaBanniere 2, plus repli de ceux
+  // qui n'ont pas trouvé leur ancre (pages sans la colonne de la home).
+  const bottomParts = [];
+  if (!gaPlaced) bottomParts.push(labeled('', adSlot(45654)));
+  if (!p1Placed) bottomParts.push(labeled('', adSlot(45655)));
+  bottomParts.push(labeled('', adSlot(49048)));             // Pavé 2
+  bottomParts.push(labeled('cn-ad-desktop', adSlot(49046))); // MegaBanniere 2
+  const bottom = bottomParts.join('\n');
+  if (html.includes('id="cn-legal-bar"')) {
+    html = html.replace('<div id="cn-legal-bar"', `${bottom}\n<div id="cn-legal-bar"`);
+  } else {
+    html = html.replace('</body>', `${bottom}\n</body>`);
+  }
+
+  // Floor fixe (overlay bas d'écran) + script de révélation.
+  const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
+  html = html.replace('</body>', `${floor}\n${AD_REVEAL}\n</body>`);
   return html;
 }
