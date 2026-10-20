@@ -44,7 +44,8 @@ export const AD_CSS = `<style id="cn-ads-css">
 .cn-ad{position:relative;display:flex;justify-content:center;margin:18px auto;padding-top:13px;max-width:100%;overflow:hidden;}
 .cn-ad--empty{display:none!important;}
 .cn-ad-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);font:600 9px/1.4 system-ui,sans-serif;letter-spacing:.09em;color:#b3b3b3;text-transform:uppercase;}
-.cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;margin:18px auto;}
+.cn-ad-strip{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px;margin:18px auto;}
+.cn-ad-strip .cn-ad{margin:0;}
 .cn-ad-rail{position:fixed;right:14px;top:120px;z-index:900;margin:0;}
 .cn-ad-floor{position:fixed;left:0;right:0;bottom:0;z-index:9998;margin:0;background:rgba(255,255,255,.97);box-shadow:0 -2px 10px rgba(0,0,0,.12);padding:8px 0;}
 .cn-ad-floor .cn-ad-close{position:absolute;right:10px;top:3px;border:none;background:rgba(0,0,0,.35);color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:20px;padding:0;}
@@ -71,6 +72,13 @@ export function injectAds(html, cfg = SAS) {
     + labeled('cn-ad-desktop', adSlot(49046)); // 2 pavés + MegaBanniere 2 (bas de contenu)
   const rail = labeled('cn-ad-rail cn-ad-desktop', adSlot(45654)); // GrandAngle (colonne droite, desktop)
   const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  html = html.replace('</body>', `${strip}\n${rail}\n${floor}\n${AD_REVEAL}\n</body>`);
+  // Le strip (pavés + MegaBanniere 2) va AVANT le pied de page légal (sinon il
+  // s'affiche sous le footer). rail + floor sont des overlays fixes.
+  if (html.includes('id="cn-legal-bar"')) {
+    html = html.replace('<div id="cn-legal-bar"', `${strip}\n<div id="cn-legal-bar"`);
+  } else {
+    html = html.replace('</body>', `${strip}\n</body>`);
+  }
+  html = html.replace('</body>', `${rail}\n${floor}\n${AD_REVEAL}\n</body>`);
   return html;
 }
