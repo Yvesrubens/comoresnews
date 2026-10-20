@@ -1,0 +1,5 @@
+[
+  { "id": "habari", "nom": "Habari Za Comores", "type": "rss", "url": "https://www.habarizacomores.com/rss.xml" },
+  { "id": "masiwa", "nom": "Masiwa", "type": "rss", "url": "https://masiwa-comores.com/feed/" },
+  { "id": "gazette", "nom": "La Gazette des Comores", "type": "gazette", "url": "https://www.lagazettedescomores.com/" }
+]

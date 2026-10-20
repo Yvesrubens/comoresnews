@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "build": "node build/generate.mjs",
-    "migrate": "node build/migrate.mjs"
+    "migrate": "node build/migrate.mjs",
+    "import": "node scripts/import-sources.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.1",
