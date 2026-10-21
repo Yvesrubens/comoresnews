@@ -72,7 +72,9 @@ export function nextStatus(action) {
 // Construit la ligne `articles` à écrire selon l'action et l'auteur.
 export function formToRow(f, auteurId) {
   const statut = nextStatus(f.action);
+  const une = f.a_la_une === undefined ? {} : { a_la_une: !!f.a_la_une }; // champ réservé aux admins
   return {
+    ...une,
     titre: f.titre,
     slug: f.slug,
     categorie: f.categorie,

@@ -160,7 +160,7 @@
         <div><label>Catégorie</label><select id="fCat"><option value="">Toutes</option></select></div>
         <div style="flex:0 0 auto;"><label>&nbsp;</label><button class="primary" id="btnNew">+ Nouvel article</button></div>
       </div>
-      <div class="card"><table><thead><tr><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+      <div class="card"><table><thead><tr><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Date</th><th class="adminOnly hidden" title="À la une">★</th><th></th></tr></thead>
         <tbody id="listBody"></tbody></table></div>
     </section>
 
@@ -206,6 +206,7 @@
         </details>
         <div class="row" style="margin-top:10px">
           <div><label>Date de programmation (si programmé)</label><input id="e-datep" type="datetime-local"></div>
+          <div class="adminOnly hidden"><label>&nbsp;</label><label style="font-weight:600"><input type="checkbox" id="e-une"> ★ À la une (accueil et page En direct)</label></div>
         </div>
         <div id="reviewBox" class="msg hidden"></div>
         <div class="actions">
@@ -381,9 +382,13 @@ async function refreshList(){
     const d = (a.date_publication||a.date_programmee||a.maj_le||'').slice(0,10);
     const cat = (CATS.find(c=>c.slug===a.categorie)||{}).nom || a.categorie;
     return `<tr><td>${esc(a.titre)}</td><td>${esc(cat)}</td><td><span class="badge b-${a.statut}">${a.statut.replace('_',' ')}</span></td>
-      <td>${d}</td><td><button data-edit="${a.id}">Ouvrir</button></td></tr>`;
+      <td>${d}</td>${PROFILE.role === 'admin' ? `<td><button data-une="${a.id}" data-val="${a.a_la_une ? 1 : 0}" data-statut="${a.statut}" title="À la une" style="color:${a.a_la_une ? '#f5b400' : '#bbb'}">★</button></td>` : ''}<td><button data-edit="${a.id}">Ouvrir</button></td></tr>`;
   }).join('') || '<tr><td colspan="5" class="muted">Aucun article.</td></tr>';
   for (const b of $('listBody').querySelectorAll('[data-edit]')) b.onclick = () => openEditor(b.dataset.edit);
+  for (const b of $('listBody').querySelectorAll('[data-une]')) b.onclick = async () => {
+    await toggleUne(b.dataset.une, b.dataset.val !== '1', b.dataset.statut, $('globalMsg'));
+    await refreshList();
+  };
   refreshCounts();
 }
 $('fStatut').onchange = refreshList; $('fCat').onchange = refreshList;
@@ -399,6 +404,7 @@ async function openEditor(id){
   $('e-seotitre').value = a.seo_titre||''; $('e-seodesc').value = a.seo_description||''; $('e-ogimage').value = a.og_image||'';
   $('e-keywords').value = (a.mots_cles||[]).join(', ');
   $('e-datep').value = a.date_programmee ? a.date_programmee.slice(0,16) : '';
+  $('e-une').checked = !!a.a_la_une;
   $('e-sourcenom').value = a.source_nom||''; $('e-sourceurl').value = a.source_url||'';
   $('e-sourcebox').classList.add('hidden');
   if (id){ const { data: sj } = await api.getSujetByArticle(id);
@@ -461,6 +467,8 @@ function gatherForm(action){
     source_nom: $('e-sourcenom').value.trim(), source_url: $('e-sourceurl').value.trim(),
     mots_cles: $('e-keywords').value.split(',').map(s=>s.trim()).filter(Boolean),
     date_programmee: $('e-datep').value ? new Date($('e-datep').value).toISOString() : null,
+    // Article existant : la case s'enregistre seule (toggleUne), sans repasser par ce formulaire.
+    ...(PROFILE.role === 'admin' && !EDITING ? { a_la_une: $('e-une').checked } : {}),
   };
 }
 async function save(action){
@@ -476,6 +484,19 @@ async function save(action){
   msg($('editMsg'), 'Enregistré.' + (published ? ' Régénération du site déclenchée.' : ''), 'ok');
   await refreshList();
 }
+// « À la une » : mise à jour du seul champ, puis régénération si l'article est en ligne.
+async function toggleUne(id, value, statut, box){
+  const { error } = await api.setUne(id, value);
+  if (error) { msg(box, error.message, 'err'); return false; }
+  if (statut === 'publie') await api.triggerDeploy().catch(()=>{});
+  msg(box, (value ? 'Mis à la une.' : 'Retiré de la une.') + (statut === 'publie' ? ' Régénération du site déclenchée.' : ''), 'ok');
+  return true;
+}
+$('e-une').onchange = async () => {
+  if (!EDITING) return; // nouvel article : la valeur part avec l'enregistrement
+  const v = $('e-une').checked;
+  if (await toggleUne(EDITING.id, v, EDITING.statut, $('editMsg'))) EDITING.a_la_une = v; else $('e-une').checked = !v;
+};
 $('a-brouillon').onclick = () => save('brouillon');
 $('a-soumettre').onclick = () => save('soumettre');
 $('a-publier').onclick = () => save('publier');

@@ -65,3 +65,11 @@ test('formToRow transporte la source (nom + lien)', () => {
   assert.equal(r2.source_nom, null);
   assert.equal(r2.source_url, null);
 });
+
+test('formToRow : a_la_une seulement si fourni (admin)', async () => {
+  const { formToRow } = await import('../admin/lib.mjs');
+  const f = { titre: 'T', slug: 't', categorie: 'sport', corps: 'x' };
+  assert.ok(!('a_la_une' in formToRow({ ...f, action: 'brouillon' }, 'u')));
+  assert.equal(formToRow({ ...f, a_la_une: true, action: 'publier' }, 'u').a_la_une, true);
+  assert.equal(formToRow({ ...f, a_la_une: false, action: 'brouillon' }, 'u').a_la_une, false);
+});
