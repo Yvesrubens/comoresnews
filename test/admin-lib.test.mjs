@@ -93,3 +93,18 @@ test('breveToRow : statuts, date posée à la publication, gardée si republiée
   assert.equal(breveToRow('x', 'publier', deja).date_publication, '2026-10-20T08:00:00.000Z');
   assert.deepEqual(breveToRow('x', 'depublier', deja), { texte: 'x', statut: 'brouillon', date_publication: null });
 });
+
+test('breveToRow efface le motif de renvoi à la soumission et à la publication', async () => {
+  const { breveToRow } = await import('../admin/lib.mjs');
+  assert.equal(breveToRow('x', 'soumettre', { statut: 'brouillon' }).commentaire_relecture, null);
+  assert.equal(breveToRow('x', 'publier', { statut: 'en_attente' }).commentaire_relecture, null);
+  assert.ok(!('commentaire_relecture' in breveToRow('x', 'brouillon', { statut: 'brouillon' })));
+});
+
+test('breveButtons : sur une brève publiée, un admin ne peut que la garder en ligne, dépublier ou supprimer', async () => {
+  const { breveButtons } = await import('../admin/lib.mjs');
+  assert.deepEqual(breveButtons('publie', true), { brouillon: false, soumettre: false, publier: true, renvoyer: false, depublier: true, supprimer: true, publierLabel: 'Enregistrer (en ligne)' });
+  assert.deepEqual(breveButtons('publie', false), { brouillon: false, soumettre: false, publier: false, renvoyer: false, depublier: false, supprimer: false, publierLabel: 'Publier' });
+  assert.deepEqual(breveButtons('en_attente', true), { brouillon: true, soumettre: true, publier: true, renvoyer: true, depublier: false, supprimer: true, publierLabel: 'Publier' });
+  assert.deepEqual(breveButtons(null, false), { brouillon: true, soumettre: true, publier: false, renvoyer: false, depublier: false, supprimer: false, publierLabel: 'Publier' });
+});

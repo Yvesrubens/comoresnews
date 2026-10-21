@@ -343,7 +343,7 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, BREVE_MAX, insertLink, internalLinkTarget, searchArticles } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, breveButtons, BREVE_MAX, insertLink, internalLinkTarget, searchArticles } from './lib.mjs';
 import { renderNewsletter, weekSubject, pickArticles } from './newsletter-template.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
@@ -408,7 +408,7 @@ async function refreshList(){
     const cat = (CATS.find(c=>c.slug===a.categorie)||{}).nom || a.categorie;
     return `<tr><td>${esc(a.titre)}</td><td>${esc(cat)}</td><td><span class="badge b-${a.statut}">${a.statut.replace('_',' ')}</span></td>
       <td>${d}</td>${PROFILE.role === 'admin' ? `<td><button data-une="${a.id}" data-val="${a.a_la_une ? 1 : 0}" data-statut="${a.statut}" title="À la une" style="color:${a.a_la_une ? '#f5b400' : '#bbb'}">★</button></td>` : ''}<td><button data-edit="${a.id}">Ouvrir</button></td></tr>`;
-  }).join('') || '<tr><td colspan="5" class="muted">Aucun article.</td></tr>';
+  }).join('') || '<tr><td colspan="6" class="muted">Aucun article.</td></tr>';
   for (const b of $('listBody').querySelectorAll('[data-edit]')) b.onclick = () => openEditor(b.dataset.edit);
   for (const b of $('listBody').querySelectorAll('[data-une]')) b.onclick = async () => {
     await toggleUne(b.dataset.une, b.dataset.val !== '1', b.dataset.statut, $('globalMsg'));
@@ -547,11 +547,9 @@ function breveForm(b){
   $('br-texte').value = b?.texte || ''; brCount();
   $('br-etat').textContent = b ? 'Statut : ' + BR_STATUT[b.statut] : 'Nouvelle brève';
   const rv = $('br-review'); rv.classList.toggle('hidden', !b?.commentaire_relecture); rv.textContent = b?.commentaire_relecture ? 'Renvoyée : ' + b.commentaire_relecture : '';
-  const pub = b?.statut === 'publie';
-  $('br-renvoyer').classList.toggle('hidden', !admin || b?.statut !== 'en_attente');
-  $('br-depublier').classList.toggle('hidden', !admin || !pub);
-  $('br-supprimer').classList.toggle('hidden', !b || (pub && !admin));
-  for (const id of ['br-brouillon','br-soumettre']) $(id).classList.toggle('hidden', pub && !admin);
+  const vis = breveButtons(b?.statut || null, admin);
+  for (const k of ['brouillon','soumettre','publier','renvoyer','depublier','supprimer']) $('br-'+k).classList.toggle('hidden', !vis[k]);
+  $('br-publier').textContent = vis.publierLabel;
   msg($('brevesMsg'), '');
 }
 function brCount(){ $('br-count').textContent = $('br-texte').value.trim().length; }
@@ -574,7 +572,6 @@ async function saveBreve(action){
   if (errs.length) return msg($('brevesMsg'), errs[0] === 'texte' ? 'Écrivez le texte de la brève.' : `${BREVE_MAX} caractères au maximum.`, 'err');
   const wasPub = BREVE?.statut === 'publie';
   const row = breveToRow(texte, action, BREVE);
-  if (action === 'publier') row.commentaire_relecture = null;
   const res = BREVE ? await api.updateBreve(BREVE.id, row) : await api.insertBreve(row);
   if (res.error) return msg($('brevesMsg'), res.error.message, 'err');
   const deploy = wasPub || row.statut === 'publie';

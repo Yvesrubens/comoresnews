@@ -55,3 +55,10 @@ test('enDirectInner : message sans brève et liens des articles préfixés', () 
   assert.ok(h.includes('../../../index.php/2026/10/12/vanille/index.html'));
   assert.ok(h.includes('../../../index.php/2026/10/11/ylang/index.html'));
 });
+
+test('uneGridHtml : classes du thème 6 / 7 / 8 / 8 (1 grande, 1 large, 2 petites)', async () => {
+  const { uneGridHtml } = await import('../build/lib/en-direct.mjs');
+  const h = uneGridHtml(['a', 'b', 'c', 'd'].map((s, i) => art(s, String(10 + i))), cats);
+  const classes = [...h.matchAll(/td_module_flex_(\d) td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-(\d)/g)].map((m) => m[1] + ':' + m[2]);
+  assert.deepEqual(classes, ['6:0', '7:1', '8:2', '8:3']);
+});

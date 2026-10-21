@@ -103,7 +103,7 @@ function gridPost(a, i, catsCfg) {
   const date = i === 0
     ? `<div class="td-editor-date"><span class="td-post-date"><time class="entry-date updated td-module-date" datetime="${esc(stamp(a))}">${MOIS.format(new Date(a.date + 'T12:00:00Z'))}</time></span></div>`
     : '';
-  return `<div class="td_module_flex_${i === 0 ? 6 : 7} td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-${i} td-cpt-post">
+  return `<div class="td_module_flex_${i === 0 ? 6 : i === 1 ? 7 : 8} td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-${i} td-cpt-post">
   <div class="td-module-container td-category-pos-above">
     <div class="td-image-container"><div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
     <div class="td-module-meta-info">

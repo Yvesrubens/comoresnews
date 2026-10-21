@@ -6,11 +6,12 @@ alter table public.articles add column if not exists a_la_une boolean not null d
 
 -- Seul un admin peut changer la case. Pour tout autre rôle, la valeur est
 -- corrigée en silence (jamais d'erreur : un rédacteur peut réenregistrer un
--- article déjà coché par un admin).
+-- article déjà coché par un admin). Sans utilisateur connecté (éditeur SQL,
+-- clé service_role), la valeur demandée est respectée.
 create or replace function public.articles_garde_une()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if not public.is_admin() then
+  if auth.uid() is not null and not public.is_admin() then
     if tg_op = 'INSERT' then
       new.a_la_une := false;
     else

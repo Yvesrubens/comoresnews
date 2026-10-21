@@ -29,3 +29,7 @@ test('0011 : garde en base sur à la une (correction silencieuse pour les non-ad
   assert.match(s, /new\.a_la_une := old\.a_la_une/);
   assert.match(s, /new\.a_la_une := false/);
 });
+
+test('0011 : la garde ne touche pas aux sessions sans utilisateur (éditeur SQL, service_role)', () => {
+  assert.match(sql(), /if auth\.uid\(\) is not null and not public\.is_admin\(\) then/);
+});
