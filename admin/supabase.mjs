@@ -70,6 +70,20 @@ export function createApi({ url, anonKey, deployHook }) {
     // --- Newsletter (lecture réservée aux admins par la RLS) ---
     listAbonnes: () => sb.from('abonnes').select('email,statut,source,cree_le').order('cree_le', { ascending: false }),
     countAbonnes: () => sb.from('abonnes').select('id', { count: 'exact', head: true }).eq('statut', 'actif'),
+    listNewsletters: () => sb.from('newsletters')
+      .select('id,objet,statut,cree_le,validee_le,envoyee_le,nb_destinataires,nb_envoyes,derniere_erreur')
+      .order('cree_le', { ascending: false }).limit(30),
+    getNewsletter: (id) => sb.from('newsletters').select('*').eq('id', id).single(),
+    createNewsletter: (row) => sb.from('newsletters').insert(row).select().single(),
+    updateNewsletter: (id, champs) => sb.from('newsletters').update(champs).eq('id', id),
+    validerNewsletter: (id) => sb.rpc('valider_newsletter', { p_id: id }),
+    annulerNewsletter: (id) => sb.rpc('annuler_newsletter', { p_id: id }),
+    arreterNewsletter: (id) => sb.rpc('arreter_newsletter', { p_id: id }),
+    lastSentNewsletter: () => sb.from('newsletters').select('envoyee_le,nb_envoyes').eq('statut', 'envoyee')
+      .order('envoyee_le', { ascending: false }).limit(1).maybeSingle(),
+    listPublishedSince: (iso) => sb.from('articles')
+      .select('id,titre,slug,categorie,excerpt,image_couverture,date_publication,statut')
+      .eq('statut', 'publie').gt('date_publication', iso).order('date_publication', { ascending: false }),
     getSujetByArticle: (articleId) => sb.from('sujets').select('*').eq('article_id', articleId).maybeSingle(),
     ignorerSujet: (id) => sb.from('sujets').update({ statut: 'ignore' }).eq('id', id),
     // Réserve le sujet et crée un brouillon d'article vide (atomique côté base).
