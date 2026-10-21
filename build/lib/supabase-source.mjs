@@ -28,6 +28,8 @@ export function mapRow(row) {
     keywords: Array.isArray(row.mots_cles) ? row.mots_cles : [],
     sourceNom: row.source_nom || '',
     sourceUrl: row.source_url || '',
+    aLaUne: row.a_la_une === true,
+    publishedAt: String(rawDate),
   };
 }
 
@@ -63,4 +65,17 @@ export async function loadLatestSujets(client, limit = 5) {
     .limit(limit);
   if (error) { console.warn(`Ailleurs sur le web ignoré : ${error.message}`); return []; }
   return data;
+}
+
+// Brèves publiées, les plus récentes d'abord (page « En direct »).
+// Un échec ne doit jamais casser la génération du site : on renvoie alors [].
+export async function loadBreves(client, limit = 30) {
+  const { data, error } = await client
+    .from('breves')
+    .select('id,texte,date_publication')
+    .eq('statut', 'publie')
+    .order('date_publication', { ascending: false })
+    .limit(limit);
+  if (error) { console.warn(`Brèves ignorées : ${error.message}`); return []; }
+  return data.map((b) => ({ id: b.id, texte: b.texte, publishedAt: b.date_publication }));
 }
