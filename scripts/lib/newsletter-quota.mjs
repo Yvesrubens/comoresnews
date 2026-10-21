@@ -11,3 +11,12 @@ export function quotaDisponible(envoyesLe, now, limites = LIMITES) {
     limites.parJour - depuis(86_400_000),
   ));
 }
+
+// Même calcul à partir de comptes déjà faits en base ({ minute, heure, jour }).
+export function quotaRestant(comptes, limites = LIMITES) {
+  return Math.max(0, Math.min(
+    limites.parMinute - (comptes.minute || 0),
+    limites.parHeure - (comptes.heure || 0),
+    limites.parJour - (comptes.jour || 0),
+  ));
+}

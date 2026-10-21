@@ -9,8 +9,11 @@ const ab = (id, statut = 'actif') => ({ id, email: `${id}@exemple.test`, jeton: 
 function fakeDb({ newsletter = null, abonnes = [], envois = [], tests = [], recents = [], statutSeq = null } = {}) {
   const db = {
     newsletter, abonnes, envois, tests, marques: [],
+    erreursTests: [],
     async testsDemandes() { return db.tests.map((t) => ({ ...t })); },
-    async effacerTest(id) { db.tests = db.tests.filter((t) => t.id !== id); },
+    async effacerTest(id, erreur = null) { db.tests = db.tests.filter((t) => t.id !== id); if (erreur) db.erreursTests.push(erreur); },
+    async demarrer(id) { if (db.newsletter.statut !== 'validee') return false; db.newsletter.statut = 'en_cours'; return true; },
+    async terminer(id, champs) { if (db.newsletter.statut !== 'en_cours') return false; Object.assign(db.newsletter, { statut: 'envoyee' }, champs); return true; },
     async prochaineNewsletter() { return db.newsletter && ['validee', 'en_cours'].includes(db.newsletter.statut) ? { ...db.newsletter } : null; },
     async statut(id) { return statutSeq ? statutSeq() : db.newsletter.statut; },
     async marquer(id, champs) { db.marques.push(champs); Object.assign(db.newsletter, champs); },
@@ -19,7 +22,11 @@ function fakeDb({ newsletter = null, abonnes = [], envois = [], tests = [], rece
     async destinatairesRestants(nlId, limite) {
       return db.abonnes.filter((a) => a.statut === 'actif' && !db.envois.some((e) => e.newsletter_id === nlId && e.abonne_id === a.id)).slice(0, limite);
     },
-    async envoisRecents(depuis) { return [...recents, ...db.envois.map((e) => e.envoye_le)].filter((d) => d >= depuis); },
+    async comptesEnvois(now) {
+      const dates = [...recents, ...db.envois.map((e) => e.envoye_le)];
+      const n = (ms) => dates.filter((d) => now.getTime() - d.getTime() < ms).length;
+      return { minute: n(60e3), heure: n(3600e3), jour: n(86400e3) };
+    },
     async enregistrerEnvoi(row) { db.envois.push({ ...row, envoye_le: new Date() }); },
   };
   return db;

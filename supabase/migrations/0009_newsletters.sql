@@ -98,3 +98,27 @@ begin
 end $$;
 
 grant execute on function public.desinscrire_newsletter(uuid) to anon, authenticated;
+
+-- Calculs côté base pour le script d'envoi (évite le plafond de 1 000 lignes de l'API).
+-- Réservés au service_role.
+create or replace function public.newsletter_destinataires(p_newsletter uuid, p_limite int)
+returns table (id uuid, email text, jeton uuid) language sql stable set search_path = public as $$
+  select a.id, a.email, a.jeton from public.abonnes a
+   where a.statut = 'actif'
+     and not exists (select 1 from public.newsletter_envois e where e.newsletter_id = p_newsletter and e.abonne_id = a.id)
+   order by a.cree_le, a.id
+   limit greatest(p_limite, 0);
+$$;
+
+create or replace function public.newsletter_comptes()
+returns table (minute int, heure int, jour int) language sql stable set search_path = public as $$
+  select count(*) filter (where envoye_le > now() - interval '1 minute')::int,
+         count(*) filter (where envoye_le > now() - interval '1 hour')::int,
+         count(*)::int
+    from public.newsletter_envois where envoye_le > now() - interval '24 hours';
+$$;
+
+revoke all on function public.newsletter_destinataires(uuid, int) from public, anon, authenticated;
+revoke all on function public.newsletter_comptes() from public, anon, authenticated;
+grant execute on function public.newsletter_destinataires(uuid, int) to service_role;
+grant execute on function public.newsletter_comptes() to service_role;

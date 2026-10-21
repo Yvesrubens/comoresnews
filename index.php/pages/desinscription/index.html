@@ -472,16 +472,20 @@ var td_ad_background_click_target="";
   <div style="max-width:820px;margin:30px auto 60px;padding:0 15px;font-size:15px;line-height:1.75;color:#333;">
     
 <h1 style="font-size:32px;font-weight:700;margin:0 0 8px;">Désinscription</h1>
-<p id="cn-unsub-msg" style="font-size:17px;line-height:1.6;margin:24px 0;">Traitement de votre demande…</p>
+<p id="cn-unsub-msg" style="font-size:17px;line-height:1.6;margin:24px 0;">Vous souhaitez ne plus recevoir la newsletter de Comoresnews ?</p>
+<p><button id="cn-unsub-btn" type="button" style="background:#e50914;color:#fff;border:0;border-radius:6px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer;">Confirmer ma désinscription</button></p>
 <p><a href="/index.html" style="color:#e50914;">Retour à l'accueil</a></p>
 <script>(function(){
-var m=document.getElementById('cn-unsub-msg');
+var m=document.getElementById('cn-unsub-msg'), b=document.getElementById('cn-unsub-btn');
 var invalide="Ce lien de désinscription n'est pas valide. Écrivez-nous à contact@comoresnews.com.";
 var t=new URLSearchParams(location.search).get('t');
-if(!t||!/^[0-9a-f-]{36}$/i.test(t)){ m.textContent=invalide; return; }
-fetch('https://flednhvntwyxirepijyn.supabase.co/rest/v1/rpc/desinscrire_newsletter',{method:'POST',headers:{'Content-Type':'application/json',apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ',Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ'},body:JSON.stringify({p_jeton:t})})
-.then(function(r){ if(!r.ok) throw new Error(); m.textContent='Vous êtes désinscrit de la newsletter. Vous ne recevrez plus nos emails.'; })
-.catch(function(){ m.textContent=invalide; });
+if(!t||!/^[0-9a-f-]{36}$/i.test(t)){ m.textContent=invalide; b.style.display='none'; return; }
+b.addEventListener('click',function(){
+  b.disabled=true;
+  fetch('https://flednhvntwyxirepijyn.supabase.co/rest/v1/rpc/desinscrire_newsletter',{method:'POST',headers:{'Content-Type':'application/json',apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ',Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ'},body:JSON.stringify({p_jeton:t})})
+  .then(function(r){ if(!r.ok) throw new Error(); m.textContent='Vous êtes désinscrit de la newsletter. Vous ne recevrez plus nos emails.'; b.style.display='none'; })
+  .catch(function(){ m.textContent=invalide; b.disabled=false; });
+});
 })();</script>
 
   </div>
