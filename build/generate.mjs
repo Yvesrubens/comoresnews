@@ -12,6 +12,7 @@ import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
+import { injectMenu } from './lib/menu.mjs';
 import { homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml } from './lib/en-direct.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
@@ -143,7 +144,12 @@ export async function main({ now, outDir = '_site' }) {
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
   const ailleurs = (h) => injectAilleurs(h, ailleursItems);
   // « Ailleurs sur le web » avant les pubs de bas de page (ordre : bloc, pubs, footer)
-  const deco = (h) => consent(analytics(ads(newsletter(ailleurs(h)))));
+  const deco = (h) => injectMenu(consent(analytics(ads(newsletter(ailleurs(h))))));
+  // Pages statiques recopiées telles quelles : menu seulement.
+  for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
+    const p = path.join(outDir, rel, 'index.html');
+    if (fs.existsSync(p)) fs.writeFileSync(p, injectMenu(fs.readFileSync(p, 'utf8')));
+  }
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
