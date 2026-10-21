@@ -163,3 +163,20 @@ export function abonnesToCsv(rows) {
   }
   return lines.join('\r\n');
 }
+
+const COMORES_MS = 3 * 3600 * 1000; // UTC+3
+const comoros = (d) => new Date(d.getTime() + COMORES_MS); // lire avec les getters UTC
+
+// Vendredi, à l'heure des Comores.
+export function isFridayComoros(now) {
+  return comoros(now).getUTCDay() === 5;
+}
+
+// Le vendredi, rappeler de préparer la newsletter si aucune n'est partie, en cours ou validée depuis lundi (heure des Comores).
+export function newsletterDueThisWeek(newsletters, now) {
+  if (!isFridayComoros(now)) return false;
+  const local = comoros(now);
+  const offset = (local.getUTCDay() + 6) % 7;
+  const lundiUtc = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() - offset) - COMORES_MS;
+  return !(newsletters || []).some((n) => ['envoyee', 'en_cours', 'validee'].includes(n.statut) && new Date(n.cree_le).getTime() >= lundiUtc);
+}

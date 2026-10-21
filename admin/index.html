@@ -230,6 +230,30 @@
     <section id="view-news" class="hidden">
       <div class="card">
         <div class="row" style="align-items:center">
+          <div><h2 style="margin:0;font-size:20px">Newsletter de la semaine</h2>
+            <div class="muted">Préparez, relisez, puis validez : l'envoi part dans les 10 minutes depuis newsletter@comoresnews.com.</div></div>
+          <div style="flex:0 0 auto"><button class="primary" id="nl-preparer">Préparer la newsletter de la semaine</button></div>
+        </div>
+        <div id="nlMsg"></div>
+      </div>
+      <div class="card hidden" id="nl-editeur">
+        <label>Objet</label><input id="nl-objet">
+        <label>Introduction (facultative)</label><textarea id="nl-intro" style="min-height:80px"></textarea>
+        <label>Articles inclus</label><div id="nl-articles"></div>
+        <label>Aperçu de l'email</label>
+        <iframe id="nl-apercu" title="Aperçu de la newsletter" style="width:100%;height:560px;border:1px solid var(--border);border-radius:6px;background:#fff"></iframe>
+        <div class="actions">
+          <button id="nl-enregistrer">Enregistrer</button>
+          <button id="nl-test">M'envoyer un test</button>
+          <button class="ok" id="nl-valider">Valider et envoyer</button>
+          <button id="nl-fermer">Fermer</button>
+        </div>
+      </div>
+      <div class="card"><h3 style="margin:0 0 8px;font-size:15px">Historique des envois</h3>
+        <table><thead><tr><th>Créée le</th><th>Objet</th><th>Statut</th><th>Envoyés</th><th></th></tr></thead>
+        <tbody id="nlHistBody"></tbody></table></div>
+      <div class="card">
+        <div class="row" style="align-items:center">
           <div><h2 style="margin:0;font-size:20px"><span id="n-actifs">–</span> abonnés actifs</h2>
             <div class="muted">Inscrits via le bandeau du site. L'envoi du récapitulatif hebdomadaire arrive bientôt.</div></div>
           <div style="flex:0 0 auto"><button id="n-export">Exporter (CSV)</button></div>
@@ -280,7 +304,8 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek } from './lib.mjs';
+import { renderNewsletter, weekSubject, pickArticles } from './newsletter-template.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
 const CONFIG = {
@@ -488,9 +513,11 @@ async function refreshDashboard(){
 
   const fmt = (v) => new Date(v).toLocaleString('fr-FR', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
   if (isAdmin) {
-    const { count: nAbonnes, error: eAb } = await api.countAbonnes();
-    $('b-news').innerHTML = eAb ? 'Section à venir — abonnés, dernier envoi, prochain envoi.'
-      : `<b style="font-size:22px;color:#222">${nAbonnes || 0}</b> abonnés actifs · envoi hebdomadaire bientôt disponible`;
+    const [{ count: nAbonnes, error: eAb }, { data: nls }, { data: dernier }] = await Promise.all([api.countAbonnes(), api.listNewsletters(), api.lastSentNewsletter()]);
+    const aFaire = newsletterDueThisWeek(nls || [], now);
+    $('b-news').innerHTML = eAb ? '' : `<b style="font-size:22px;color:#222">${nAbonnes || 0}</b> abonnés actifs<br>${
+      aFaire ? '<span style="color:#e50914;font-weight:600">La newsletter de la semaine est à préparer.</span> <button class="primary" data-go="news" style="margin-top:6px">Préparer</button>'
+      : dernier ? `Dernier envoi : ${relativeTime(dernier.envoyee_le, now)} à ${dernier.nb_envoyes} abonné(s)` : 'Aucune newsletter envoyée pour le moment.'}`;
   }
   $('b-prog').innerHTML = upcomingScheduled(rows, now).map(r => `<div class="item"><span>${esc(r.titre)}</span><span class="muted">${fmt(r.date_programmee)}</span></div>`).join('')
     || vide('Aucune publication programmée.');
@@ -499,6 +526,7 @@ async function refreshDashboard(){
 // ---------- NEWSLETTERS ----------
 let ABONNES = [];
 async function refreshNews(){
+  refreshNlHistory();
   const { data, error } = await api.listAbonnes();
   if (error) return msg($('newsMsg'), error.message, 'err');
   ABONNES = data || [];
@@ -510,6 +538,102 @@ async function refreshNews(){
     <td>${a.statut === 'actif' ? 'actif' : '<span class="muted">désinscrit</span>'}</td><td class="muted">${esc(a.source)}</td></tr>`).join('')
     || '<tr><td colspan="4" class="muted">Aucun abonné pour le moment.</td></tr>';
 }
+// ---------- NEWSLETTER DE LA SEMAINE ----------
+let NL = null, NL_CANDIDATS = [];
+const NL_SITE = 'https://comoresnews.com';
+const NL_STATUTS = { brouillon:'brouillon', validee:'validée, envoi imminent', en_cours:'envoi en cours', envoyee:'envoyée', arretee:'arrêtée', echec:'échec' };
+async function refreshNlHistory(){
+  const { data, error } = await api.listNewsletters();
+  if (error) return msg($('nlMsg'), error.message, 'err');
+  $('nlHistBody').innerHTML = (data||[]).map(n => `<tr><td>${(n.cree_le||'').slice(0,10)}</td><td>${esc(n.objet)}${n.derniere_erreur ? '<br><span class="muted">'+esc(n.derniere_erreur)+'</span>' : ''}</td>
+    <td>${NL_STATUTS[n.statut]||n.statut}</td><td>${n.nb_envoyes}/${n.nb_destinataires}</td><td>${
+      n.statut==='brouillon' ? `<button data-nl-ouvrir="${n.id}">Ouvrir</button>` :
+      n.statut==='validee' ? `<button data-nl-annuler="${n.id}">Annuler l'envoi</button>` :
+      n.statut==='en_cours' ? `<button class="accent" data-nl-arreter="${n.id}">Arrêter l'envoi</button>` : ''}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="muted">Aucune newsletter pour le moment.</td></tr>';
+}
+$('nlHistBody').onclick = async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.nlOuvrir) return ouvrirNewsletter(b.dataset.nlOuvrir);
+  const action = b.dataset.nlAnnuler ? ['annulerNewsletter', b.dataset.nlAnnuler, 'Envoi annulé : la newsletter repasse en brouillon.', "Annuler l'envoi de cette newsletter ?"]
+    : b.dataset.nlArreter ? ['arreterNewsletter', b.dataset.nlArreter, 'Envoi arrêté : plus aucun email ne partira.', "Arrêter l'envoi ? Les emails déjà partis le restent."] : null;
+  if (!action || !confirm(action[3])) return;
+  const { error } = await api[action[0]](action[1]);
+  msg($('nlMsg'), error ? error.message : action[2], error ? 'err' : 'ok');
+  refreshNlHistory();
+};
+async function nlDepuis(){
+  const { data } = await api.lastSentNewsletter();
+  return data && data.envoyee_le ? data.envoyee_le : new Date(Date.now() - 7*86400000).toISOString();
+}
+$('nl-preparer').onclick = async () => {
+  const { data: liste } = await api.listNewsletters();
+  const brouillon = (liste||[]).find(n => n.statut === 'brouillon');
+  if (brouillon) return ouvrirNewsletter(brouillon.id);
+  const since = await nlDepuis();
+  const { data: rows, error } = await api.listPublishedSince(since);
+  if (error) return msg($('nlMsg'), error.message, 'err');
+  const now = new Date();
+  const ids = pickArticles(rows||[], since, now).map(a => a.id);
+  const { data, error: e2 } = await api.createNewsletter({ objet: weekSubject(now), intro: '', article_ids: ids, statut: 'brouillon', cree_par: PROFILE.id });
+  if (e2) return msg($('nlMsg'), e2.message, 'err');
+  await ouvrirNewsletter(data.id);
+  msg($('nlMsg'), ids.length ? `Brouillon créé avec ${ids.length} article(s) de la semaine.` : "Brouillon créé, mais aucun article n'a été publié depuis la dernière newsletter.", ids.length ? 'ok' : 'err');
+  refreshNlHistory();
+};
+async function ouvrirNewsletter(id){
+  const { data, error } = await api.getNewsletter(id);
+  if (error) return msg($('nlMsg'), error.message, 'err');
+  NL = data;
+  const { data: rows } = await api.listPublishedSince(await nlDepuis());
+  const dejaLa = new Set((rows||[]).map(r => r.id));
+  const extra = NL.article_ids.filter(x => !dejaLa.has(x));
+  let extras = [];
+  if (extra.length) { const r = await api.listPublishedSince('1970-01-01T00:00:00Z'); extras = (r.data||[]).filter(a => extra.includes(a.id)); }
+  NL_CANDIDATS = [...(rows||[]), ...extras];
+  $('nl-objet').value = NL.objet; $('nl-intro').value = NL.intro || '';
+  $('nl-articles').innerHTML = NL_CANDIDATS.map(a => `<label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:4px 0">
+    <input type="checkbox" style="width:auto" value="${a.id}" ${NL.article_ids.includes(a.id) ? 'checked' : ''}>
+    ${esc(a.titre)} <span class="muted">(${(a.date_publication||'').slice(0,10)})</span></label>`).join('') || '<div class="muted">Aucun article publié sur la période.</div>';
+  $('nl-editeur').classList.remove('hidden');
+  nlApercu();
+}
+function nlForm(){
+  const ids = [...$('nl-articles').querySelectorAll('input:checked')].map(i => i.value);
+  return { objet: $('nl-objet').value.trim() || weekSubject(new Date()), intro: $('nl-intro').value, article_ids: NL_CANDIDATS.map(a => a.id).filter(x => ids.includes(x)) };
+}
+function nlApercu(){
+  const f = nlForm();
+  const cats = Object.fromEntries(CATS.map(c => [c.slug, c.nom]));
+  const articles = NL_CANDIDATS.filter(a => f.article_ids.includes(a.id));
+  $('nl-apercu').srcdoc = renderNewsletter({ objet: f.objet, intro: f.intro, articles, siteUrl: NL_SITE, unsubscribeUrl: '#', categories: cats }).html;
+}
+$('nl-objet').oninput = nlApercu; $('nl-intro').oninput = nlApercu; $('nl-articles').onchange = nlApercu;
+async function nlEnregistrer(){
+  const { error } = await api.updateNewsletter(NL.id, nlForm());
+  if (error) { msg($('nlMsg'), error.message, 'err'); return false; }
+  return true;
+}
+$('nl-enregistrer').onclick = async () => { if (await nlEnregistrer()) { msg($('nlMsg'), 'Brouillon enregistré.', 'ok'); refreshNlHistory(); } };
+$('nl-test').onclick = async () => {
+  if (!(await nlEnregistrer())) return;
+  const { error } = await api.updateNewsletter(NL.id, { test_a: PROFILE.email });
+  msg($('nlMsg'), error ? error.message : `Test envoyé à ${esc(PROFILE.email)} dans les 10 prochaines minutes.`, error ? 'err' : 'ok');
+};
+$('nl-valider').onclick = async () => {
+  const f = nlForm();
+  if (!f.article_ids.length) return msg($('nlMsg'), 'Cochez au moins un article.', 'err');
+  if (!(await nlEnregistrer())) return;
+  const { count } = await api.countAbonnes();
+  if (!confirm(`Envoyer « ${f.objet} » à ${count || 0} abonné(s) ? L'envoi ne pourra plus être modifié.`)) return;
+  const { error } = await api.validerNewsletter(NL.id);
+  if (error) return msg($('nlMsg'), error.message, 'err');
+  $('nl-editeur').classList.add('hidden'); NL = null;
+  msg($('nlMsg'), "Newsletter validée : l'envoi commence dans les 10 prochaines minutes.", 'ok');
+  refreshNlHistory();
+};
+$('nl-fermer').onclick = () => { $('nl-editeur').classList.add('hidden'); NL = null; };
+
 $('n-export').onclick = () => {
   const blob = new Blob(['\ufeff' + abonnesToCsv(ABONNES)], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');

@@ -67,3 +67,21 @@ test('abonnesToCsv : en-tête, une ligne par abonné, champs protégés', async 
   assert.equal(lines[2], 'x@y.fr;desinscrit;2026-10-20;"/page;""spéciale"""');
   assert.equal(abonnesToCsv([]), 'email;statut;inscrit_le;page');
 });
+
+test('isFridayComoros : vendredi selon l\'heure des Comores (UTC+3)', async () => {
+  const { isFridayComoros } = await import('../admin/lib.mjs');
+  assert.equal(isFridayComoros(new Date('2026-10-23T05:00:00Z')), true);   // vendredi 8h aux Comores
+  assert.equal(isFridayComoros(new Date('2026-10-23T22:00:00Z')), false);  // samedi 1h aux Comores
+  assert.equal(isFridayComoros(new Date('2026-10-22T21:30:00Z')), true);   // vendredi 0h30 aux Comores
+});
+
+test('newsletterDueThisWeek : vendredi et aucune newsletter partie ou validée cette semaine', async () => {
+  const { newsletterDueThisWeek } = await import('../admin/lib.mjs');
+  const vendredi = new Date('2026-10-23T06:00:00Z');
+  assert.equal(newsletterDueThisWeek([], vendredi), true);
+  assert.equal(newsletterDueThisWeek([{ statut: 'envoyee', cree_le: '2026-10-21T08:00:00Z' }], vendredi), false);
+  assert.equal(newsletterDueThisWeek([{ statut: 'validee', cree_le: '2026-10-22T08:00:00Z' }], vendredi), false);
+  assert.equal(newsletterDueThisWeek([{ statut: 'brouillon', cree_le: '2026-10-22T08:00:00Z' }], vendredi), true);
+  assert.equal(newsletterDueThisWeek([{ statut: 'envoyee', cree_le: '2026-10-16T08:00:00Z' }], vendredi), true); // semaine précédente
+  assert.equal(newsletterDueThisWeek([], new Date('2026-10-21T06:00:00Z')), false); // mercredi
+});

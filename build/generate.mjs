@@ -90,7 +90,8 @@ export function buildSearchIndex(articles, catsCfg) {
 // --- assets & pages statiques à recopier tels quels dans _site ---
 const PASSTHROUGH = ['wp-content', 'wp-includes', '_external', '.nojekyll', 'admin',
   'index.php/pages/contact', 'index.php/pages/recherche',
-  'index.php/pages/mentions-legales', 'index.php/pages/politique-confidentialite'];
+  'index.php/pages/mentions-legales', 'index.php/pages/politique-confidentialite',
+  'index.php/pages/desinscription'];
 
 function copyRec(src, dst) {
   const st = fs.statSync(src);
