@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { importAll, exitCode } from '../scripts/import-sources.mjs';
+import { importAll, exitCode, shouldRebuild } from '../scripts/import-sources.mjs';
 
 const fx = (f) => fs.readFileSync(new URL(`./fixtures/sources/${f}`, import.meta.url), 'utf8');
 
@@ -101,4 +101,9 @@ test('flux RSS vide = erreur', async () => {
 test("exitCode : 1 dès qu'une source a échoué, 0 sinon", () => {
   assert.equal(exitCode([{ erreur: null }, { erreur: null }]), 0);
   assert.equal(exitCode([{ erreur: null }, { erreur: 'boom' }]), 1);
+});
+
+test('shouldRebuild : seulement si au moins un nouveau sujet', () => {
+  assert.equal(shouldRebuild([{ nouveaux: 0 }, { nouveaux: 0, erreur: 'x' }]), false);
+  assert.equal(shouldRebuild([{ nouveaux: 0 }, { nouveaux: 3 }]), true);
 });

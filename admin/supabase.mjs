@@ -66,6 +66,10 @@ export function createApi({ url, anonKey, deployHook }) {
       .eq('statut', statut).order('importe_le', { ascending: false }).limit(200),
     getSujet: (id) => sb.from('sujets').select('*').eq('id', id).single(),
     countSujets: () => sb.from('sujets').select('id', { count: 'exact', head: true }).eq('statut', 'nouveau'),
+
+    // --- Newsletter (lecture réservée aux admins par la RLS) ---
+    listAbonnes: () => sb.from('abonnes').select('email,statut,source,cree_le').order('cree_le', { ascending: false }),
+    countAbonnes: () => sb.from('abonnes').select('id', { count: 'exact', head: true }).eq('statut', 'actif'),
     getSujetByArticle: (articleId) => sb.from('sujets').select('*').eq('article_id', articleId).maybeSingle(),
     ignorerSujet: (id) => sb.from('sujets').update({ statut: 'ignore' }).eq('id', id),
     // Réserve le sujet et crée un brouillon d'article vide (atomique côté base).

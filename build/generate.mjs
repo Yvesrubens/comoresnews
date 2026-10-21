@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
-import { makeClient, loadArticlesFromSupabase } from './lib/supabase-source.mjs';
+import { makeClient, loadArticlesFromSupabase, loadLatestSujets } from './lib/supabase-source.mjs';
+import { injectNewsletter } from './lib/newsletter.mjs';
+import { injectAilleurs } from './lib/ailleurs.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 import { injectAds } from './lib/ads.mjs';
 import { injectAnalytics } from './lib/analytics.mjs';
@@ -111,6 +113,7 @@ export async function main({ now, outDir = '_site' }) {
   const all = process.env.CONTENT_SOURCE === 'supabase'
     ? await loadArticlesFromSupabase(makeClient(), now)
     : loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
+  const ailleursItems = process.env.CONTENT_SOURCE === 'supabase' ? await loadLatestSujets(makeClient(), 5) : [];
   fs.rmSync(outDir, { recursive: true, force: true });
   for (const rel of PASSTHROUGH) {
     const src = path.join(ROOT, rel);
@@ -120,7 +123,10 @@ export async function main({ now, outDir = '_site' }) {
   const analytics = process.env.GA4 === 'off' ? (h) => h : injectAnalytics;
   const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
   // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
-  const deco = (h) => consent(analytics(ads(h)));
+  const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
+  const ailleurs = (h) => injectAilleurs(h, ailleursItems);
+  // « Ailleurs sur le web » avant les pubs de bas de page (ordre : bloc, pubs, footer)
+  const deco = (h) => consent(analytics(ads(newsletter(ailleurs(h)))));
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));

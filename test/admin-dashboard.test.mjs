@@ -54,3 +54,16 @@ test('relativeTime', () => {
   assert.equal(relativeTime(iso(2026, 10, 12), NOW), 'le 12/10');
   assert.equal(relativeTime(null, NOW), '');
 });
+
+test('abonnesToCsv : en-tête, une ligne par abonné, champs protégés', async () => {
+  const { abonnesToCsv } = await import('../admin/lib.mjs');
+  const csv = abonnesToCsv([
+    { email: 'a@b.co', statut: 'actif', cree_le: '2026-10-21T08:30:00Z', source: '/' },
+    { email: 'x@y.fr', statut: 'desinscrit', cree_le: '2026-10-20T10:00:00Z', source: '/page;"spéciale"' },
+  ]);
+  const lines = csv.split('\r\n');
+  assert.equal(lines[0], 'email;statut;inscrit_le;page');
+  assert.equal(lines[1], 'a@b.co;actif;2026-10-21;/');
+  assert.equal(lines[2], 'x@y.fr;desinscrit;2026-10-20;"/page;""spéciale"""');
+  assert.equal(abonnesToCsv([]), 'email;statut;inscrit_le;page');
+});

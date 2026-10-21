@@ -59,6 +59,10 @@ export async function importAll({ sources, fetchText, db, log = console.log }) {
 }
 
 // 1 dès qu'une source a échoué : le run GitHub passe en rouge et envoie une alerte.
+export function shouldRebuild(results) {
+  return results.some((r) => r.nouveaux > 0);
+}
+
 export function exitCode(results) {
   return results.some((r) => r.erreur) ? 1 : 0;
 }
@@ -91,6 +95,11 @@ async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const sources = JSON.parse(fs.readFileSync(new URL('../config/sources.json', import.meta.url), 'utf8'));
   const results = await importAll({ sources, fetchText, db: supabaseDb({ dryRun }) });
+  // Nouveaux titres → régénérer le site pour mettre à jour « Ailleurs sur le web ».
+  if (!dryRun && shouldRebuild(results) && process.env.VERCEL_DEPLOY_HOOK_URL) {
+    const res = await fetch(process.env.VERCEL_DEPLOY_HOOK_URL, { method: 'POST' }).catch((e) => ({ ok: false, statusText: e.message }));
+    console.log(res.ok ? 'Régénération du site déclenchée.' : `Régénération du site impossible : ${res.status || ''} ${res.statusText || ''}`);
+  }
   process.exitCode = exitCode(results);
 }
 

@@ -148,3 +148,18 @@ export function relativeTime(value, now) {
   if (min < 48 * 60) return 'hier';
   return `le ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
+
+// ---- Newsletter ----
+
+// Export des abonnés (séparateur « ; » pour Excel en français).
+export function abonnesToCsv(rows) {
+  const cell = (v) => {
+    const s = String(v ?? '');
+    return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = ['email;statut;inscrit_le;page'];
+  for (const r of rows || []) {
+    lines.push([r.email, r.statut, String(r.cree_le || '').slice(0, 10), r.source].map(cell).join(';'));
+  }
+  return lines.join('\r\n');
+}

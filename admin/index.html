@@ -111,8 +111,8 @@
       <button data-view="list">Articles <span class="nav-count hidden" id="cnt-attente"></span></button>
       <button data-view="sujets">Sujets <span class="nav-count hidden" id="cnt-sujets"></span></button>
       <button data-view="media">Médiathèque</button>
-      <div class="grp">Lecteurs</div>
-      <button disabled title="Bientôt disponible">Newsletters <span class="soon">bientôt</span></button>
+      <div class="grp adminOnly hidden">Lecteurs</div>
+      <button data-view="news" class="adminOnly hidden">Newsletters <span class="soon" id="cnt-abonnes"></span></button>
       <div class="grp adminOnly hidden">Réglages</div>
       <button data-view="cats" class="adminOnly hidden">Catégories</button>
       <button data-view="users" class="adminOnly hidden">Utilisateurs</button>
@@ -141,7 +141,7 @@
         <div class="box"><h3><span id="b-valider-titre">À valider</span><a data-go="list" data-statut="en_attente">tout voir</a></h3><div id="b-valider"></div></div>
         <div class="box"><h3>Derniers sujets arrivés<a data-go="sujets">tout voir</a></h3><div id="b-sujets"></div></div>
         <div class="box"><h3>Prochaines publications programmées</h3><div id="b-prog"></div></div>
-        <div class="box"><h3>Newsletter</h3><div class="muted">Section à venir — abonnés, dernier envoi, prochain envoi.</div></div>
+        <div class="box"><h3>Newsletter<a data-go="news" class="adminOnly hidden">voir la liste</a></h3><div id="b-news" class="muted">Section à venir — abonnés, dernier envoi, prochain envoi.</div></div>
       </div>
     </section>
 
@@ -226,6 +226,20 @@
       </div>
     </section>
 
+    <!-- NEWSLETTERS -->
+    <section id="view-news" class="hidden">
+      <div class="card">
+        <div class="row" style="align-items:center">
+          <div><h2 style="margin:0;font-size:20px"><span id="n-actifs">–</span> abonnés actifs</h2>
+            <div class="muted">Inscrits via le bandeau du site. L'envoi du récapitulatif hebdomadaire arrive bientôt.</div></div>
+          <div style="flex:0 0 auto"><button id="n-export">Exporter (CSV)</button></div>
+        </div>
+        <div id="newsMsg"></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Email</th><th>Inscrit le</th><th>Statut</th><th>Page</th></tr></thead>
+        <tbody id="newsBody"></tbody></table></div>
+    </section>
+
     <!-- MEDIATHEQUE -->
     <section id="view-media" class="hidden">
       <div class="card">
@@ -266,7 +280,7 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv } from './lib.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
 const CONFIG = {
@@ -281,7 +295,7 @@ let PROFILE = null, CATS = [], EDITING = null; // EDITING = ligne article ou nul
 
 function msg(el, text, kind='ok'){ el.innerHTML = text ? `<div class="msg ${kind}">${text}</div>` : ''; }
 function show(view){
-  for (const s of ['dash','list','edit','sujets','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
+  for (const s of ['dash','list','edit','sujets','news','media','users','cats']) $('view-'+s).classList.toggle('hidden', s!==view);
   const navView = view === 'edit' ? 'list' : view;
   for (const b of $('tabs').querySelectorAll('[data-view]')) b.classList.toggle('active', b.dataset.view===navView);
 }
@@ -410,7 +424,7 @@ $('a-annuler').onclick = () => { show('list'); };
 async function go(v, statut){
   if (v === 'list' && statut !== undefined) $('fStatut').value = statut;
   show(v);
-  if (v==='dash') await refreshDashboard(); else if (v==='sujets') await refreshSujets(); else if (v==='media') await refreshMedia();
+  if (v==='dash') await refreshDashboard(); else if (v==='sujets') await refreshSujets(); else if (v==='news') await refreshNews(); else if (v==='media') await refreshMedia();
   else if (v==='users') await refreshUsers(); else if (v==='cats') await refreshCats(); else if (v==='list') await refreshList();
 }
 $('tabs').onclick = (e) => {
@@ -473,9 +487,36 @@ async function refreshDashboard(){
     <button class="primary" data-sujet="${sj.id}">Rédiger</button></div>`).join('') || vide('Aucun nouveau sujet.');
 
   const fmt = (v) => new Date(v).toLocaleString('fr-FR', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  if (isAdmin) {
+    const { count: nAbonnes, error: eAb } = await api.countAbonnes();
+    $('b-news').innerHTML = eAb ? 'Section à venir — abonnés, dernier envoi, prochain envoi.'
+      : `<b style="font-size:22px;color:#222">${nAbonnes || 0}</b> abonnés actifs · envoi hebdomadaire bientôt disponible`;
+  }
   $('b-prog').innerHTML = upcomingScheduled(rows, now).map(r => `<div class="item"><span>${esc(r.titre)}</span><span class="muted">${fmt(r.date_programmee)}</span></div>`).join('')
     || vide('Aucune publication programmée.');
 }
+
+// ---------- NEWSLETTERS ----------
+let ABONNES = [];
+async function refreshNews(){
+  const { data, error } = await api.listAbonnes();
+  if (error) return msg($('newsMsg'), error.message, 'err');
+  ABONNES = data || [];
+  const actifs = ABONNES.filter(a => a.statut === 'actif').length;
+  $('n-actifs').textContent = actifs;
+  $('cnt-abonnes').textContent = actifs ? actifs : '';
+  const now = new Date();
+  $('newsBody').innerHTML = ABONNES.map(a => `<tr><td>${esc(a.email)}</td><td>${(a.cree_le||'').slice(0,10)} <span class="muted">(${relativeTime(a.cree_le, now)})</span></td>
+    <td>${a.statut === 'actif' ? 'actif' : '<span class="muted">désinscrit</span>'}</td><td class="muted">${esc(a.source)}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="muted">Aucun abonné pour le moment.</td></tr>';
+}
+$('n-export').onclick = () => {
+  const blob = new Blob(['\ufeff' + abonnesToCsv(ABONNES)], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'abonnes-newsletter-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+};
 
 // ---------- SUJETS ----------
 let SUJET = null;
