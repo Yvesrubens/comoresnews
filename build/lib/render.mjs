@@ -3,8 +3,30 @@ import { articlePath, resolveImg } from './paths.mjs';
 
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true });
 
-export function renderMarkdown(src) {
-  return md.render(src || '');
+// Sites de référence : liens externes sans nofollow.
+const SOURCES_FIABLES = ['wikipedia.org', 'unesco.org', 'gouv.km', 'beit-salam.km', 'un.org', 'fifa.com', 'cafonline.com', 'worldbank.org', 'imf.org', 'afd.fr', 'ird.fr'];
+const SITE = /^https?:\/\/(www\.)?comoresnews\.com(\/|$)/i;
+
+function hote(url) {
+  try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
+}
+const fiable = (h) => SOURCES_FIABLES.some((d) => h === d || h.endsWith('.' + d));
+
+md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+  const t = tokens[idx];
+  const href = t.attrGet('href') || '';
+  if (href.startsWith('/') && !href.startsWith('//')) {
+    if (env?.prefix) t.attrSet('href', env.prefix + href.slice(1));
+  } else if (/^https?:\/\//i.test(href) && !SITE.test(href)) {
+    t.attrSet('target', '_blank');
+    t.attrSet('rel', fiable(hote(href)) ? 'noopener' : 'noopener nofollow');
+  }
+  return self.renderToken(tokens, idx, options);
+};
+
+// prefix : chemin relatif vers la racine du site depuis la page (liens internes « /… »).
+export function renderMarkdown(src, prefix = '') {
+  return md.render(src || '', { prefix });
 }
 
 export function articleCard(a, prefix, catName) {

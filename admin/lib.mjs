@@ -180,3 +180,20 @@ export function newsletterDueThisWeek(newsletters, now) {
   const lundiUtc = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() - offset) - COMORES_MS;
   return !(newsletters || []).some((n) => ['envoyee', 'en_cours', 'validee'].includes(n.statut) && new Date(n.cree_le).getTime() >= lundiUtc);
 }
+
+// ---------- Liens dans le corps d'un article ----------
+// Entoure la sélection [start,end) d'un lien Markdown ; sans sélection, insère `label` (ou l'URL).
+export function insertLink(text, start, end, label, url) {
+  const sel = text.slice(start, end);
+  const lien = `[${sel || label || url}](${url})`;
+  return { text: text.slice(0, start) + lien + text.slice(end), cursor: start + lien.length };
+}
+// Chemin public d'un article publié, depuis la racine du site.
+export function internalLinkTarget(a) {
+  return '/' + articleUrl(String(a.date_publication).slice(0, 10), a.slug);
+}
+const sansAccents = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+export function searchArticles(rows, q, limit = 8) {
+  const n = sansAccents(q).trim();
+  return rows.filter((r) => r.statut === 'publie' && (!n || sansAccents(r.titre).includes(n))).slice(0, limit);
+}

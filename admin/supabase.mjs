@@ -36,6 +36,12 @@ export function createApi({ url, anonKey, deployHook }) {
       if (categorie) q = q.eq('categorie', categorie);
       return q;
     },
+    // Articles publiés de tous les auteurs (titre, slug, date) pour l'insertion de liens.
+    articlesPourLiens: async () => {
+      const r = await sb.rpc('articles_publies_pour_liens');
+      if (!r.error) return { data: (r.data || []).map((a) => ({ ...a, statut: 'publie' })), error: null };
+      return sb.from('articles').select('id,titre,slug,statut,date_publication').eq('statut', 'publie'); // migration 0010 absente
+    },
     getArticle: (id) => sb.from('articles').select('*').eq('id', id).single(),
     insertArticle: (row) => sb.from('articles').insert(row).select().single(),
     updateArticle: (id, row) => sb.from('articles').update(row).eq('id', id).select().single(),
