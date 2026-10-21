@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
-import { makeClient, loadArticlesFromSupabase, loadLatestSujets } from './lib/supabase-source.mjs';
+import { makeClient, loadArticlesFromSupabase, loadLatestSujets, loadBreves } from './lib/supabase-source.mjs';
 import { injectNewsletter } from './lib/newsletter.mjs';
 import { injectAilleurs, mixSources } from './lib/ailleurs.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
@@ -12,6 +12,8 @@ import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
+import { injectMenu } from './lib/menu.mjs';
+import { homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml } from './lib/en-direct.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
@@ -62,7 +64,10 @@ export function buildCategoryPage(slug, articles, catsCfg) {
 }
 
 export function buildHome(articles, catsCfg) {
-  let html = TPL('home.html');
+  const une = homeUne(articles, 4);
+  let html = TPL('home.html')
+    .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
+    .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)));
   for (const slug of Object.keys(catsCfg)) {
     const list = articles.filter(a => a.category === slug).sort((x, y) => y.date.localeCompare(x.date));
     const inner = list.length
@@ -71,6 +76,17 @@ export function buildHome(articles, catsCfg) {
     html = replaceSection(html, slug, inner);
   }
   return html;
+}
+
+export const EN_DIRECT_PAGE = 'index.php/pages/en-direct/index.html';
+
+export function buildEnDirectPage(articles, breves, catsCfg) {
+  const html = applyTemplate(TPL('category.html'), {
+    TITLE: 'En direct',
+    BREADCRUMB: '<span class="td-bred-no-url-last">En direct</span>',
+    ARTICLES: enDirectInner(pickUne(articles, 8), breves, relPrefix(EN_DIRECT_PAGE), catsCfg),
+  });
+  return setTitle(html, 'En direct');
 }
 
 export function buildAuthor(articles, catsCfg) {
@@ -115,6 +131,7 @@ export async function main({ now, outDir = '_site' }) {
     ? await loadArticlesFromSupabase(makeClient(), now)
     : loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
   const ailleursItems = process.env.CONTENT_SOURCE === 'supabase' ? mixSources(await loadLatestSujets(makeClient(), 40)) : [];
+  const breves = process.env.CONTENT_SOURCE === 'supabase' ? await loadBreves(makeClient(), 30) : [];
   fs.rmSync(outDir, { recursive: true, force: true });
   for (const rel of PASSTHROUGH) {
     const src = path.join(ROOT, rel);
@@ -127,14 +144,20 @@ export async function main({ now, outDir = '_site' }) {
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
   const ailleurs = (h) => injectAilleurs(h, ailleursItems);
   // « Ailleurs sur le web » avant les pubs de bas de page (ordre : bloc, pubs, footer)
-  const deco = (h) => consent(analytics(ads(newsletter(ailleurs(h)))));
+  const deco = (h) => injectMenu(consent(analytics(ads(newsletter(ailleurs(h))))));
+  // Pages statiques recopiées telles quelles : menu seulement.
+  for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
+    const p = path.join(outDir, rel, 'index.html');
+    if (fs.existsSync(p)) fs.writeFileSync(p, injectMenu(fs.readFileSync(p, 'utf8')));
+  }
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
   write(outDir, 'index.html', deco(buildHome(all, cats)));
   write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats)));
+  write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
-  const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }]
+  const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }, { loc: `${BASE}/${EN_DIRECT_PAGE}`, lastmod: now }]
     .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))
     .concat(all.map(a => ({ loc: `${BASE}/${articlePath(a.date, a.slug)}`, lastmod: a.date })));
   write(outDir, 'sitemap.xml', sitemapXml(sitemapEntries));

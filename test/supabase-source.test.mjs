@@ -46,3 +46,28 @@ test('mapRow propage la source (nom + lien)', () => {
   assert.equal(b.sourceNom, '');
   assert.equal(b.sourceUrl, '');
 });
+
+test('mapRow expose la case à la une et l’horodatage complet', async () => {
+  const base = { titre: 'T', slug: 's', categorie: 'sport', statut: 'publie', date_publication: '2026-10-21T08:30:00Z' };
+  assert.equal(mapRow({ ...base, a_la_une: true }).aLaUne, true);
+  assert.equal(mapRow(base).aLaUne, false);
+  assert.equal(mapRow(base).publishedAt, '2026-10-21T08:30:00Z');
+});
+
+test('loadBreves renvoie les brèves publiées, ou [] en cas d’erreur', async () => {
+  const { loadBreves } = await import('../build/lib/supabase-source.mjs');
+  const appels = [];
+  const fake = (res) => {
+    const q = { select: (c) => (appels.push(['select', c]), q), eq: (k, v) => (appels.push(['eq', k, v]), q),
+      order: (k, o) => (appels.push(['order', k, o]), q), limit: (n) => (appels.push(['limit', n]), Promise.resolve(res)) };
+    return { from: (t) => (appels.push(['from', t]), q) };
+  };
+  const rows = [{ id: '1', texte: 'A', date_publication: '2026-10-21T08:00:00Z' }, { id: '2', texte: 'B', date_publication: '2026-10-20T08:00:00Z' }];
+  const r = await loadBreves(fake({ data: rows, error: null }));
+  assert.deepEqual(r, [{ id: '1', texte: 'A', publishedAt: '2026-10-21T08:00:00Z' }, { id: '2', texte: 'B', publishedAt: '2026-10-20T08:00:00Z' }]);
+  assert.ok(appels.some((a) => a[0] === 'from' && a[1] === 'breves'));
+  assert.ok(appels.some((a) => a[0] === 'eq' && a[1] === 'statut' && a[2] === 'publie'));
+  assert.ok(appels.some((a) => a[0] === 'limit' && a[1] === 30));
+  const warn = console.warn; console.warn = () => {};
+  try { assert.deepEqual(await loadBreves(fake({ data: null, error: { message: 'x' } })), []); } finally { console.warn = warn; }
+});

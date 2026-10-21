@@ -74,7 +74,7 @@ fréquentes et plus d'inscriptions à la newsletter.
 
 ### Page « En direct »
 
-- Adresse : `index.php/en-direct/index.html` *(choix de Claude)*. Titre « En direct ».
+- Adresse : `index.php/pages/en-direct/index.html` *(choix de Claude : même profondeur que les pages catégorie, dont on réutilise le gabarit)*. Titre « En direct ».
 - Colonne gauche « À la une » : articles publiés cochés, du plus récent au plus
   ancien (date de publication), **8 au maximum** *(choix de Claude)* : photo,
   catégorie, titre, lien vers l'article.
@@ -83,7 +83,7 @@ fréquentes et plus d'inscriptions à la newsletter.
   « Hier », puis date (« 12 juin »). *(Choix de Claude.)*
 - Si aucune brève : « Aucune brève pour le moment. » Si aucun article coché :
   on montre les derniers articles publiés.
-- Publicités : mêmes emplacements que les pages d'article *(choix de Claude)* ;
+- Publicités : mêmes emplacements que les pages de catégorie *(choix de Claude)* ;
   bandeau newsletter et « Ailleurs sur le web » comme partout. Présente dans le sitemap.
 - Sur mobile, les deux colonnes s'empilent (ordre : voir « Laissé au constructeur »).
 
@@ -112,7 +112,7 @@ fréquentes et plus d'inscriptions à la newsletter.
 
 - Case à cocher dans l'éditeur d'article, **visible et modifiable seulement par
   un admin**, et colonne/indicateur « ★ » dans la liste des articles.
-- Cocher/décocher sur un article publié déclenche la régénération du site.
+- Cocher/décocher sur un article publié déclenche la régénération du site. La case s'enregistre seule (mise à jour du seul champ `a_la_une`), **sans repasser par « Publier »**, qui remettrait la date de publication — donc l'adresse de l'article — à aujourd'hui. Un bouton ★ dans la liste des articles fait la même chose. *(Choix de Claude.)*
 
 ## Données (Supabase, migration 0011)
 

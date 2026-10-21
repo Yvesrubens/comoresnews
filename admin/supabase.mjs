@@ -30,7 +30,7 @@ export function createApi({ url, anonKey, deployHook }) {
     // --- Articles ---
     listArticles: ({ statut, categorie } = {}) => {
       let q = sb.from('articles')
-        .select('id,titre,slug,categorie,statut,date_publication,date_programmee,maj_le,auteur_id,commentaire_relecture')
+        .select('id,titre,slug,categorie,statut,date_publication,date_programmee,maj_le,auteur_id,commentaire_relecture,a_la_une')
         .order('maj_le', { ascending: false });
       if (statut) q = q.eq('statut', statut);
       if (categorie) q = q.eq('categorie', categorie);
@@ -42,6 +42,18 @@ export function createApi({ url, anonKey, deployHook }) {
       if (!r.error) return { data: (r.data || []).map((a) => ({ ...a, statut: 'publie' })), error: null };
       return sb.from('articles').select('id,titre,slug,statut,date_publication').eq('statut', 'publie'); // migration 0010 absente
     },
+    // Case « À la une » seule : ne touche ni au statut ni à la date de publication.
+    setUne: (id, value) => sb.from('articles').update({ a_la_une: value }).eq('id', id),
+    listBreves: ({ statut } = {}) => {
+      let q = sb.from('breves')
+        .select('id,texte,statut,auteur_id,commentaire_relecture,date_publication,maj_le,profiles!breves_auteur_id_fkey(nom)')
+        .order('maj_le', { ascending: false });
+      if (statut) q = q.eq('statut', statut);
+      return q;
+    },
+    insertBreve: (row) => sb.from('breves').insert(row).select().single(),
+    updateBreve: (id, row) => sb.from('breves').update(row).eq('id', id).select().single(),
+    deleteBreve: (id) => sb.from('breves').delete().eq('id', id),
     getArticle: (id) => sb.from('articles').select('*').eq('id', id).single(),
     insertArticle: (row) => sb.from('articles').insert(row).select().single(),
     updateArticle: (id, row) => sb.from('articles').update(row).eq('id', id).select().single(),

@@ -65,3 +65,46 @@ test('formToRow transporte la source (nom + lien)', () => {
   assert.equal(r2.source_nom, null);
   assert.equal(r2.source_url, null);
 });
+
+test('formToRow : a_la_une seulement si fourni (admin)', async () => {
+  const { formToRow } = await import('../admin/lib.mjs');
+  const f = { titre: 'T', slug: 't', categorie: 'sport', corps: 'x' };
+  assert.ok(!('a_la_une' in formToRow({ ...f, action: 'brouillon' }, 'u')));
+  assert.equal(formToRow({ ...f, a_la_une: true, action: 'publier' }, 'u').a_la_une, true);
+  assert.equal(formToRow({ ...f, a_la_une: false, action: 'brouillon' }, 'u').a_la_une, false);
+});
+
+test('validateBreve : vide, 300 et 301 caractères', async () => {
+  const { validateBreve } = await import('../admin/lib.mjs');
+  assert.deepEqual(validateBreve('   '), ['texte']);
+  assert.deepEqual(validateBreve('a'.repeat(300)), []);
+  assert.deepEqual(validateBreve('a'.repeat(301)), ['longueur']);
+  assert.deepEqual(validateBreve('  ' + 'a'.repeat(300) + '  '), []); // espaces de bord ignorés
+});
+
+test('breveToRow : statuts, date posée à la publication, gardée si republiée, effacée si dépubliée', async () => {
+  const { breveToRow } = await import('../admin/lib.mjs');
+  assert.deepEqual(breveToRow('  Ferry  ', 'brouillon', null), { texte: 'Ferry', statut: 'brouillon', date_publication: null });
+  assert.equal(breveToRow('x', 'soumettre', null).statut, 'en_attente');
+  const pub = breveToRow('x', 'publier', { statut: 'en_attente', date_publication: null });
+  assert.equal(pub.statut, 'publie');
+  assert.ok(Date.now() - new Date(pub.date_publication).getTime() < 5000);
+  const deja = { statut: 'publie', date_publication: '2026-10-20T08:00:00.000Z' };
+  assert.equal(breveToRow('x', 'publier', deja).date_publication, '2026-10-20T08:00:00.000Z');
+  assert.deepEqual(breveToRow('x', 'depublier', deja), { texte: 'x', statut: 'brouillon', date_publication: null });
+});
+
+test('breveToRow efface le motif de renvoi à la soumission et à la publication', async () => {
+  const { breveToRow } = await import('../admin/lib.mjs');
+  assert.equal(breveToRow('x', 'soumettre', { statut: 'brouillon' }).commentaire_relecture, null);
+  assert.equal(breveToRow('x', 'publier', { statut: 'en_attente' }).commentaire_relecture, null);
+  assert.ok(!('commentaire_relecture' in breveToRow('x', 'brouillon', { statut: 'brouillon' })));
+});
+
+test('breveButtons : sur une brève publiée, un admin ne peut que la garder en ligne, dépublier ou supprimer', async () => {
+  const { breveButtons } = await import('../admin/lib.mjs');
+  assert.deepEqual(breveButtons('publie', true), { brouillon: false, soumettre: false, publier: true, renvoyer: false, depublier: true, supprimer: true, publierLabel: 'Enregistrer (en ligne)' });
+  assert.deepEqual(breveButtons('publie', false), { brouillon: false, soumettre: false, publier: false, renvoyer: false, depublier: false, supprimer: false, publierLabel: 'Publier' });
+  assert.deepEqual(breveButtons('en_attente', true), { brouillon: true, soumettre: true, publier: true, renvoyer: true, depublier: false, supprimer: true, publierLabel: 'Publier' });
+  assert.deepEqual(breveButtons(null, false), { brouillon: true, soumettre: true, publier: false, renvoyer: false, depublier: false, supprimer: false, publierLabel: 'Publier' });
+});

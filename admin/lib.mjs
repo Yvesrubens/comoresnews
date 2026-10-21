@@ -72,7 +72,9 @@ export function nextStatus(action) {
 // Construit la ligne `articles` à écrire selon l'action et l'auteur.
 export function formToRow(f, auteurId) {
   const statut = nextStatus(f.action);
+  const une = f.a_la_une === undefined ? {} : { a_la_une: !!f.a_la_une }; // champ réservé aux admins
   return {
+    ...une,
     titre: f.titre,
     slug: f.slug,
     categorie: f.categorie,
@@ -196,4 +198,30 @@ const sansAccents = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, 
 export function searchArticles(rows, q, limit = 8) {
   const n = sansAccents(q).trim();
   return rows.filter((r) => r.statut === 'publie' && (!n || sansAccents(r.titre).includes(n))).slice(0, limit);
+}
+
+// ---------- Brèves ----------
+export const BREVE_MAX = 300;
+export function validateBreve(texte) {
+  const t = String(texte ?? '').trim();
+  if (!t) return ['texte'];
+  return t.length > BREVE_MAX ? ['longueur'] : [];
+}
+// Ligne `breves` à écrire. La date n'est posée qu'au passage en « publie » (jamais réécrite ensuite).
+export function breveToRow(texte, action, existing) {
+  const statut = action === 'depublier' ? 'brouillon' : nextStatus(action);
+  const dejaPubliee = existing?.statut === 'publie' && existing.date_publication;
+  const date_publication = statut !== 'publie' ? null : (dejaPubliee ? existing.date_publication : new Date().toISOString());
+  const motif = ['soumettre', 'publier'].includes(action) ? { commentaire_relecture: null } : {};
+  return { texte: String(texte ?? '').trim(), statut, date_publication, ...motif };
+}
+// Boutons visibles dans l'éditeur de brève (statut null = nouvelle brève).
+export function breveButtons(statut, isAdmin) {
+  const pub = statut === 'publie';
+  return {
+    brouillon: !pub, soumettre: !pub, publier: isAdmin,
+    renvoyer: isAdmin && statut === 'en_attente', depublier: isAdmin && pub,
+    supprimer: !!statut && (isAdmin || !pub),
+    publierLabel: pub && isAdmin ? 'Enregistrer (en ligne)' : 'Publier',
+  };
 }
