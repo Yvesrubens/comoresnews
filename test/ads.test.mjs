@@ -55,3 +55,20 @@ test('injectAds est idempotent', () => {
   const once = injectAds(page);
   assert.equal(injectAds(once), once);
 });
+
+test('page article : GrandAngle et Pavé 1 dans la colonne de droite, sous « Suivez nous »', () => {
+  const page = '<html><head></head><body><div class="td-post-content"><p>a</p><p>b</p></div>'
+    + '<div class="td-ss-main-sidebar"><div class="social">Suivez nous</div><div id="cn-sidebar-ads"></div></div>'
+    + '<div id="cn-legal-bar">footer</div></body></html>';
+  const out = injectAds(page);
+  const iSocial = out.indexOf('Suivez nous');
+  const iGA = out.indexOf('id="sas_45654"');
+  const iP1 = out.indexOf('id="sas_45655"');
+  const iFooter = out.indexOf('<div id="cn-legal-bar"');
+  const iMarque = out.indexOf('<div id="cn-sidebar-ads">');
+  assert.ok(iGA > iSocial && iP1 > iGA, 'GrandAngle puis Pavé 1 sous Suivez nous');
+  assert.ok(out.slice(iMarque + '<div id="cn-sidebar-ads">'.length).startsWith('<div class="cn-ad'), 'les pubs remplissent la colonne');
+  assert.equal(out.split('id="sas_45654"').length - 1, 1, 'GrandAngle une seule fois');
+  assert.equal(out.split('id="sas_45655"').length - 1, 1, 'Pavé 1 une seule fois');
+  assert.ok(out.indexOf('id="sas_49046"') < iFooter, 'MégaBannière 2 toujours avant le footer');
+});

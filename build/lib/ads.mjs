@@ -128,6 +128,14 @@ export function injectAds(html, cfg = SAS) {
     p1Placed = true;
   }
 
+  // Pages article : GrandAngle puis Pavé 1 dans la colonne de droite, sous « Suivez nous ».
+  const SIDEBAR_MARK = '<div id="cn-sidebar-ads"></div>';
+  if (html.includes(SIDEBAR_MARK) && !gaPlaced && !p1Placed) {
+    html = html.replace(SIDEBAR_MARK, () => `<div id="cn-sidebar-ads">${labeled('', adSlot(45654))}${labeled('', adSlot(45655))}</div>`);
+    gaPlaced = true;
+    p1Placed = true;
+  }
+
   // Bloc bas (avant le footer) : Pavé 2 + MegaBanniere 2, plus repli de ceux
   // qui n'ont pas trouvé leur ancre (pages sans la colonne de la home).
   const bottomParts = [];
