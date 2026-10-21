@@ -40,7 +40,7 @@ export function buildArticlePage(a, catsCfg) {
     AUTHOR: esc(a.author),
     DATE: a.date,
     IMAGE: img,
-    BODY: renderMarkdown(a.body) + sourceLine(a),
+    BODY: renderMarkdown(a.body, P) + sourceLine(a),
     SEO: metaTags(a, `${BASE}/${rel}`) + '\n' + jsonLdArticle(a, `${BASE}/${rel}`),
   });
   return setTitle(html, a.seoTitle || a.title);

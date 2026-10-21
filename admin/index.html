@@ -81,6 +81,9 @@
   .grid img { width:100%; height:90px; object-fit:cover; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
   .preview { border:1px solid var(--border); border-radius:6px; padding:12px; background:#fafafa; min-height:80px; }
   .hidden { display:none; }
+  .linkbar { display:flex; gap:8px; align-items:center; margin:4px 0 6px; }
+  .linkbox { border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:8px; background:#fafafa; }
+  .linkbox .lk-res button { display:block; width:100%; text-align:left; margin:4px 0; }
   .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
 </style>
 <script src="./vendor/markdown-it.min.js" defer></script>
@@ -182,7 +185,17 @@
         </details>
         <label>Chapô (excerpt)</label><textarea id="e-excerpt" style="min-height:70px"></textarea>
         <div class="row">
-          <div><label>Corps (Markdown)</label><textarea id="e-body"></textarea></div>
+          <div><label>Corps (Markdown)</label>
+            <div class="linkbar"><button type="button" id="lk-open">🔗 Insérer un lien</button><span class="muted">Sélectionnez d'abord les mots à lier.</span></div>
+            <div id="lk-box" class="linkbox hidden">
+              <label><input type="radio" name="lk-type" value="int" checked> Article Comoresnews</label>
+              <label style="margin-left:14px"><input type="radio" name="lk-type" value="ext"> Autre site</label>
+              <div id="lk-int"><input id="lk-q" placeholder="Rechercher un article publié…"><div class="lk-res" id="lk-res"></div></div>
+              <div id="lk-ext" class="hidden"><input id="lk-url" placeholder="https://…"><div class="actions"><button type="button" class="primary" id="lk-add">Insérer</button></div></div>
+              <div id="lk-msg"></div>
+              <div class="actions"><button type="button" id="lk-close">Fermer</button></div>
+            </div>
+            <textarea id="e-body"></textarea></div>
           <div><label>Aperçu</label><div class="preview" id="e-preview"></div></div>
         </div>
         <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">SEO</summary>
@@ -304,7 +317,7 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, insertLink, internalLinkTarget, searchArticles } from './lib.mjs';
 import { renderNewsletter, weekSubject, pickArticles } from './newsletter-template.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
@@ -401,6 +414,42 @@ async function openEditor(id){
 $('e-titre').oninput = () => { if (!EDITING) $('e-slug').value = slugify($('e-titre').value); };
 $('e-body').oninput = renderPreview;
 function renderPreview(){ $('e-preview').innerHTML = md.render($('e-body').value||''); }
+
+// ---------- Insertion de liens ----------
+let LK_SEL = [0, 0], LK_ARTICLES = [];
+$('lk-open').onclick = async () => {
+  const ta = $('e-body'); LK_SEL = [ta.selectionStart, ta.selectionEnd];
+  $('lk-box').classList.remove('hidden'); msg($('lk-msg'), ''); $('lk-q').value = ''; $('lk-url').value = '';
+  const { data } = await api.articlesPourLiens();
+  LK_ARTICLES = (data || []).filter((a) => a.id !== EDITING?.id);
+  lkSearch(); $('lk-q').focus();
+};
+$('lk-close').onclick = () => $('lk-box').classList.add('hidden');
+for (const r of document.querySelectorAll('input[name="lk-type"]')) r.onchange = () => {
+  const ext = r.value === 'ext' && r.checked;
+  $('lk-int').classList.toggle('hidden', ext); $('lk-ext').classList.toggle('hidden', !ext);
+};
+function lkInsert(label, url){
+  const ta = $('e-body');
+  const { text, cursor } = insertLink(ta.value, LK_SEL[0], LK_SEL[1], label, url);
+  ta.value = text; renderPreview(); $('lk-box').classList.add('hidden');
+  ta.focus(); ta.setSelectionRange(cursor, cursor);
+}
+function lkSearch(){
+  const res = searchArticles(LK_ARTICLES, $('lk-q').value);
+  $('lk-res').innerHTML = res.length ? '' : '<p class="muted">Aucun article publié ne correspond.</p>';
+  for (const a of res) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = a.titre;
+    b.onclick = () => lkInsert(a.titre, internalLinkTarget(a));
+    $('lk-res').appendChild(b);
+  }
+}
+$('lk-q').oninput = lkSearch;
+$('lk-add').onclick = () => {
+  const url = $('lk-url').value.trim();
+  if (!/^https?:\/\/[^\s/]+\.[^\s]+$/i.test(url)) return msg($('lk-msg'), 'Adresse invalide : elle doit commencer par https://', 'err');
+  lkInsert('', url);
+};
 
 function gatherForm(action){
   return {
