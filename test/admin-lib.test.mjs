@@ -73,3 +73,23 @@ test('formToRow : a_la_une seulement si fourni (admin)', async () => {
   assert.equal(formToRow({ ...f, a_la_une: true, action: 'publier' }, 'u').a_la_une, true);
   assert.equal(formToRow({ ...f, a_la_une: false, action: 'brouillon' }, 'u').a_la_une, false);
 });
+
+test('validateBreve : vide, 300 et 301 caractères', async () => {
+  const { validateBreve } = await import('../admin/lib.mjs');
+  assert.deepEqual(validateBreve('   '), ['texte']);
+  assert.deepEqual(validateBreve('a'.repeat(300)), []);
+  assert.deepEqual(validateBreve('a'.repeat(301)), ['longueur']);
+  assert.deepEqual(validateBreve('  ' + 'a'.repeat(300) + '  '), []); // espaces de bord ignorés
+});
+
+test('breveToRow : statuts, date posée à la publication, gardée si republiée, effacée si dépubliée', async () => {
+  const { breveToRow } = await import('../admin/lib.mjs');
+  assert.deepEqual(breveToRow('  Ferry  ', 'brouillon', null), { texte: 'Ferry', statut: 'brouillon', date_publication: null });
+  assert.equal(breveToRow('x', 'soumettre', null).statut, 'en_attente');
+  const pub = breveToRow('x', 'publier', { statut: 'en_attente', date_publication: null });
+  assert.equal(pub.statut, 'publie');
+  assert.ok(Date.now() - new Date(pub.date_publication).getTime() < 5000);
+  const deja = { statut: 'publie', date_publication: '2026-10-20T08:00:00.000Z' };
+  assert.equal(breveToRow('x', 'publier', deja).date_publication, '2026-10-20T08:00:00.000Z');
+  assert.deepEqual(breveToRow('x', 'depublier', deja), { texte: 'x', statut: 'brouillon', date_publication: null });
+});

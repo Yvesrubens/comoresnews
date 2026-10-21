@@ -44,6 +44,16 @@ export function createApi({ url, anonKey, deployHook }) {
     },
     // Case « À la une » seule : ne touche ni au statut ni à la date de publication.
     setUne: (id, value) => sb.from('articles').update({ a_la_une: value }).eq('id', id),
+    listBreves: ({ statut } = {}) => {
+      let q = sb.from('breves')
+        .select('id,texte,statut,auteur_id,commentaire_relecture,date_publication,maj_le,profiles!breves_auteur_id_fkey(nom)')
+        .order('maj_le', { ascending: false });
+      if (statut) q = q.eq('statut', statut);
+      return q;
+    },
+    insertBreve: (row) => sb.from('breves').insert(row).select().single(),
+    updateBreve: (id, row) => sb.from('breves').update(row).eq('id', id).select().single(),
+    deleteBreve: (id) => sb.from('breves').delete().eq('id', id),
     getArticle: (id) => sb.from('articles').select('*').eq('id', id).single(),
     insertArticle: (row) => sb.from('articles').insert(row).select().single(),
     updateArticle: (id, row) => sb.from('articles').update(row).eq('id', id).select().single(),
