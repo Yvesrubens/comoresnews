@@ -4,7 +4,7 @@ import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
 import { makeClient, loadArticlesFromSupabase, loadLatestSujets } from './lib/supabase-source.mjs';
 import { injectNewsletter } from './lib/newsletter.mjs';
-import { injectAilleurs } from './lib/ailleurs.mjs';
+import { injectAilleurs, mixSources } from './lib/ailleurs.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 import { injectAds } from './lib/ads.mjs';
 import { injectAnalytics } from './lib/analytics.mjs';
@@ -113,7 +113,7 @@ export async function main({ now, outDir = '_site' }) {
   const all = process.env.CONTENT_SOURCE === 'supabase'
     ? await loadArticlesFromSupabase(makeClient(), now)
     : loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
-  const ailleursItems = process.env.CONTENT_SOURCE === 'supabase' ? await loadLatestSujets(makeClient(), 5) : [];
+  const ailleursItems = process.env.CONTENT_SOURCE === 'supabase' ? mixSources(await loadLatestSujets(makeClient(), 40)) : [];
   fs.rmSync(outDir, { recursive: true, force: true });
   for (const rel of PASSTHROUGH) {
     const src = path.join(ROOT, rel);

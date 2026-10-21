@@ -44,3 +44,18 @@ export function injectAilleurs(html, items) {
   if (html.includes('<div id="cn-legal-bar"')) return html.replace('<div id="cn-legal-bar"', () => `${block}\n<div id="cn-legal-bar"`);
   return html.replace('</body>', () => `${block}\n</body>`);
 }
+
+// Garde au plus `perSource` titres par journal (ordre d'entrée conservé :
+// les plus récents d'abord), puis les `total` premiers — pour mélanger les sources.
+export function mixSources(items, perSource = 2, total = 5) {
+  const seen = new Map();
+  const out = [];
+  for (const it of items || []) {
+    const n = seen.get(it.source_nom) || 0;
+    if (n >= perSource) continue;
+    seen.set(it.source_nom, n + 1);
+    out.push(it);
+    if (out.length >= total) break;
+  }
+  return out;
+}

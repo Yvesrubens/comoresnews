@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newsletterBand, injectNewsletter } from '../build/lib/newsletter.mjs';
-import { ailleursBlock, injectAilleurs } from '../build/lib/ailleurs.mjs';
+import { ailleursBlock, injectAilleurs, mixSources } from '../build/lib/ailleurs.mjs';
 import { injectAds } from '../build/lib/ads.mjs';
 
 const CFG = { url: 'https://projet.supabase.co', anonKey: 'cle-publique' };
@@ -61,4 +61,14 @@ test('injectAilleurs : avant le footer, et au-dessus des pubs de bas de page', (
   assert.ok(out.indexOf('id="sas_49046"') < out.indexOf('<div id="cn-legal-bar"'));
   assert.equal(injectAilleurs(injectAilleurs(PAGE, ITEMS), ITEMS), injectAilleurs(PAGE, ITEMS));
   assert.equal(injectAilleurs(PAGE, []), PAGE);
+});
+
+test('mixSources : au plus 2 titres par journal, les plus récents, 5 au total', () => {
+  const it = (src, jour) => ({ titre: `${src} ${jour}`, url: `https://${src}.test/${jour}`, source_nom: src, date_source: `2026-10-${String(jour).padStart(2, '0')}T08:00:00Z` });
+  // déjà triés du plus récent au plus ancien, Habari domine
+  const items = [it('Habari', 20), it('Habari', 19), it('Habari', 18), it('Habari', 17), it('Masiwa', 16), it('Gazette', 15), it('Masiwa', 14), it('Gazette', 13), it('Masiwa', 12)];
+  const out = mixSources(items);
+  assert.deepEqual(out.map((x) => x.titre), ['Habari 20', 'Habari 19', 'Masiwa 16', 'Gazette 15', 'Masiwa 14']);
+  assert.equal(mixSources(items, 2, 3).length, 3);
+  assert.deepEqual(mixSources([]), []);
 });
