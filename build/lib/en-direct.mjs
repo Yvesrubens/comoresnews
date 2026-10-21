@@ -66,11 +66,11 @@ function brevesHtml(breves) {
 
 const CSS = `<style>
 .cn-direct{display:flex;gap:28px;align-items:flex-start;padding:8px 0 24px}
-.cn-direct-une{flex:3;min-width:0}.cn-direct-breves{flex:2;min-width:0}
+.cn-direct-une{flex:3;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:0 18px;align-content:start}.cn-direct-une>h2,.cn-direct-une>.cn-direct-card:first-of-type{grid-column:1/-1}.cn-direct-breves{flex:2;min-width:0}
 .cn-direct h2{font-size:15px;font-weight:700;text-transform:uppercase;border-left:4px solid #4db2ec;padding-left:8px;margin:0 0 14px}
 .cn-direct-card{margin:0 0 20px}.cn-direct-card img,.cn-direct-noimg{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:3px;background:#dcdcdc}
 .cn-direct-cat{display:inline-block;background:#222;color:#fff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;margin-top:8px}
-.cn-direct-card h3{margin:6px 0 0;font-size:19px;line-height:1.3}.cn-direct-card h3 a{color:#111;text-decoration:none}
+.cn-direct-card h3{margin:6px 0 0;font-size:16px;line-height:1.3}.cn-direct-card:first-of-type h3{font-size:22px}.cn-direct-card h3 a{color:#111;text-decoration:none}
 .cn-direct-breves ul{list-style:none;margin:0 0 12px;padding:0}
 .cn-direct-breves li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #eaeaea;font-size:15px;line-height:1.45}
 .cn-direct-breves time{flex:0 0 44px;font-weight:700;color:#e0262b}
@@ -88,4 +88,43 @@ export function enDirectInner(une, breves, P, catsCfg) {
 <section class="cn-direct-une"><h2>À la une</h2>${une.map((a) => uneCard(a, P, catsCfg)).join('\n')}</section>
 <section class="cn-direct-breves"><h2>Brèves</h2>${brevesHtml(breves)}</section>
 </div>${SCRIPT}`;
+}
+
+const MOIS = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+// Une case de la grille « À la une » de l'accueil (balisage du thème, page à la racine).
+function gridPost(a, i, catsCfg) {
+  const url = articlePath(a.date, a.slug);
+  const t = esc(a.title);
+  const img = a.image ? resolveImg('', a.image) : '';
+  const thumb = img
+    ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
+    : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
+  const date = i === 0
+    ? `<div class="td-editor-date"><span class="td-post-date"><time class="entry-date updated td-module-date" datetime="${esc(stamp(a))}">${MOIS.format(new Date(a.date + 'T12:00:00Z'))}</time></span></div>`
+    : '';
+  return `<div class="td_module_flex_${i === 0 ? 6 : 7} td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-${i} td-cpt-post">
+  <div class="td-module-container td-category-pos-above">
+    <div class="td-image-container"><div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
+    <div class="td-module-meta-info">
+      <a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a>
+      <div class="tdb-module-title-wrap"><h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3></div>
+      ${date}
+    </div>
+  </div>
+</div>`;
+}
+
+export function uneGridHtml(list, catsCfg) {
+  if (!list.length) return '';
+  const [first, ...rest] = list;
+  return `${gridPost(first, 0, catsCfg)}
+<div class="td-big-grid-flex-scroll-holder">${rest.map((a, i) => gridPost(a, i + 1, catsCfg)).join('\n')}</div>`;
+}
+
+export function uneTickerHtml(list) {
+  return list.map((a, i) => {
+    const t = esc(a.title);
+    return `<div class="td_module_trending_now td-trending-now-post-${i} td-trending-now-post td-cpt-post"><h2 class="entry-title td-module-title"><a href="${articlePath(a.date, a.slug)}" rel="bookmark" title="${t}">${t}</a></h2></div>`;
+  }).join('\n');
 }
