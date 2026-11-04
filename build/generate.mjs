@@ -12,7 +12,7 @@ import { injectConsent } from './lib/consent.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
-import { homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml } from './lib/en-direct.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml } from './lib/en-direct.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
@@ -62,15 +62,23 @@ export function buildCategoryPage(slug, articles, catsCfg) {
   return setTitle(html, catName);
 }
 
+// Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
+const HOME_SECTION_MAX = { politique: 4, economie: 4, societe: 4 };
+
 export function buildHome(articles, catsCfg) {
   const une = homeUne(articles, 4);
   let html = TPL('home.html')
     .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
     .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)));
   for (const slug of Object.keys(catsCfg)) {
-    const list = articles.filter(a => a.category === slug).sort((x, y) => y.date.localeCompare(x.date));
+    const tous = articles.filter(a => a.category === slug).sort(byRecent);
+    const max = HOME_SECTION_MAX[slug];
+    const list = max ? tous.slice(0, max) : tous;
+    const voirTout = max && tous.length > max
+      ? `<p style="margin:10px 0 0;text-align:right;"><a href="${categoryPath(slug)}" class="cn-voir-tout" style="font-weight:600;font-size:13px;">Tous les articles ${catsCfg[slug].name} →</a></p>`
+      : '';
     const inner = list.length
-      ? `<div style="padding:4px 0;">${list.map(a => articleCard(a, '', catsCfg[a.category].name)).join('')}</div>`
+      ? `<div style="padding:4px 0;">${list.map(a => articleCard(a, '', catsCfg[a.category].name)).join('')}</div>${voirTout}`
       : `<p style="padding:22px 4px;color:#999;font-style:italic;margin:0;">Aucun article pour le moment.</p>`;
     html = replaceSection(html, slug, inner);
   }
