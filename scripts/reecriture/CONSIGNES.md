@@ -32,8 +32,8 @@ de la presse comorienne (Habari Za Comores, La Gazette des Comores, Masiwa). Pou
 - `seo_titre` ≤ 60 caractères ; `seo_description` ≤ 155 caractères ; `mots_cles` : 3 à 6 mots-clés.
 - `categorie` : garde celle fournie, ou corrige parmi politique, economie, societe, culture, sport,
   diaspora, monde, tourisme si elle est manifestement fausse.
-- `photo` : une clé de la banque ci-dessous si elle illustre honnêtement le sujet (lieu concerné ou thème
-  général), sinon `null`. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
+- `photo` : une clé de la banque ci-dessous qui illustre honnêtement le sujet (lieu concerné ou thème
+  général). Choisis-en toujours une : à défaut de mieux, `drapeau` pour un sujet comorien. `null` seulement si aucune ne convient sans tromper le lecteur. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
   `drapeau` convient aux sujets institutionnels/diplomatiques sans lieu précis.
 
 ## Banque de photos (clé → ce qu'elle montre)
@@ -43,7 +43,12 @@ mutsamudu-rue → une rue de Mutsamudu · anjouan-vue → paysage d'Anjouan · m
 drapeau → drapeau des Comores · pecheurs → pêcheurs et pirogues sur une plage d'Anjouan ·
 grande-comore-cote → littoral de Grande Comore · route-grande-comore → route en Grande Comore ·
 ecole → une école aux Comores · marche-poisson → étal de poissons d'un marché comorien ·
-marche-moroni → marché de Moroni · kremlin → le Kremlin à Moscou · mamoudzou → Mamoudzou (Mayotte)
+marche-moroni → marché de Moroni · kremlin → le Kremlin à Moscou · mamoudzou → Mamoudzou (Mayotte) ·
+ruban-rose → ruban rose (cancer du sein) · justice → marteau de juge (affaires judiciaires, plaintes, procès) ·
+archives → boîtes d'archives · radio → studio de radio (médias, journalistes) · athletisme → piste d'athlétisme (sport, JIOI) ·
+corail-moheli → coraux de Mohéli (environnement, biodiversité, mer) · europe → drapeau de l'Union européenne ·
+salle-de-classe → élèves en classe · billet-comorien → ancien billet de 100 francs comoriens (économie, banque, budget) ·
+mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé)
 
 ## Sortie
 Écris un fichier JSON (UTF-8) : un tableau d'objets

@@ -110,5 +110,82 @@
   "auteur": "David Stanley from Nanaimo, Canada",
   "licence": "CC BY 2.0",
   "page": "https://commons.wikimedia.org/wiki/File:Mamoudzou_(10029936275).jpg"
+ },
+ "ruban-rose": {
+  "legende": "Le ruban rose, symbole de la lutte contre le cancer du sein",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/ruban-rose.jpg",
+  "auteur": "חגי אדלר",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Breast_Cancer_Pink_Ribbon.JPG"
+ },
+ "justice": {
+  "legende": "Un marteau de juge, symbole de la justice",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/justice.jpg",
+  "auteur": "Chris Potter",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:3D_Judges_Gavel.jpg"
+ },
+ "archives": {
+  "legende": "Des boîtes de documents d’archives",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/archives.jpg",
+  "auteur": "Smallison",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Boxes_of_archival_documents.jpg"
+ },
+ "radio": {
+  "legende": "Un studio de radio",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/radio.jpg",
+  "auteur": "Infrogmation of New Orleans",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Radio_WWOZ_New_Orleans_studio_October_2009_01.jpg"
+ },
+ "athletisme": {
+  "legende": "Une piste d’athlétisme",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/athletisme.jpg",
+  "auteur": "Shaun Ferguson",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Roger_Bannister_Running_Track.jpg"
+ },
+ "corail-moheli": {
+  "legende": "Les coraux de Ouallah, à Mohéli",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/corail-moheli.jpg",
+  "auteur": "alKomor.com",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Ouallah-Moh%C3%A9li-Corail.jpg"
+ },
+ "europe": {
+  "legende": "Le drapeau de l’Union européenne",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/europe.jpg",
+  "auteur": "MPD01605",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:European_flag_in_Karlskrona_2011.jpg"
+ },
+ "salle-de-classe": {
+  "legende": "Des élèves en classe",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/salle-de-classe.jpg",
+  "auteur": "Kwameghana(Bright Kwame Ayisi)",
+  "licence": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:Students_reading_in_a_classroom_02.jpg"
+ },
+ "billet-comorien": {
+  "legende": "Un ancien billet de 100 francs comoriens",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/billet-comorien.jpg",
+  "auteur": "Banque de Madagascar et des Comores",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:100_Francs_Comores.jpg"
+ },
+ "mobile-money": {
+  "legende": "Un point de transfert d’argent par téléphone mobile",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/mobile-money.jpg",
+  "auteur": "Ndiwulira",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mobile_money_outlet.jpg"
+ },
+ "hopital": {
+  "legende": "Une salle d’hôpital (image d’archive)",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/hopital.jpg",
+  "auteur": "Wellcome Collection",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Johannesburg_Hospital,_South_Africa;_hospital_ward_with_male_Wellcome_V0029351.jpg"
  }
 }
