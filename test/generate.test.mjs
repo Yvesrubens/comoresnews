@@ -60,14 +60,13 @@ test('buildEnDirectPage : brèves et articles à la une, liens à la bonne profo
   assert.ok(html.includes('../../../index.php/2026/06/12/s/index.html'));
 });
 
-test('buildHome : Actu Politique, Économie et Société limitées à 4 articles + lien vers la rubrique', () => {
+test('buildHome : chaque rubrique limitée à 4 articles + lien vers la rubrique', () => {
   const mk = (cat, i) => ({ ...a, category: cat, title: `T-${cat}-${i}`, slug: `${cat}-${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` });
-  const list = ['politique', 'economie', 'societe', 'culture'].flatMap((c) => [0, 1, 2, 3, 4, 5].map((i) => mk(c, i)));
+  const list = ['politique', 'economie', 'societe', 'culture', 'sport', 'diaspora', 'monde', 'tourisme'].flatMap((c) => [0, 1, 2, 3, 4, 5].map((i) => mk(c, i)));
   const html = buildHome(list, cats);
-  for (const c of ['politique', 'economie', 'societe']) {
+  for (const c of ['politique', 'economie', 'societe', 'culture', 'sport', 'diaspora', 'monde', 'tourisme']) {
     assert.ok(html.includes(`T-${c}-5`) && html.includes(`T-${c}-2`), c + ' : les 4 plus récents');
     assert.ok(!html.includes(`>T-${c}-1<`) && !html.includes(`>T-${c}-0<`), c + ' : pas les plus anciens');
     assert.ok(html.includes(`href="index.php/category/${c}/index.html" class="cn-voir-tout"`), c + ' : lien');
   }
-  assert.ok(html.includes('>T-culture-0<'), 'les autres rubriques ne sont pas limitées');
 });

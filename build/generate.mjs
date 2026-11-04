@@ -63,7 +63,7 @@ export function buildCategoryPage(slug, articles, catsCfg) {
 }
 
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
-const HOME_SECTION_MAX = { politique: 4, economie: 4, societe: 4 };
+const HOME_SECTION_MAX = 4;
 
 export function buildHome(articles, catsCfg) {
   const une = homeUne(articles, 4);
@@ -72,9 +72,8 @@ export function buildHome(articles, catsCfg) {
     .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)));
   for (const slug of Object.keys(catsCfg)) {
     const tous = articles.filter(a => a.category === slug).sort(byRecent);
-    const max = HOME_SECTION_MAX[slug];
-    const list = max ? tous.slice(0, max) : tous;
-    const voirTout = max && tous.length > max
+    const list = tous.slice(0, HOME_SECTION_MAX);
+    const voirTout = tous.length > HOME_SECTION_MAX
       ? `<p style="margin:10px 0 0;text-align:right;"><a href="${categoryPath(slug)}" class="cn-voir-tout" style="font-weight:600;font-size:13px;">Tous les articles ${catsCfg[slug].name} →</a></p>`
       : '';
     const inner = list.length
