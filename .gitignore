@@ -19,3 +19,6 @@ serve.json
 .env
 supabase/.temp/
 supabase/.branches/
+
+# Travail de réécriture (textes sources, sorties)
+.reecriture/

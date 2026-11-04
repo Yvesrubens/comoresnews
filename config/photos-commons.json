@@ -1,0 +1,114 @@
+{
+ "moroni-mosquee": {
+  "legende": "La mosquée du vendredi de Moroni",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/moroni-mosquee.jpg",
+  "auteur": "Daryl Wallace from Abu Dhabi, UAE",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mosque_in_Moroni,_Comoros_(3923026238).jpg"
+ },
+ "moroni-plage": {
+  "legende": "Le front de mer de Moroni",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/moroni-plage.jpg",
+  "auteur": "Radosław Botev",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Moroni_beach.jpg"
+ },
+ "moroni-fete-nationale": {
+  "legende": "Fête de l’indépendance à Moroni",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/moroni-fete-nationale.jpg",
+  "auteur": "Radosław Botev",
+  "licence": "CC BY 3.0 pl",
+  "page": "https://commons.wikimedia.org/wiki/File:Independence_day_Moroni_Comoros_1.jpg"
+ },
+ "mutsamudu-port": {
+  "legende": "Le port de Mutsamudu, à Anjouan",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/mutsamudu-port.jpg",
+  "auteur": "Peioma",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mutsamudu_port1.jpg"
+ },
+ "mutsamudu-rue": {
+  "legende": "Une rue de Mutsamudu, à Anjouan",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/mutsamudu-rue.jpg",
+  "auteur": "David Stanley from Nanaimo, Canada",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mutsamudu_Street_(9983198004).jpg"
+ },
+ "anjouan-vue": {
+  "legende": "L’île d’Anjouan",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/anjouan-vue.jpg",
+  "auteur": "Haryamouji",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Anjouan_-_Islands_of_Comoros.jpg"
+ },
+ "moheli-plage": {
+  "legende": "Une plage de Mohéli",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/moheli-plage.jpg",
+  "auteur": "alKomor.com",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Moh%C3%A9li-Beach.jpg"
+ },
+ "drapeau": {
+  "legende": "Le drapeau de l’Union des Comores",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/drapeau.png",
+  "auteur": "Cloudcounter",
+  "licence": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:Flag_of_the_Comoros_(16-9).png"
+ },
+ "pecheurs": {
+  "legende": "Pêcheurs sur la plage de Moya, à Anjouan",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/pecheurs.jpg",
+  "auteur": "mwanasimba from La Réunion",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Fishermen_at_Moya_beach.jpg"
+ },
+ "grande-comore-cote": {
+  "legende": "Le littoral de la Grande Comore",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/grande-comore-cote.jpg",
+  "auteur": "Radosław Botev",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Grande_Comore_shores.jpg"
+ },
+ "route-grande-comore": {
+  "legende": "Une route de la Grande Comore",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/route-grande-comore.jpg",
+  "auteur": "Radosław Botev",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Main_road_on_Grand_Comore.jpg"
+ },
+ "ecole": {
+  "legende": "Une école aux Comores",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/ecole.jpg",
+  "auteur": "US Army Africa from Vicenza, Italy",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Comoros_school_reconstruction_(5430687468).jpg"
+ },
+ "marche-poisson": {
+  "legende": "L’étal des poissonniers d’un marché comorien",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/marche-poisson.jpg",
+  "auteur": "Rokaso",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Fish_section_in_Comoros_market.jpg"
+ },
+ "marche-moroni": {
+  "legende": "Le marché de Moroni",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/marche-moroni.jpg",
+  "auteur": "Radosław Botev",
+  "licence": "CC BY 3.0 pl",
+  "page": "https://commons.wikimedia.org/wiki/File:Moroni_market_scene_1.jpg"
+ },
+ "kremlin": {
+  "legende": "Le Kremlin, à Moscou",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/kremlin.jpg",
+  "auteur": "A.Savin",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Moscow_05-2012_Kremlin_22.jpg"
+ },
+ "mamoudzou": {
+  "legende": "Mamoudzou, à Mayotte",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/mamoudzou.jpg",
+  "auteur": "David Stanley from Nanaimo, Canada",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mamoudzou_(10029936275).jpg"
+ }
+}
