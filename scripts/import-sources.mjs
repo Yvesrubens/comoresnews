@@ -1,4 +1,5 @@
 // Import des nouveaux articles de la presse comorienne comme « sujets » (table Supabase `sujets`).
+// Seuls les sujets qui concernent les Comores sont gardés ; chacun devient un article brouillon à réécrire.
 // Exécution : node --env-file=.env scripts/import-sources.mjs [--dry-run]
 // Spec : docs/superpowers/specs/2026-10-20-import-sources-design.md
 import fs from 'node:fs';
@@ -6,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { parseRss } from './lib/sources/rss.mjs';
 import { parseGazetteHome, parseGazetteArticle } from './lib/sources/gazette.mjs';
 import { guessCategory } from './lib/sources/category.mjs';
+import { concerneComores, creerBrouillons } from './lib/sujets-brouillons.mjs';
 
 const USER_AGENT = 'ComoresnewsBot/1.0 (+https://comoresnews.com)';
 
@@ -46,23 +48,26 @@ export async function importAll({ sources, fetchText, db, log = console.log }) {
   const results = [];
   for (const src of sources) {
     try {
-      const { trouves, rows } = await collect(src, fetchText, db, log);
-      const nouveaux = rows.length ? await db.insertSujets(rows) : 0;
-      log(`${src.nom} : ${trouves} trouvés, ${nouveaux} nouveaux`);
-      results.push({ source: src.id, trouves, nouveaux, erreur: null });
+      const { trouves, rows: tous } = await collect(src, fetchText, db, log);
+      const rows = tous.filter((r) => concerneComores(`${r.titre} ${r.texte}`));
+      const ecartes = tous.length - rows.length;
+      const inseres = rows.length ? await db.insertSujets(rows) : [];
+      const res = { source: src.id, trouves, nouveaux: inseres.length, ecartes, brouillons: 0, erreur: null };
+      results.push(res);
+      log(`${src.nom} : ${trouves} trouvés, ${inseres.length} nouveaux, ${ecartes} écarté${ecartes > 1 ? 's' : ''} (hors Comores)`);
+      res.brouillons = inseres.length ? await db.creerBrouillons(inseres) : 0;
+      if (res.brouillons) log(`  ${res.brouillons} brouillon${res.brouillons > 1 ? 's' : ''} créé${res.brouillons > 1 ? 's' : ''}`);
     } catch (e) {
       log(`${src.nom} : ERREUR ${e.message}`);
-      results.push({ source: src.id, trouves: 0, nouveaux: 0, erreur: e.message });
+      const deja = results.find((r) => r.source === src.id);
+      if (deja) deja.erreur = e.message;
+      else results.push({ source: src.id, trouves: 0, nouveaux: 0, ecartes: 0, brouillons: 0, erreur: e.message });
     }
   }
   return results;
 }
 
 // 1 dès qu'une source a échoué : le run GitHub passe en rouge et envoie une alerte.
-export function shouldRebuild(results) {
-  return results.some((r) => r.nouveaux > 0);
-}
-
 export function exitCode(results) {
   return results.some((r) => r.erreur) ? 1 : 0;
 }
@@ -82,11 +87,16 @@ function supabaseDb({ dryRun }) {
       if (error) throw new Error(`Supabase: ${error.message}`);
       return new Set(data.map((r) => r.url));
     },
+    // Renvoie les sujets réellement insérés (avec leur id).
     async insertSujets(rows) {
-      if (dryRun) { for (const r of rows) console.log(`  [dry-run] ${r.source} | ${r.categorie || '-'} | ${r.titre}`); return rows.length; }
-      const { data, error } = await sb.from('sujets').upsert(rows, { onConflict: 'url', ignoreDuplicates: true }).select('id');
+      if (dryRun) { for (const r of rows) console.log(`  [dry-run] ${r.source} | ${r.categorie || '-'} | ${r.titre}`); return rows; }
+      const { data, error } = await sb.from('sujets').upsert(rows, { onConflict: 'url', ignoreDuplicates: true }).select('id,titre,url,source_nom,categorie');
       if (error) throw new Error(`Supabase: ${error.message}`);
-      return data.length;
+      return data;
+    },
+    async creerBrouillons(sujets) {
+      if (dryRun) return 0;
+      return creerBrouillons(sb, sujets);
     },
   };
 }
@@ -95,11 +105,6 @@ async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const sources = JSON.parse(fs.readFileSync(new URL('../config/sources.json', import.meta.url), 'utf8'));
   const results = await importAll({ sources, fetchText, db: supabaseDb({ dryRun }) });
-  // Nouveaux titres → régénérer le site pour mettre à jour « Ailleurs sur le web ».
-  if (!dryRun && shouldRebuild(results) && process.env.VERCEL_DEPLOY_HOOK_URL) {
-    const res = await fetch(process.env.VERCEL_DEPLOY_HOOK_URL, { method: 'POST' }).catch((e) => ({ ok: false, statusText: e.message }));
-    console.log(res.ok ? 'Régénération du site déclenchée.' : `Régénération du site impossible : ${res.status || ''} ${res.statusText || ''}`);
-  }
   process.exitCode = exitCode(results);
 }
 

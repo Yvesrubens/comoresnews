@@ -2,9 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import cats from '../config/categories.json' with { type: 'json' };
 import { loadArticles, isPublishable } from './lib/content.mjs';
-import { makeClient, loadArticlesFromSupabase, loadLatestSujets, loadBreves } from './lib/supabase-source.mjs';
+import { makeClient, loadArticlesFromSupabase, loadBreves } from './lib/supabase-source.mjs';
 import { injectNewsletter } from './lib/newsletter.mjs';
-import { injectAilleurs, mixSources } from './lib/ailleurs.mjs';
 import { metaTags, jsonLdArticle, sitemapXml } from './lib/seo.mjs';
 import { injectAds } from './lib/ads.mjs';
 import { injectAnalytics } from './lib/analytics.mjs';
@@ -130,7 +129,6 @@ export async function main({ now, outDir = '_site' }) {
   const all = process.env.CONTENT_SOURCE === 'supabase'
     ? await loadArticlesFromSupabase(makeClient(), now)
     : loadArticles('content/articles', validCats).filter(a => isPublishable(a, now));
-  const ailleursItems = process.env.CONTENT_SOURCE === 'supabase' ? mixSources(await loadLatestSujets(makeClient(), 40)) : [];
   const breves = process.env.CONTENT_SOURCE === 'supabase' ? await loadBreves(makeClient(), 30) : [];
   fs.rmSync(outDir, { recursive: true, force: true });
   for (const rel of PASSTHROUGH) {
@@ -142,9 +140,7 @@ export async function main({ now, outDir = '_site' }) {
   const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
   // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
-  const ailleurs = (h) => injectAilleurs(h, ailleursItems);
-  // « Ailleurs sur le web » avant les pubs de bas de page (ordre : bloc, pubs, footer)
-  const deco = (h) => injectMenu(consent(analytics(ads(newsletter(ailleurs(h))))));
+  const deco = (h) => injectMenu(consent(analytics(ads(newsletter(h)))));
   // Pages statiques recopiées telles quelles : menu seulement.
   for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
     const p = path.join(outDir, rel, 'index.html');
