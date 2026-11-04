@@ -55,17 +55,6 @@ export async function loadArticlesFromSupabase(client, nowISO) {
   });
 }
 
-// Derniers titres des journaux suivis (bloc « Ailleurs sur le web »).
-// Un échec ne doit jamais casser la génération du site : on renvoie alors [].
-export async function loadLatestSujets(client, limit = 5) {
-  const { data, error } = await client
-    .from('sujets')
-    .select('titre,url,source_nom,date_source')
-    .order('date_source', { ascending: false, nullsFirst: false })
-    .limit(limit);
-  if (error) { console.warn(`Ailleurs sur le web ignoré : ${error.message}`); return []; }
-  return data;
-}
 
 // Brèves publiées, les plus récentes d'abord (page « En direct »).
 // Un échec ne doit jamais casser la génération du site : on renvoie alors [].

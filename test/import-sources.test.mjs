@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { importAll, exitCode, shouldRebuild } from '../scripts/import-sources.mjs';
+import { importAll, exitCode } from '../scripts/import-sources.mjs';
 
 const fx = (f) => fs.readFileSync(new URL(`./fixtures/sources/${f}`, import.meta.url), 'utf8');
 
@@ -33,7 +33,9 @@ function fakeDb(known = []) {
   return {
     rows,
     existingUrls: async (list) => new Set(list.filter((u) => urls.has(u))),
-    insertSujets: async (batch) => { for (const r of batch) { urls.add(r.url); rows.push(r); } return batch.length; },
+    brouillons: [],
+    insertSujets: async (batch) => batch.map((r) => { urls.add(r.url); const row = { ...r, id: 'id-' + rows.length }; rows.push(row); return row; }),
+    async creerBrouillons(sujets) { this.brouillons.push(...sujets); return sujets.length; },
   };
 }
 
@@ -103,7 +105,33 @@ test("exitCode : 1 dès qu'une source a échoué, 0 sinon", () => {
   assert.equal(exitCode([{ erreur: null }, { erreur: 'boom' }]), 1);
 });
 
-test('shouldRebuild : seulement si au moins un nouveau sujet', () => {
-  assert.equal(shouldRebuild([{ nouveaux: 0 }, { nouveaux: 0, erreur: 'x' }]), false);
-  assert.equal(shouldRebuild([{ nouveaux: 0 }, { nouveaux: 3 }]), true);
+
+test('importAll écarte les sujets qui ne concernent pas les Comores', async () => {
+  const xml = `<?xml version="1.0"?><rss><channel>
+<item><title>Début de la COP 17 à Erevan</title><link>https://masiwa-comores.com/cop</link><description>Biodiversité mondiale</description><pubDate>Mon, 02 Nov 2026 08:00:00 +0000</pubDate></item>
+<item><title>Grève à Moroni</title><link>https://masiwa-comores.com/greve</link><description>Les enseignants</description><pubDate>Mon, 02 Nov 2026 09:00:00 +0000</pubDate></item>
+</channel></rss>`;
+  const db = fakeDb();
+  const lignes = [];
+  const [r] = await importAll({ sources: [SOURCES[1]], fetchText: async () => xml, db, log: (l) => lignes.push(l) });
+  assert.deepEqual(db.rows.map((x) => x.titre), ['Grève à Moroni']);
+  assert.equal(r.nouveaux, 1);
+  assert.equal(r.ecartes, 1);
+  assert.ok(lignes.some((l) => l.includes('1 écarté')), lignes.join(' | '));
+});
+
+test('importAll crée un brouillon pour chaque nouveau sujet retenu', async () => {
+  const db = fakeDb();
+  const res = bySource(await importAll({ sources: SOURCES.slice(0, 2), fetchText: fakeFetch().fetchText, db, log: quiet }));
+  assert.equal(db.brouillons.length, 35);
+  assert.ok(db.brouillons.every((b) => b.id && b.titre && b.url));
+  assert.equal(res.habari.brouillons, 25);
+});
+
+test('importAll : un échec de création des brouillons est une erreur de la source, sujets gardés', async () => {
+  const db = fakeDb();
+  db.creerBrouillons = async () => { throw new Error('profil introuvable'); };
+  const [r] = await importAll({ sources: [SOURCES[1]], fetchText: fakeFetch().fetchText, db, log: quiet });
+  assert.equal(db.rows.length, 10);
+  assert.match(r.erreur, /profil introuvable/);
 });
