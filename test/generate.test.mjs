@@ -25,36 +25,10 @@ test('buildCategoryPage: tri desc et message si vide', () => {
   assert.match(buildCategoryPage('monde', [], cats), /Aucun article pour le moment/);
 });
 
-test('buildHome remplit les sections, plus de marqueurs bruts', () => {
-  const html = buildHome([a], cats);
-  assert.doesNotMatch(html, /\{\{SECTION/);
-  assert.match(html, /Mon titre/);
-});
-
 test('buildSearchIndex', () => {
   const idx = buildSearchIndex([a], cats);
   assert.equal(idx[0].catSlug, 'economie');
   assert.equal(idx[0].url, 'index.php/2026/06/12/s/index.html');
-});
-
-test('buildHome : grille et bandeau À la une suivent la case, ancre pub intacte', async () => {
-  const mk = (slug, jour, aLaUne = false) => ({ ...a, title: 'Une ' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T09:00:00Z`, aLaUne });
-  const list = [mk('coche', '10', true), mk('a2', '15'), mk('a3', '14'), mk('a4', '13'), mk('a5', '12')];
-  const html = buildHome(list, cats);
-  assert.doesNotMatch(html, /\{\{UNE_GRID\}\}|\{\{UNE_TICKER\}\}/);
-  assert.ok(html.includes('data-td-block-uid="tdi_51" >'));
-  const grille = html.slice(html.indexOf('<div id=tdi_51'));
-  assert.ok(grille.indexOf('Une coche') < grille.indexOf('Une a2'));
-  assert.ok(!grille.slice(0, grille.indexOf('tdi_52')).includes('Une a5'));
-  assert.ok(!grille.slice(0, grille.indexOf('tdi_52')).includes('Le Grand Mariage aux Comores'));
-  const bandeau = (h) => h.slice(h.indexOf('<div class="td-trending-now-display-area">'), h.indexOf('<div class="td-next-prev-wrap">', h.indexOf('<div class="td-trending-now-display-area">')));
-  // Bandeau : titres publiés le jour du build…
-  const jour = bandeau(buildHome(list, cats, '2026-10-15'));
-  assert.ok(jour.includes('Une a2') && !jour.includes('Une coche') && !jour.includes('Une a3'));
-  // … et, si rien n'a été publié ce jour-là, les articles de la une.
-  const vide = bandeau(buildHome(list, cats, '2026-10-30'));
-  assert.ok(vide.includes('Une coche') && vide.includes('Une a4') && !vide.includes('Une a5') && !vide.includes('Le Grand Mariage'));
-  assert.doesNotThrow(() => buildHome([], cats));
 });
 
 test('buildEnDirectPage : brèves et articles à la une, liens à la bonne profondeur', async () => {
@@ -65,28 +39,57 @@ test('buildEnDirectPage : brèves et articles à la une, liens à la bonne profo
   assert.ok(html.includes('../../../index.php/2026/06/12/s/index.html'));
 });
 
-test('buildHome : chaque rubrique limitée à 4 articles + lien vers la rubrique', () => {
-  const mk = (cat, i) => ({ ...a, category: cat, title: `T-${cat}-${i}`, slug: `${cat}-${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` });
-  const list = ['politique', 'economie', 'societe', 'culture', 'sport', 'diaspora', 'monde', 'tourisme'].flatMap((c) => [0, 1, 2, 3, 4, 5].map((i) => mk(c, i)));
-  const html = buildHome(list, cats);
-  for (const c of ['politique', 'economie', 'societe', 'culture', 'sport', 'diaspora', 'monde', 'tourisme']) {
-    assert.ok(html.includes(`T-${c}-5`) && html.includes(`T-${c}-2`), c + ' : les 4 plus récents');
-    assert.ok(!html.includes(`>T-${c}-1<`) && !html.includes(`>T-${c}-0<`), c + ' : pas les plus anciens');
-    assert.ok(html.includes(`href="index.php/category/${c}/index.html" class="cn-voir-tout"`), c + ' : lien');
-  }
+const unePart = (h) => h.slice(h.indexOf('<div class="cn-une">'), h.indexOf('id="cn-ad-top"'));
+const bandeau = (h) => h.slice(h.indexOf('<div class="cn-ticker">'), h.indexOf('</header>'));
+
+test('buildHome : remplit la page, aucun marqueur ni contenu figé, ancres pub', () => {
+  const html = buildHome([a], cats);
+  assert.match(html, /Mon titre/);
+  assert.doesNotMatch(html, /{{|Le Grand Mariage/);
+  assert.ok(html.includes('<div id="cn-ad-top"></div>') && html.includes('id="cn-sidebar-ads"'));
+  assert.ok(html.includes('<link rel="canonical" href="index.html"/>'));
+  assert.ok(html.includes('og:site_name') && html.includes('<title>Comoresnews |'));
+  assert.doesNotThrow(() => buildHome([], cats));
 });
 
-test('buildHome : « À ne pas manquer » affiche la veille hors une, plus de contenu figé', () => {
+test('buildHome : .cn-une = 1 grande + 3 lignes, la case « À la une » en premier ; bandeau = titres du jour', () => {
+  const mk = (slug, jour, aLaUne = false) => ({ ...a, title: 'Une ' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T09:00:00Z`, aLaUne });
+  const list = [mk('coche', '10', true), mk('a2', '15'), mk('a3', '14'), mk('a4', '13'), mk('a5', '12')];
+  const une = unePart(buildHome(list, cats));
+  assert.ok(une.indexOf('Une coche') < une.indexOf('Une a2'));
+  assert.equal((une.match(/cn-carte grande/g) || []).length, 1);
+  assert.equal((une.match(/cn-carte ligne/g) || []).length, 3);
+  assert.ok(une.indexOf('cn-carte grande') < une.indexOf('Une a2') && une.indexOf('Une coche') < une.indexOf('cn-carte ligne'));
+  assert.ok(!une.includes('Une a5'));
+  const jour = bandeau(buildHome(list, cats, '2026-10-15'));
+  assert.ok(jour.includes('Une a2') && !jour.includes('Une coche') && !jour.includes('Une a3'));
+  const vide = bandeau(buildHome(list, cats, '2026-10-30'));
+  assert.ok(vide.includes('Une coche') && vide.includes('Une a4') && !vide.includes('Une a5'));
+});
+
+test('buildHome : « À ne pas manquer » = veille hors une', () => {
   const mk = (slug, jour, h = '09') => ({ ...a, title: 'Art ' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T${h}:00:00Z` });
   const list = ['1', '2', '3', '4'].map((x) => mk('auj' + x, '21', '0' + x)).concat([mk('hier1', '20', '10'), mk('hier2', '20', '11'), mk('vieux', '15')]);
   const html = buildHome(list, cats, '2026-10-21');
-  assert.doesNotMatch(html, /\{\{A_NE_PAS_MANQUER\}\}/);
-  const bloc = html.slice(html.indexOf('<div id=tdi_56'), html.indexOf('data-td-block-uid="tdi_57"'));
-  assert.ok(bloc.indexOf('Art hier2') < bloc.indexOf('Art hier1') && bloc.includes('Art vieux'));
-  assert.ok(!bloc.includes('Art auj') && !bloc.includes('Le Grand Mariage') && !bloc.includes('next-page-tdi_56'));
+  const i = html.indexOf('À ne pas manquer');
+  const bloc = html.slice(i, html.indexOf('Actu ', i));
+  assert.ok(i > 0 && bloc.indexOf('Art hier2') < bloc.indexOf('Art hier1') && bloc.includes('Art vieux'));
+  assert.ok(!bloc.includes('Art auj'));
 });
 
-test('buildHome : le bandeau « À la une » défile automatiquement (5 s)', () => {
-  const html = buildHome([a], cats, '2026-06-12');
-  assert.ok(html.includes('id="tdi_50" data-start="auto" data-timer="5"'));
+test('buildHome : rubrique de 6 articles = 4 cartes + lien ; rubrique vide = message', () => {
+  const mk = (i) => ({ ...a, category: 'sport', title: `T-sport-${i}`, slug: `sport-${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` });
+  const html = buildHome([0, 1, 2, 3, 4, 5].map(mk), cats);
+  const i = html.indexOf('Actu Sport');
+  const fin = html.indexOf('Actu ', i + 5);
+  const bloc = html.slice(i, fin > 0 ? fin : html.indexOf('Les plus récents'));
+  assert.equal((bloc.match(/<article class="cn-carte grille"/g) || []).length, 4);
+  assert.ok(bloc.includes('Tous les articles Sport →') && bloc.includes('href="index.php/category/sport/index.html"'));
+  assert.ok(html.includes('Aucun article pour le moment.'));
+  assert.ok(!buildHome([mk(0), mk(1)], cats).includes('Tous les articles Sport'));
+});
+
+test('buildHome : « Les plus récents » en fin de page', () => {
+  const html = buildHome(Array.from({ length: 20 }, (_, i) => i).map((i) => ({ ...a, title: `P${i}`, slug: `p${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` })), cats, '2026-10-30');
+  assert.ok(html.includes('Les plus récents') && html.includes('cn-grille quatre'));
 });

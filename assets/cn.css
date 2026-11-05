@@ -32,6 +32,11 @@ a{color:inherit}
 /* cartes et grilles */
 .cn-grille{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .cn-grille.trois{grid-template-columns:repeat(3,1fr)}
+.cn-grille.quatre{grid-template-columns:repeat(4,1fr)}
+.cn-une{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:18px;align-items:start}
+.cn-une-pile{display:flex;flex-direction:column;gap:14px}
+.cn-une-pile .cn-carte.ligne img,.cn-une-pile .cn-carte.ligne span.cn-carte-vide{width:130px;min-height:96px}
+.cn-principal{min-width:0}
 .cn-carte{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;flex-direction:column}
 .cn-carte img{width:100%;display:block;object-fit:cover;height:170px}
 .cn-carte .cn-carte-in{padding:14px 16px}
@@ -85,10 +90,11 @@ a{color:inherit}
 body.cn-menu-ouvert .cn-menu{display:flex}
 #cn-main{padding:16px 14px}
 .cn-deux{grid-template-columns:1fr}
-.cn-grille,.cn-grille.trois{grid-template-columns:1fr}
+.cn-grille,.cn-grille.trois,.cn-grille.quatre,.cn-une{grid-template-columns:1fr}
 .cn-carte.ligne{flex-direction:column}
 .cn-carte.ligne img,.cn-carte.ligne span.cn-carte-vide{width:100%;height:170px}
 .cn-carte.grande img,.cn-carte.grande span.cn-carte-vide{height:200px}
+.cn-une-pile .cn-carte.ligne img,.cn-une-pile .cn-carte.ligne span.cn-carte-vide{width:100%;height:170px}
 .cn-carte.grande h3{font-size:21px}
 .cn-footer-in{grid-template-columns:1fr}
 }

@@ -90,38 +90,6 @@ export function enDirectInner(une, breves, P, catsCfg) {
 </div>${SCRIPT}`;
 }
 
-const MOIS = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-
-// Une case de la grille « À la une » de l'accueil (balisage du thème, page à la racine).
-function gridPost(a, i, catsCfg) {
-  const url = articlePath(a.date, a.slug);
-  const t = esc(a.title);
-  const img = a.image ? resolveImg('', a.image) : '';
-  const thumb = img
-    ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
-    : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
-  const date = i === 0
-    ? `<div class="td-editor-date"><span class="td-post-date"><time class="entry-date updated td-module-date" datetime="${esc(stamp(a))}">${MOIS.format(new Date(a.date + 'T12:00:00Z'))}</time></span></div>`
-    : '';
-  return `<div class="td_module_flex_${i === 0 ? 6 : i === 1 ? 7 : 8} td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-${i} td-cpt-post">
-  <div class="td-module-container td-category-pos-above">
-    <div class="td-image-container"><div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
-    <div class="td-module-meta-info">
-      <a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a>
-      <div class="tdb-module-title-wrap"><h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3></div>
-      ${date}
-    </div>
-  </div>
-</div>`;
-}
-
-export function uneGridHtml(list, catsCfg) {
-  if (!list.length) return '';
-  const [first, ...rest] = list;
-  return `${gridPost(first, 0, catsCfg)}
-<div class="td-big-grid-flex-scroll-holder">${rest.map((a, i) => gridPost(a, i + 1, catsCfg)).join('\n')}</div>`;
-}
-
 // Jour précédent (AAAA-MM-JJ) d'un jour AAAA-MM-JJ.
 function veilleDe(jour) {
   return new Date(Date.parse(jour + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
@@ -137,35 +105,6 @@ export function aNePasManquer(articles, une, jour, n = 5) {
   const hier = dispo.filter((a) => a.date === veille).slice(0, n);
   const vus = new Set(hier.map((a) => a.slug));
   return hier.concat(dispo.filter((a) => !vus.has(a.slug))).slice(0, n);
-}
-
-// Balisage du thème (td_flex_block_3) : un grand article puis une colonne de petits.
-function manquerPost(a, grand, catsCfg) {
-  const url = articlePath(a.date, a.slug);
-  const t = esc(a.title);
-  const img = a.image ? resolveImg('', a.image) : '';
-  const thumb = img
-    ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
-    : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
-  const date = `<span class="td-post-date"><time class="entry-date updated td-module-date" datetime="${esc(stamp(a))}">${MOIS.format(new Date(a.date + 'T12:00:00Z'))}</time></span>`;
-  const cat = grand ? `<a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a>` : '';
-  return `<div class="td_module_flex td_module_flex_${grand ? 1 : 3} td_module_wrap td-animation-stack td-cpt-post">
-  <div class="td-module-container td-category-pos-${grand ? 'image' : ''}">
-    <div class="td-image-container">${cat}<div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
-    <div class="td-module-meta-info">
-      <h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3>
-      <div class="td-editor-date"><span class="td-author-date">${date}</span></div>
-      ${grand && a.excerpt ? `<div class="td-excerpt">${esc(a.excerpt)}</div>` : ''}
-    </div>
-  </div>
-</div>`;
-}
-
-export function aNePasManquerHtml(list, catsCfg) {
-  if (!list.length) return '';
-  const [first, ...rest] = list;
-  return `${manquerPost(first, true, catsCfg)}
-<div class="td_module_column">${rest.map((a) => manquerPost(a, false, catsCfg)).join('\n')}</div>`;
 }
 
 // Bandeau « À la une » : titres des articles publiés le jour `jour` (10 max) ;
@@ -189,26 +128,8 @@ export function pourraitInteresser(articles, exclus, n = 4) {
   return choix.concat(dispo.filter((a) => !vus.has(a.slug))).slice(0, n);
 }
 
-export function pourraitHtml(list, catsCfg) {
-  return list.map((a) => {
-    const url = articlePath(a.date, a.slug);
-    const t = esc(a.title);
-    const img = a.image ? resolveImg('', a.image) : '';
-    const thumb = img
-      ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
-      : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
-    return `<div class="td_module_flex td_module_flex_1 td_module_wrap td-animation-stack td-cpt-post">
-  <div class="td-module-container td-category-pos-image">
-    <div class="td-image-container"><a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a><div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
-    <div class="td-module-meta-info"><h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3></div>
-  </div>
-</div>`;
-  }).join('\n');
-}
-
-export function uneTickerHtml(list) {
-  return list.map((a, i) => {
-    const t = esc(a.title);
-    return `<div class="td_module_trending_now td-trending-now-post-${i} td-trending-now-post td-cpt-post"><h2 class="entry-title td-module-title"><a href="${articlePath(a.date, a.slug)}" rel="bookmark" title="${t}">${t}</a></h2></div>`;
-  }).join('\n');
+// Bloc « Les plus récents » : les `n` derniers articles absents d'`exclus`.
+export function plusRecents(articles, exclus, n = 4) {
+  const pris = new Set(exclus.map((a) => a.slug));
+  return [...articles].sort(byRecent).filter((a) => !pris.has(a.slug)).slice(0, n);
 }

@@ -12,9 +12,11 @@ import { injectConsent } from './lib/consent.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
-import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml, aNePasManquer, aNePasManquerHtml, breveDayKey, titresDuJour, pourraitInteresser, pourraitHtml } from './lib/en-direct.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents } from './lib/en-direct.mjs';
+import { page, colonneDroite, titreSection } from './lib/gabarit.mjs';
+import { carte, grille } from './lib/cartes.mjs';
 import { injectDate } from './lib/date-bandeau.mjs';
-import { applyTemplate, replaceSection } from './lib/templates.mjs';
+import { applyTemplate } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
 
@@ -66,27 +68,35 @@ export function buildCategoryPage(slug, articles, catsCfg) {
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
 const HOME_SECTION_MAX = 4;
 
+const HOME_HEAD = `<link rel="canonical" href="index.html"/>
+<meta name="description" content="L'actualité des Comores et de la diaspora comorienne">
+<meta property="og:description" content="L'actualité des Comores et de la diaspora comorienne">
+<meta property="og:site_name" content="Comoresnews">
+<meta property="og:locale" content="fr-FR">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Comoresnews">
+<meta property="og:url" content="index.html">`;
+
 // `jour` : date du build (AAAA-MM-JJ, heure des Comores) ; « À ne pas manquer » montre la veille.
 export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  const opts = { prefix: '', catsCfg };
   const une = homeUne(articles, 4);
   const manquer = aNePasManquer(articles, une, jour);
-  let html = TPL('home.html')
-    .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
-    .replace('{{UNE_TICKER}}', () => uneTickerHtml(titresDuJour(articles, jour, une)))
-    .replace('{{A_NE_PAS_MANQUER}}', () => aNePasManquerHtml(manquer, catsCfg))
-    .replace('{{POURRAIT_INTERESSER}}', () => pourraitHtml(pourraitInteresser(articles, une.concat(manquer)), catsCfg));
-  for (const slug of Object.keys(catsCfg)) {
-    const tous = articles.filter(a => a.category === slug).sort(byRecent);
-    const list = tous.slice(0, HOME_SECTION_MAX);
-    const voirTout = tous.length > HOME_SECTION_MAX
-      ? `<p style="margin:10px 0 0;text-align:right;"><a href="${categoryPath(slug)}" class="cn-voir-tout" style="font-weight:600;font-size:13px;">Tous les articles ${catsCfg[slug].name} →</a></p>`
-      : '';
-    const inner = list.length
-      ? `<div style="padding:4px 0;">${list.map(a => articleCard(a, '', catsCfg[a.category].name)).join('')}</div>${voirTout}`
-      : `<p style="padding:22px 4px;color:#999;font-style:italic;margin:0;">Aucun article pour le moment.</p>`;
-    html = replaceSection(html, slug, inner);
-  }
-  return html;
+  const pourrait = pourraitInteresser(articles, une.concat(manquer));
+  const recents = plusRecents(articles, une.concat(manquer, pourrait));
+  const [premiere, ...autres] = une;
+  const uneHtml = une.length
+    ? `<div class="cn-une">${carte(premiere, { ...opts, variante: 'grande' })}<div class="cn-une-pile">${autres.map((a) => carte(a, { ...opts, variante: 'ligne' })).join('')}</div></div>`
+    : '';
+  const rubriques = Object.entries(catsCfg).sort(([, x], [, y]) => x.order - y.order).map(([slug, c]) => {
+    const tous = articles.filter((a) => a.category === slug).sort(byRecent);
+    const lien = tous.length > HOME_SECTION_MAX ? { lien: categoryPath(slug), libelleLien: `Tous les articles ${c.name} →` } : {};
+    return titreSection('Actu ' + c.name, lien) + grille(tous.slice(0, HOME_SECTION_MAX), opts);
+  }).join('');
+  const contenu = `${uneHtml}<div id="cn-ad-top"></div>
+<div class="cn-deux"><div class="cn-principal">${titreSection('À ne pas manquer')}${grille(manquer, opts)}${rubriques}</div>${colonneDroite({ pourrait: pourrait.map((a) => carte(a, { ...opts, variante: 'mini' })).join('') })}</div>
+${titreSection('Les plus récents')}${recents.length ? grille(recents, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : grille([], opts)}`;
+  return page({ prefix: '', head: HOME_HEAD, contenu, jour, titres: titresDuJour(articles, jour, une), catsCfg });
 }
 
 export const EN_DIRECT_PAGE = 'index.php/pages/en-direct/index.html';
