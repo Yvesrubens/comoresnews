@@ -9,10 +9,55 @@ const a = { title:'Mon titre', slug:'s', category:'economie', author:'Comoresnew
 
 test('buildArticlePage injecte titre, corps, categorie et <title>', () => {
   const html = buildArticlePage(a, cats);
-  assert.match(html, /Mon titre/);
-  assert.match(html, /<strong>paragraphe<\/strong>/);
+  assert.ok(html.includes('<h1>Mon titre</h1>') || /<h1[^>]*>Mon titre<[/]h1>/.test(html));
+  assert.ok(html.includes('<strong>paragraphe</strong>'));
   assert.match(html, /Économie/);
-  assert.match(html, /<title>Mon titre \| Comoresnews<\/title>/);
+  assert.ok(html.includes('<title>Mon titre | Comoresnews</title>'));
+});
+
+const mkA = (slug, jour, category = 'economie') => ({ ...a, category, title: 'A-' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T09:00:00Z` });
+
+test('buildArticlePage : structure, chapo, byline, partage, ancres pub', () => {
+  const art = { ...a, excerpt: 'Le chapô', sourceNom: 'Al-Watwan', sourceUrl: 'https://exemple.com/x' };
+  const html = buildArticlePage(art, cats, [art], '2026-06-12');
+  assert.ok(html.includes('<div id="cn-ad-top"></div>') && html.includes('cn-sidebar-ads'));
+  assert.ok(html.includes('<p class="cn-chapo">Le chapô</p>'));
+  assert.ok(html.includes('<div class="cn-article-body"><p>Un <strong>paragraphe</strong>.'));
+  assert.ok(html.includes('⏱') && html.includes('min de lecture') && html.includes('12 juin 2026'));
+  const url = encodeURIComponent('https://comoresnews.com/index.php/2026/06/12/s/index.html');
+  assert.ok(html.includes('https://www.facebook.com/sharer/sharer.php?u=' + url));
+  assert.ok(html.includes('https://twitter.com/intent/tweet?url=' + url));
+  assert.ok(html.includes('https://wa.me/?text='));
+  assert.ok(html.includes('mailto:?subject='));
+  assert.ok(html.includes('Source :'));
+  assert.ok(html.includes('Newsletter') && html.includes("S'inscrire gratuitement") && html.includes('index.html#cn-newsletter'));
+});
+
+test('buildArticlePage : légende seulement pour une photo de banque, <figure absent sans image', () => {
+  const banque = { ...a, image: 'wp-content/uploads/medias/commons/x.jpg' };
+  assert.ok(buildArticlePage(banque, cats).includes("Photo d'illustration"));
+  const h = buildArticlePage(a, cats);
+  assert.ok(h.includes('<figure') && !h.includes("Photo d'illustration"));
+  assert.ok(!buildArticlePage({ ...a, image: '' }, cats).includes('<figure'));
+});
+
+test('buildArticlePage : « À lire aussi » avec 4 cartes, absent si seul article', () => {
+  const cur = mkA('cur', '10');
+  const autres = ['11', '12', '13', '14', '15'].map((j) => mkA('x' + j, j));
+  const h = buildArticlePage(cur, cats, [cur, ...autres], '2026-10-16');
+  const bloc = h.slice(h.indexOf('À lire aussi'));
+  assert.equal((h.match(/À lire aussi/g) || []).length, 1);
+  assert.equal((bloc.match(/cn-carte grille/g) || []).length, 4);
+  assert.ok(h.includes('cn-grille quatre'));
+  assert.ok(!buildArticlePage(cur, cats, [cur], '2026-10-16').includes('À lire aussi'));
+});
+
+test('buildArticlePage : seoTitle dans <title>, SEO une seule fois, plus de méta figée', () => {
+  const h = buildArticlePage({ ...a, seoTitle: 'Titre SEO' }, cats);
+  assert.ok(h.includes('<title>Titre SEO | Comoresnews</title>'));
+  assert.equal(h.split('og:title').length - 1, 1);
+  assert.equal(h.split('application/ld+json').length - 1, 1);
+  assert.ok(!/vanille/i.test(h));
 });
 
 const mkS = (slug, jour, category = 'sport') => ({ ...a, category, title: 'T-' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T09:00:00Z` });

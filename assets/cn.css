@@ -81,6 +81,27 @@ a{color:inherit}
 .cn-footer-liens a{display:inline-block;margin-right:14px}
 #cn-legal-bar{background:var(--vert2);color:#9db39d;text-align:center;padding:18px 15px;font-size:13px;line-height:2}
 #cn-legal-bar a{color:#ddd;text-decoration:none;margin:0 6px}
+/* article */
+.cn-article .cn-h1{font-family:var(--serif);font-size:40px;line-height:1.12;margin:6px 0 14px}
+.cn-chapo{font-family:var(--serif);font-size:20px;line-height:1.5;color:#444;margin:0 0 18px}
+.cn-byline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:13px;color:#666;padding:12px 0;border-top:1px solid #e3e0d8;border-bottom:1px solid #e3e0d8;margin-bottom:20px}
+.cn-initiales{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--vert);color:#fff;font-weight:700;font-size:12px}
+.cn-auteur{font-weight:700;color:#1a1a1a}
+.cn-partage{margin-left:auto;display:flex;gap:6px}
+.cn-partage a{border:1px solid #cfccc3;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;text-decoration:none;background:#fff}
+.cn-partage a:hover{background:var(--vert);color:#fff}
+.cn-article figure{margin:0 0 24px}
+.cn-article figure img{width:100%;height:auto;border-radius:14px;display:block}
+.cn-article figcaption{font-size:12px;color:#777;margin-top:6px}
+.cn-article-body{font-family:var(--serif);font-size:18px;line-height:1.8;color:#222}
+.cn-article-body p{margin:0 0 1.2em}
+.cn-article-body h2,.cn-article-body h3{font-family:var(--serif);line-height:1.25;margin:1.6em 0 .6em}
+.cn-article-body a{color:var(--bleu)}
+.cn-article-body img{height:auto;border-radius:8px}
+.cn-source{font-size:14px;color:#666}
+.cn-nl-encart{background:var(--vert);color:#fff;border-radius:12px;padding:18px;margin-bottom:18px}
+.cn-nl-encart h3{margin:0 0 6px;font-size:17px}.cn-nl-encart p{margin:0 0 12px;font-size:14px;color:#d8e5d8}
+.cn-nl-encart .cn-btn{display:inline-block}
 /* mobile */
 @media (max-width:767px){
 .cn-top{padding:6px 14px;flex-direction:column;align-items:flex-start;gap:4px}
@@ -99,4 +120,8 @@ body.cn-menu-ouvert .cn-menu{display:flex}
 .cn-une-pile .cn-carte.ligne img,.cn-une-pile .cn-carte.ligne span.cn-carte-vide{width:100%;height:170px}
 .cn-carte.grande h3{font-size:21px}
 .cn-footer-in{grid-template-columns:1fr}
+.cn-article .cn-h1{font-size:28px}
+.cn-chapo{font-size:18px}
+.cn-article-body{font-size:17px}
+.cn-partage{margin-left:0;width:100%}
 }

@@ -103,3 +103,18 @@ test('plusRecents : exclut, trie, limite', async () => {
   assert.deepEqual(plusRecents(list, [], 2).map((a) => a.slug), ['r15', 'r14']);
   assert.deepEqual(plusRecents([], []), []);
 });
+
+test('aLireAussi : même rubrique d\'abord, complété, sans l\'article', async () => {
+  const { aLireAussi } = await import('../build/lib/en-direct.mjs');
+  const c = (slug, jour, category) => ({ ...art(slug, jour), category });
+  const cur = c('cur', '10', 'sport');
+  const list = [cur, c('s1', '11', 'sport'), c('e1', '19', 'economie'), c('s2', '12', 'sport'), c('e2', '18', 'economie'), c('e3', '17', 'economie')];
+  assert.deepEqual(aLireAussi(cur, list).map((x) => x.slug), ['s2', 's1', 'e1', 'e2']);
+  assert.deepEqual(aLireAussi(cur, list, 2).map((x) => x.slug), ['s2', 's1']);
+});
+
+test('aLireAussi : un seul article → []', async () => {
+  const { aLireAussi } = await import('../build/lib/en-direct.mjs');
+  const cur = art('seul', '10');
+  assert.deepEqual(aLireAussi(cur, [cur]), []);
+});

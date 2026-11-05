@@ -12,42 +12,51 @@ import { injectConsent } from './lib/consent.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
-import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents } from './lib/en-direct.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents, aLireAussi } from './lib/en-direct.mjs';
 import { page, colonneDroite, titreSection } from './lib/gabarit.mjs';
-import { carte, grille } from './lib/cartes.mjs';
+import { carte, grille, etiquettes, dateFr, estPhotoBanque, tempsLecture } from './lib/cartes.mjs';
 import { injectDate } from './lib/date-bandeau.mjs';
-import { applyTemplate } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
 
 const ROOT = process.cwd();
-const TPL = (n) => fs.readFileSync(path.join(ROOT, 'templates', n), 'utf8');
 const AUTHOR_PAGE = 'index.php/author/lewistifosi/index.html'; // URL historique préservée
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-function setTitle(html, title) {
-  return html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)} | Comoresnews</title>`);
-}
 
-export function buildArticlePage(a, catsCfg) {
+export function buildArticlePage(a, catsCfg, articles = [a], jour = breveDayKey(new Date().toISOString())) {
   const rel = articlePath(a.date, a.slug);
   const P = relPrefix(rel);
+  const url = `${BASE}/${rel}`;
+  const opts = { prefix: P, catsCfg };
   const catName = catsCfg[a.category].name;
-  const img = a.image
-    ? `<img src="${resolveImg(P, a.image)}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
+  const suite = aLireAussi(a, articles);
+  const pourrait = pourraitInteresser(articles, [a, ...suite]).map((x) => carte(x, { ...opts, variante: 'mini' })).join('');
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(a.title);
+  const partage = [
+    ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${u}`],
+    ['X', `https://twitter.com/intent/tweet?url=${u}&text=${t}`],
+    ['WhatsApp', `https://wa.me/?text=${t}%20${u}`],
+    ['E-mail', `mailto:?subject=${t}&body=${u}`],
+  ].map(([n, h]) => `<a href="${esc(h)}" target="_blank" rel="noopener" aria-label="Partager sur ${n}">${n}</a>`).join('');
+  const figure = a.image
+    ? `<figure><img src="${esc(resolveImg(P, a.image))}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async">${estPhotoBanque(a.image) ? "<figcaption>Photo d'illustration</figcaption>" : ''}</figure>`
     : '';
-  const breadcrumb = `<span><a class="entry-crumb" href="${P}index.html">Accueil</a></span> <i class="td-icon-right td-bread-sep"></i> <span><a class="entry-crumb" href="${P}${categoryPath(a.category)}">${catName}</a></span>`;
-  let html = applyTemplate(TPL('article.html'), {
-    TITLE: esc(a.title),
-    BREADCRUMB: breadcrumb,
-    CATEGORY: catName,
-    AUTHOR: esc(a.author),
-    DATE: a.date,
-    IMAGE: img,
-    BODY: renderMarkdown(a.body, P) + sourceLine(a),
-    SEO: metaTags(a, `${BASE}/${rel}`) + '\n' + jsonLdArticle(a, `${BASE}/${rel}`),
+  const newsletter = `<div class="cn-nl-encart"><h3>Newsletter</h3><p>Les articles de la semaine, chaque vendredi.</p><a class="cn-btn" href="${P}index.html#cn-newsletter">S'inscrire gratuitement</a></div>`;
+  const contenu = `<div id="cn-ad-top"></div>
+<div class="cn-article cn-deux"><article>
+<nav class="cn-fil"><a href="${P}index.html">Accueil</a> › <a href="${P}${categoryPath(a.category)}">${esc(catName)}</a></nav>
+${etiquettes(a, catsCfg, P)}<h1 class="cn-h1">${esc(a.title)}</h1>
+${a.excerpt ? `<p class="cn-chapo">${esc(a.excerpt)}</p>` : ''}<div class="cn-byline"><span class="cn-initiales">CN</span><span class="cn-auteur">${esc(a.author || 'Comoresnews')}</span><span>${dateFr(a.date)}</span><span>⏱ ${tempsLecture(a.body)} min de lecture</span><span class="cn-partage">${partage}</span></div>
+${figure}<div class="cn-article-body">${renderMarkdown(a.body, P) + sourceLine(a)}</div>
+</article>${colonneDroite({ avant: newsletter, pourrait })}</div>
+${suite.length ? titreSection('À lire aussi') + grille(suite, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : ''}`;
+  return page({
+    titre: a.seoTitle || a.title, prefix: P, contenu, jour, catsCfg, actif: a.category,
+    head: metaTags(a, url) + '\n' + jsonLdArticle(a, url),
+    titres: titresDuJour(articles, jour, pickUne(articles, 4)),
   });
-  return setTitle(html, a.seoTitle || a.title);
 }
 
 const pluriel = (n) => `${n} article${n > 1 ? 's' : ''}`;
@@ -173,7 +182,7 @@ export async function main({ now, jour = now, outDir = '_site' }) {
     const p = path.join(outDir, rel, 'index.html');
     if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(injectMenu(fs.readFileSync(p, 'utf8')), jour));
   }
-  for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
+  for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats, all, jour)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats, jour, all)));
   write(outDir, 'index.html', deco(buildHome(all, cats, jour)));

@@ -120,3 +120,12 @@ export function plusRecents(articles, exclus, n = 4) {
   const pris = new Set(exclus.map((a) => a.slug));
   return [...articles].sort(byRecent).filter((a) => !pris.has(a.slug)).slice(0, n);
 }
+
+// Bloc « À lire aussi » : les `n` plus récents de la même rubrique hors `a`,
+// complétés par les plus récents des autres rubriques.
+export function aLireAussi(a, articles, n = 4) {
+  const dispo = [...articles].sort(byRecent).filter((x) => x.slug !== a.slug);
+  const meme = dispo.filter((x) => x.category === a.category);
+  const autres = dispo.filter((x) => x.category !== a.category);
+  return meme.concat(autres).slice(0, n);
+}
