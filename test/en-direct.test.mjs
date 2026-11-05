@@ -62,3 +62,33 @@ test('uneGridHtml : classes du thème 6 / 7 / 8 / 8 (1 grande, 1 large, 2 petite
   const classes = [...h.matchAll(/td_module_flex_(\d) td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-(\d)/g)].map((m) => m[1] + ':' + m[2]);
   assert.deepEqual(classes, ['6:0', '7:1', '8:2', '8:3']);
 });
+
+test('aNePasManquer : articles de la veille hors une, 5 max, plus récents d\'abord', async () => {
+  const { aNePasManquer } = await import('../build/lib/en-direct.mjs');
+  const v = (slug, h) => ({ ...art(slug, '20'), publishedAt: `2026-10-20T${h}:00:00Z` });
+  const list = [art('auj', '21'), v('v1', '08'), v('v2', '10'), v('v3', '12'), v('v4', '14'), v('v5', '15'), v('v6', '16'), art('vieux', '18')];
+  const une = [list[0], list[6]]; // aujourd'hui + v6 déjà à la une
+  const r = aNePasManquer(list, une, '2026-10-21');
+  assert.deepEqual(r.map((a) => a.slug), ['v5', 'v4', 'v3', 'v2', 'v1']);
+});
+
+test('aNePasManquer : veille trop maigre → complété par les plus récents hors une', async () => {
+  const { aNePasManquer } = await import('../build/lib/en-direct.mjs');
+  const list = [art('auj1', '21'), art('auj2', '21'), art('veille', '20'), art('a19', '19'), art('a18', '18'), art('a17', '17'), art('a16', '16')];
+  const r = aNePasManquer(list, [list[0]], '2026-10-21');
+  assert.equal(r[0].slug, 'veille');
+  assert.equal(r.length, 5);
+  assert.ok(!r.some((a) => a.slug === 'auj1'));
+  assert.equal(new Set(r.map((a) => a.slug)).size, 5);
+  assert.deepEqual(aNePasManquer([], [], '2026-10-21'), []);
+});
+
+test('aNePasManquerHtml : balisage du thème, 1 grand + colonne', async () => {
+  const { aNePasManquerHtml } = await import('../build/lib/en-direct.mjs');
+  const l = [{ ...art('x', '20'), excerpt: 'Chapô <x>' }, art('y', '20')];
+  const html = aNePasManquerHtml(l, cats);
+  assert.ok(html.includes('td_module_flex_1') && html.includes('td_module_column') && html.includes('td_module_flex_3'));
+  assert.ok(html.includes('index.php/2026/10/20/x/index.html'));
+  assert.ok(html.includes('Chapô &lt;x&gt;'));
+  assert.equal(aNePasManquerHtml([], cats), '');
+});
