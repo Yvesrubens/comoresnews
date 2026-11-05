@@ -32,6 +32,7 @@ de la presse comorienne (Habari Za Comores, La Gazette des Comores, Masiwa). Pou
 - `seo_titre` ≤ 60 caractères ; `seo_description` ≤ 155 caractères ; `mots_cles` : 3 à 6 mots-clés.
 - `categorie` : garde celle fournie, ou corrige parmi politique, economie, societe, culture, sport,
   diaspora, monde, tourisme si elle est manifestement fausse.
+- `ile` : l'île concernée — `ngazidja` (Grande Comore), `ndzuani` (Anjouan), `mwali` (Mohéli), `maore` (Mayotte) ou `diaspora` — seulement si le sujet se passe clairement sur une île ou concerne la diaspora ; sinon `null` (sujet national, international, ou doute).
 - `photo` : une clé de la banque ci-dessous qui illustre honnêtement le sujet (lieu concerné ou thème
   général). Choisis-en toujours une : à défaut de mieux, `drapeau` pour un sujet comorien. `null` seulement si aucune ne convient sans tromper le lecteur. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
   `drapeau` convient aux sujets institutionnels/diplomatiques sans lieu précis.
@@ -52,5 +53,5 @@ mobile-money → point de transfert d'argent par mobile (télécoms, paiements) 
 
 ## Sortie
 Écris un fichier JSON (UTF-8) : un tableau d'objets
-`{ "article_id", "titre", "excerpt", "corps", "seo_titre", "seo_description", "mots_cles": [..], "categorie", "photo" }`,
+`{ "article_id", "titre", "excerpt", "corps", "seo_titre", "seo_description", "mots_cles": [..], "categorie", "ile", "photo" }`,
 un par article du lot, dans le même ordre. Vérifie que le JSON est valide (relis-le avec node : `node -e "JSON.parse(require('fs').readFileSync(F,'utf8'))"`).

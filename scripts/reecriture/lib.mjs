@@ -1,5 +1,7 @@
 // Réécriture des brouillons issus des sujets : contrôles et mise en forme (fonctions pures).
 
+import { normaliserIle } from '../../build/lib/iles.mjs';
+
 export const CATEGORIES = ['politique', 'economie', 'societe', 'culture', 'sport', 'diaspora', 'monde', 'tourisme', 'annonces'];
 
 const mots = (t) => String(t ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -29,6 +31,7 @@ export function controler(a, texteSource, { pool, liens }) {
   for (const m of String(a.corps ?? '').matchAll(/\]\(([^)]+)\)/g)) if (!liens.has(m[1])) p.push('lien non autorisé ' + m[1]);
   if (a.photo !== null && a.photo !== undefined && !pool[a.photo]) p.push('photo inconnue ' + a.photo);
   if (!CATEGORIES.includes(a.categorie)) p.push('categorie ' + a.categorie);
+  try { normaliserIle(a.ile); } catch { p.push('ile ' + a.ile); }
   const r = reprises(a.corps, texteSource);
   if (r > 30) p.push(`${r} reprises de 8 mots du texte source`);
   return p;

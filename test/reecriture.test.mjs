@@ -39,3 +39,13 @@ test('decouper : lots de 9 au plus', () => {
   assert.deepEqual(decouper([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 9).map((l) => l.length), [9, 2]);
   assert.deepEqual(decouper([], 9), []);
 });
+
+test('controler : ile valide, null ou absente → conforme', () => {
+  for (const a of [{ ...ok, ile: 'mwali' }, { ...ok, ile: null }, ok]) {
+    assert.deepEqual(controler(a, 'source', { pool: POOL, liens: LIENS }), []);
+  }
+});
+
+test('controler : ile inconnue signalée', () => {
+  assert.ok(controler({ ...ok, ile: 'Anjouan' }, 'source', { pool: POOL, liens: LIENS }).includes('ile Anjouan'));
+});
