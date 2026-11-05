@@ -115,7 +115,7 @@ export function buildSearchIndex(articles, catsCfg) {
 }
 
 // --- assets & pages statiques à recopier tels quels dans _site ---
-const PASSTHROUGH = ['wp-content', 'wp-includes', '_external', '.nojekyll', 'admin',
+const PASSTHROUGH = ['wp-content', 'wp-includes', 'assets', '_external', '.nojekyll', 'admin',
   'index.php/pages/contact', 'index.php/pages/recherche',
   'index.php/pages/mentions-legales', 'index.php/pages/politique-confidentialite',
   'index.php/pages/desinscription'];
