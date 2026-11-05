@@ -45,8 +45,7 @@ export function page({ titre, prefix, head = '', contenu, jour, titres = [], cat
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${titreDoc}</title>
-<meta name='robots' content='max-image-preview:large'>
-<link rel="icon" href="${fav}cropped-Favicone-32x32.png" sizes="32x32">
+${/name=["']robots["']/.test(head) ? '' : "<meta name='robots' content='max-image-preview:large'>\n"}<link rel="icon" href="${fav}cropped-Favicone-32x32.png" sizes="32x32">
 <link rel="icon" href="${fav}cropped-Favicone-192x192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="${fav}cropped-Favicone-180x180.png">
 <meta name="msapplication-TileImage" content="${fav}cropped-Favicone-270x270.png">

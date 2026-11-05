@@ -20,3 +20,18 @@ test('habillerPageFixe : structure inattendue → page inchangée', () => {
   const html = '<html><body>x</body></html>';
   assert.equal(habillerPageFixe(html, OPTS), html);
 });
+
+test('habillerPageFixe : meta robots propre à la page conservé, sans balise robots contradictoire', () => {
+  const src = readFileSync(new URL('../index.php/pages/desinscription/index.html', import.meta.url), 'utf8');
+  const out = habillerPageFixe(src, OPTS);
+  assert.ok(out.includes('noindex, nofollow'));
+  assert.equal((out.match(/name=["']robots["']/g) || []).length, 1);
+  assert.ok(!out.includes('max-image-preview'));
+});
+
+test('habillerPageFixe : robots par défaut inchangé sur les autres pages', () => {
+  const src = readFileSync(new URL('../index.php/pages/contact/index.html', import.meta.url), 'utf8');
+  const out = habillerPageFixe(src, OPTS);
+  assert.equal((out.match(/name=["']robots["']/g) || []).length, 1);
+  assert.ok(out.includes('max-image-preview:large'));
+});

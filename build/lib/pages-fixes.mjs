@@ -11,5 +11,8 @@ export function habillerPageFixe(html, { prefix, jour, catsCfg }) {
   const j = html.indexOf(FIN, i);
   if (!t || i === -1 || j === -1) return html;
   const contenu = html.slice(i, j + FIN.length);
-  return page({ titre: t[1].trim(), prefix, contenu, jour, catsCfg });
+  // Directive robots propre à la page (ex. noindex) : remplace celle par défaut de page().
+  const robots = (html.slice(0, i).match(/<meta\s+name=["']robots["'][^>]*>/gi) || [])
+    .filter((m) => !/content=["']max-image-preview:large["']/i.test(m));
+  return page({ titre: t[1].trim(), prefix, head: robots.join('\n'), contenu, jour, catsCfg });
 }
