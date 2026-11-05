@@ -48,6 +48,16 @@ a{color:inherit}
 .cn-carte.mini{flex-direction:row;margin-bottom:12px}
 .cn-carte.mini img{width:110px;height:auto;min-height:84px}
 .cn-carte.mini h3{font-size:14px}
+.cn-carte{position:relative}
+.cn-carte h3 a::after{content:"";position:absolute;inset:0;z-index:1}
+.cn-carte .cn-tag-cat{position:relative;z-index:2}
+.cn-carte span.cn-carte-vide{display:block;width:100%;height:170px;min-height:84px;border:0;border-radius:0;padding:0;background:#e6e3da}
+.cn-carte.mini span.cn-carte-vide{width:110px;height:auto;flex:none}
+.cn-carte.grande img,.cn-carte.grande span.cn-carte-vide{height:340px}
+.cn-carte.grande h3{font-size:26px}
+.cn-carte.grande p{font-size:15px}
+.cn-carte.ligne{flex-direction:row}
+.cn-carte.ligne img,.cn-carte.ligne span.cn-carte-vide{width:210px;height:auto;min-height:130px;flex:none}
 /* colonne de droite */
 .cn-rail{display:flex;flex-direction:column;gap:6px}
 .cn-suivez{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -76,5 +86,9 @@ body.cn-menu-ouvert .cn-menu{display:flex}
 #cn-main{padding:16px 14px}
 .cn-deux{grid-template-columns:1fr}
 .cn-grille,.cn-grille.trois{grid-template-columns:1fr}
+.cn-carte.ligne{flex-direction:column}
+.cn-carte.ligne img,.cn-carte.ligne span.cn-carte-vide{width:100%;height:170px}
+.cn-carte.grande img,.cn-carte.grande span.cn-carte-vide{height:200px}
+.cn-carte.grande h3{font-size:21px}
 .cn-footer-in{grid-template-columns:1fr}
 }
