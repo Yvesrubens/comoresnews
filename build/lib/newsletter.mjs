@@ -8,7 +8,8 @@ export const SUPABASE_PUBLIC = {
   anonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWRuaHZudHd5eGlyZXBpanluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDgwMzcsImV4cCI6MjEwMTUyNDAzN30.eIyZ5mrJSeOntlyYqux_DyEr4BfRYZg04jTpquXUobQ',
 };
 
-const ANCHOR = '<div class="td-main-content-wrap';
+const MAIN_ANCHOR = '<main id="cn-main"';
+const ANCHOR ='<div class="td-main-content-wrap';
 const PRIVACY = '/index.php/pages/politique-confidentialite/index.html';
 
 export function newsletterBand(cfg = SUPABASE_PUBLIC) {
@@ -66,7 +67,9 @@ f.addEventListener('submit',function(e){
 
 // Insère le bandeau juste avant le contenu (sous le menu du site). Idempotent.
 export function injectNewsletter(html, cfg = SUPABASE_PUBLIC) {
-  if (html.includes('id="cn-newsletter"') || !html.includes(ANCHOR)) return html;
-  const i = html.indexOf(ANCHOR);
+  if (html.includes('id="cn-newsletter"')) return html;
+  const anchor = html.includes(MAIN_ANCHOR) ? MAIN_ANCHOR : ANCHOR;
+  if (!html.includes(anchor)) return html;
+  const i = html.indexOf(anchor);
   return html.slice(0, i) + newsletterBand(cfg) + '\n' + html.slice(i);
 }

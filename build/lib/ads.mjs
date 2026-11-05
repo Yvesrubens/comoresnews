@@ -73,7 +73,8 @@ if(document.readyState!=='loading')mv();else document.addEventListener('DOMConte
 // Insère une pub dans le corps d'un article, après le 2e paragraphe (ou le 1er
 // s'il n'y en a qu'un). Ne fait rien hors des pages article.
 export function insertInArticle(html, adHtml, afterParagraph = 2) {
-  const start = html.indexOf('td-post-content');
+  let start = html.indexOf('class="cn-article-body"');
+  if (start === -1) start = html.indexOf('td-post-content');
   if (start === -1) return html;
   let pos = start;
   let found = -1;
@@ -102,7 +103,12 @@ export function injectAds(html, cfg = SAS) {
   // (injectée dans le bloc puis relocalisée), sinon tout en haut après <body>.
   let heroPlaced = false;
   const ANCHOR_HERO_INNER = 'data-td-block-uid="tdi_51" >';
-  if (html.includes(ANCHOR_HERO_INNER)) {
+  const MAIN_OPEN = '<main id="cn-main">';
+  if (html.includes('<div id="cn-ad-top"></div>')) {
+    html = html.replace('<div id="cn-ad-top"></div>', () => labeled('cn-ad-desktop', adSlot(45656)));
+  } else if (html.includes(MAIN_OPEN)) {
+    html = html.replace(MAIN_OPEN, () => `${MAIN_OPEN}\n${labeled('cn-ad-desktop', adSlot(45656))}`);
+  } else if (html.includes(ANCHOR_HERO_INNER)) {
     const mb1 = `<div id="cn-ad-hero" class="cn-ad cn-ad--empty cn-ad-desktop"><span class="cn-ad-tag">Publicité</span>${adSlot(45656)}</div>`;
     html = html.replace(ANCHOR_HERO_INNER, `${ANCHOR_HERO_INNER}\n${mb1}`);
     heroPlaced = true;

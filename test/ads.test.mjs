@@ -72,3 +72,47 @@ test('page article : GrandAngle et Pavé 1 dans la colonne de droite, sous « Su
   assert.equal(out.split('id="sas_45655"').length - 1, 1, 'Pavé 1 une seule fois');
   assert.ok(out.indexOf('id="sas_49046"') < iFooter, 'MégaBannière 2 toujours avant le footer');
 });
+
+// --- Nouveaux points d'ancrage (page() de la refonte) ---
+import { readFileSync } from 'node:fs';
+import { page, colonneDroite } from '../build/lib/gabarit.mjs';
+const catsCfg = JSON.parse(readFileSync(new URL('../config/categories.json', import.meta.url), 'utf8'));
+const mk = (contenu) => page({ titre: 'T', prefix: '', contenu, jour: '2026-11-05', catsCfg });
+const count = (s, sub) => s.split(sub).length - 1;
+
+test('injectAds : MégaBannière 1 à la place de cn-ad-top', () => {
+  const out = injectAds(mk('<div id="cn-ad-top"></div><p>x</p>' + colonneDroite()));
+  assert.equal(count(out, 'id="sas_45656"'), 1);
+  assert.ok(!out.includes('<div id="cn-ad-top"></div>'));
+  assert.ok(out.indexOf('sas_45656') < out.indexOf('id="cn-sidebar-ads"'));
+});
+
+test('injectAds : MégaBannière 1 en tête de main sans cn-ad-top', () => {
+  const out = injectAds(mk('<p>x</p>'));
+  assert.equal(count(out, 'id="sas_45656"'), 1);
+  const m = out.indexOf('<main id="cn-main">');
+  const s = out.indexOf('id="sas_45656"');
+  assert.ok(m !== -1 && s > m && s - m < 300);
+});
+
+test('injectAds : GrandAngle et Pavé 1 dans la colonne', () => {
+  const out = injectAds(mk('<p>x</p>' + colonneDroite()));
+  const a = out.indexOf('id="cn-sidebar-ads"');
+  const end = out.indexOf('</div></div>', a);
+  for (const id of [45654, 45655]) {
+    const p = out.indexOf(`id="sas_${id}"`);
+    assert.ok(p > a && p < end + 12, `sas_${id} dans la colonne`);
+  }
+});
+
+test('injectAds : Pavé 2 après le 2e paragraphe du corps d\'article', () => {
+  const out = injectAds(mk('<div class="cn-article-body"><p>1</p><p>2</p><p>3</p></div>'));
+  const p2 = out.indexOf('2</p>'), s = out.indexOf('id="sas_49048"'), p3 = out.indexOf('<p>3');
+  assert.ok(p2 < s && s < p3);
+});
+
+test('injectAds : bas de page avant cn-legal-bar, idempotent', () => {
+  const once = injectAds(mk('<p>x</p>'));
+  assert.ok(once.indexOf('id="sas_49046"') < once.indexOf('<div id="cn-legal-bar"'));
+  assert.equal(injectAds(once), once);
+});
