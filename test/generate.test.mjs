@@ -85,3 +85,8 @@ test('buildHome : « À ne pas manquer » affiche la veille hors une, plus de co
   assert.ok(bloc.indexOf('Art hier2') < bloc.indexOf('Art hier1') && bloc.includes('Art vieux'));
   assert.ok(!bloc.includes('Art auj') && !bloc.includes('Le Grand Mariage') && !bloc.includes('next-page-tdi_56'));
 });
+
+test('buildHome : le bandeau « À la une » défile automatiquement (5 s)', () => {
+  const html = buildHome([a], cats, '2026-06-12');
+  assert.ok(html.includes('id="tdi_50" data-start="auto" data-timer="5"'));
+});
