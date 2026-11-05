@@ -121,3 +121,13 @@ test('formToRow : ile transmise, vide → null, absente → non écrite', () => 
   assert.equal(formToRow({ ...fiche, ile: '' }, 'u').ile, null);
   assert.ok(!('ile' in formToRow(fiche, 'u')));
 });
+
+test("ileAEnvoyer : seulement si l'île change (pas d'écrasement d'une valeur posée entre-temps)", async () => {
+  const { ileAEnvoyer } = await import('../admin/lib.mjs');
+  assert.equal(ileAEnvoyer('', null), undefined);        // inchangée (aucune)
+  assert.equal(ileAEnvoyer('mwali', 'mwali'), undefined); // inchangée
+  assert.equal(ileAEnvoyer('ndzuani', 'mwali'), 'ndzuani');
+  assert.equal(ileAEnvoyer('', 'mwali'), '');             // retirée volontairement
+  assert.equal(ileAEnvoyer('maore', undefined), 'maore'); // nouvel article
+  assert.equal(ileAEnvoyer('', undefined), undefined);    // nouvel article sans île
+});

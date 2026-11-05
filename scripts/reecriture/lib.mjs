@@ -37,6 +37,13 @@ export function controler(a, texteSource, { pool, liens }) {
   return p;
 }
 
+// Colonne `ile` à écrire : seulement si une île est renseignée, pour qu'une sortie sans île
+// s'enregistre même si la colonne manque en base (migration 0012 non appliquée).
+export function champIle(a) {
+  const ile = normaliserIle(a.ile);
+  return ile ? { ile } : {};
+}
+
 // Légende placée en tête du corps : auteur et licence exigés par les licences Creative Commons.
 export function legendePhoto(ph) {
   return ph ? `*Photo d'illustration : ${ph.legende} — ${ph.auteur}, ${ph.licence}, via [Wikimedia Commons](${ph.page}).*\n\n` : '';

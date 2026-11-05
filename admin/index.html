@@ -344,7 +344,7 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, breveButtons, BREVE_MAX, insertLink, internalLinkTarget, searchArticles, ILES_ADMIN } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, breveButtons, BREVE_MAX, insertLink, internalLinkTarget, searchArticles, ILES_ADMIN, ileAEnvoyer } from './lib.mjs';
 import { renderNewsletter, weekSubject, pickArticles } from './newsletter-template.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
@@ -488,7 +488,7 @@ $('lk-add').onclick = () => {
 function gatherForm(action){
   return {
     action,
-    titre: $('e-titre').value.trim(), slug: $('e-slug').value.trim(), categorie: $('e-cat').value, ile: $('e-ile').value,
+    titre: $('e-titre').value.trim(), slug: $('e-slug').value.trim(), categorie: $('e-cat').value, ile: ileAEnvoyer($('e-ile').value, EDITING?.ile),
     corps: $('e-body').value, excerpt: $('e-excerpt').value, image_couverture: $('e-image').value.trim(),
     seo_titre: $('e-seotitre').value.trim(), seo_description: $('e-seodesc').value.trim(),
     og_image: $('e-ogimage').value.trim(),

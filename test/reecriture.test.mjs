@@ -49,3 +49,10 @@ test('controler : ile valide, null ou absente → conforme', () => {
 test('controler : ile inconnue signalée', () => {
   assert.ok(controler({ ...ok, ile: 'Anjouan' }, 'source', { pool: POOL, liens: LIENS }).includes('ile Anjouan'));
 });
+
+test("champIle : n'envoie la colonne que pour une île renseignée", async () => {
+  const { champIle } = await import('../scripts/reecriture/lib.mjs');
+  assert.deepEqual(champIle({ ile: 'mwali' }), { ile: 'mwali' });
+  assert.deepEqual(champIle({ ile: null }), {});
+  assert.deepEqual(champIle({}), {});
+});
