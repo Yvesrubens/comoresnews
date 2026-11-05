@@ -29,6 +29,7 @@ export function mapRow(row) {
     sourceNom: row.source_nom || '',
     sourceUrl: row.source_url || '',
     aLaUne: row.a_la_une === true,
+    ile: row.ile || null,
     publishedAt: String(rawDate),
   };
 }

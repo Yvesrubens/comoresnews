@@ -71,3 +71,9 @@ test('loadBreves renvoie les brèves publiées, ou [] en cas d’erreur', async 
   const warn = console.warn; console.warn = () => {};
   try { assert.deepEqual(await loadBreves(fake({ data: null, error: { message: 'x' } })), []); } finally { console.warn = warn; }
 });
+
+test("mapRow expose l'île (null par défaut)", () => {
+  const ligne = { titre: 'T', slug: 's', categorie: 'sport', statut: 'publie', date_publication: '2026-06-12T10:00:00Z' };
+  assert.equal(mapRow({ ...ligne, ile: 'ndzuani' }).ile, 'ndzuani');
+  assert.equal(mapRow(ligne).ile, null);
+});

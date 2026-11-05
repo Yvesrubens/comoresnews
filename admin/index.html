@@ -175,6 +175,7 @@
         </div>
         <div class="row">
           <div><label>Catégorie</label><select id="e-cat"></select></div>
+          <div><label>Île</label><select id="e-ile"></select></div>
           <div><label>Image de couverture (URL)</label><input id="e-image" placeholder="via Médiathèque ou URL"></div>
         </div>
         <div class="row">
@@ -343,7 +344,7 @@
 
 <script type="module">
 import { createApi } from './supabase.mjs';
-import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, breveButtons, BREVE_MAX, insertLink, internalLinkTarget, searchArticles } from './lib.mjs';
+import { slugify, validateArticleDB, formToRow, summarizeArticles, upcomingScheduled, myPending, formatDateLongFr, relativeTime, abonnesToCsv, newsletterDueThisWeek, validateBreve, breveToRow, breveButtons, BREVE_MAX, insertLink, internalLinkTarget, searchArticles, ILES_ADMIN, ileAEnvoyer } from './lib.mjs';
 import { renderNewsletter, weekSubject, pickArticles } from './newsletter-template.mjs';
 
 // Config publique (anon + URL — sans danger dans le navigateur)
@@ -397,6 +398,7 @@ async function loadCategories(){
   const opts = CATS.map(c=>`<option value="${c.slug}">${esc(c.nom)}</option>`).join('');
   $('fCat').innerHTML = '<option value="">Toutes</option>'+opts;
   $('e-cat').innerHTML = opts;
+  $('e-ile').innerHTML = '<option value="">— Aucune —</option>' + Object.entries(ILES_ADMIN).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
 }
 
 // ---------- LISTE ----------
@@ -430,6 +432,7 @@ async function openEditor(id){
   $('e-keywords').value = (a.mots_cles||[]).join(', ');
   $('e-datep').value = a.date_programmee ? a.date_programmee.slice(0,16) : '';
   $('e-une').checked = !!a.a_la_une;
+  $('e-ile').value = a.ile || '';
   $('e-sourcenom').value = a.source_nom||''; $('e-sourceurl').value = a.source_url||'';
   $('e-sourcebox').classList.add('hidden');
   if (id){ const { data: sj } = await api.getSujetByArticle(id);
@@ -485,7 +488,7 @@ $('lk-add').onclick = () => {
 function gatherForm(action){
   return {
     action,
-    titre: $('e-titre').value.trim(), slug: $('e-slug').value.trim(), categorie: $('e-cat').value,
+    titre: $('e-titre').value.trim(), slug: $('e-slug').value.trim(), categorie: $('e-cat').value, ile: ileAEnvoyer($('e-ile').value, EDITING?.ile),
     corps: $('e-body').value, excerpt: $('e-excerpt').value, image_couverture: $('e-image').value.trim(),
     seo_titre: $('e-seotitre').value.trim(), seo_description: $('e-seodesc').value.trim(),
     og_image: $('e-ogimage').value.trim(),

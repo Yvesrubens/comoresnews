@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { slugify } from '../../admin/lib.mjs';
-import { controler, legendePhoto, decouper } from './lib.mjs';
+import { controler, legendePhoto, decouper, champIle } from './lib.mjs';
 
 const ROOT = new URL('../../', import.meta.url);
 const pool = JSON.parse(fs.readFileSync(new URL('config/photos-commons.json', ROOT), 'utf8'));
@@ -60,7 +60,7 @@ async function appliquer(dir) {
     const { error } = await db.from('articles').update({
       titre: a.titre, slug, excerpt: a.excerpt, corps: legendePhoto(ph) + a.corps.trim(),
       seo_titre: a.seo_titre || '', seo_description: a.seo_description || '', mots_cles: a.mots_cles || [],
-      categorie: a.categorie, image_couverture: ph ? ph.url : '', og_image: ph ? ph.url : '',
+      categorie: a.categorie, ...champIle(a), image_couverture: ph ? ph.url : '', og_image: ph ? ph.url : '',
     }).eq('id', a.article_id).eq('statut', 'brouillon').eq('corps', '');
     if (error) console.log(`  ERREUR « ${a.titre} » : ${error.message}`); else n++;
   }
