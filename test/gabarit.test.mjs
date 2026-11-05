@@ -53,3 +53,11 @@ test('colonneDroite : pas de titre « Ça pourrait vous intéresser » si vide',
   assert.ok(!colonneDroite({ pourrait: '' }).includes('Ça pourrait vous intéresser'));
   assert.ok(!colonneDroite().includes('Ça pourrait vous intéresser'));
 });
+
+test('page : crédit G-studio de Gramica dans cn-legal-bar, après le copyright', () => {
+  const h = page({ titre: '', prefix: '', contenu: '<p>X</p>', jour: '2026-11-05', catsCfg: cats });
+  const bar = h.slice(h.indexOf('id="cn-legal-bar"'));
+  assert.ok(bar.includes('Site développé par le G-studio de Gramica'));
+  assert.ok(bar.indexOf('© 2026 Comoresnews') < bar.indexOf('Site développé par le G-studio de Gramica'));
+  assert.ok(bar.indexOf('Site développé par le G-studio de Gramica') < bar.indexOf('</footer>'));
+});

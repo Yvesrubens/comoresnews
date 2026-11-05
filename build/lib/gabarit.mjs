@@ -68,7 +68,7 @@ ${head}
 <div class="cn-footer-col"><h4>Rubriques</h4>${cats.map(lienCat).join('')}</div>
 <div class="cn-footer-col"><h4>Informations</h4>${legaux.join('')}</div>
 </div>
-<div id="cn-legal-bar"><div>${legaux.join(' · ')} · <a href="javascript:Sddan.cmp.displayUI()">Gérer mes choix (cookies)</a></div><div>© 2026 Comoresnews — ${SLOGAN}.</div></div>
+<div id="cn-legal-bar"><div>${legaux.join(' · ')} · <a href="javascript:Sddan.cmp.displayUI()">Gérer mes choix (cookies)</a></div><div>© 2026 Comoresnews — ${SLOGAN}.</div><div class="cn-credit">Site développé par le G-studio de Gramica</div></div>
 </footer>
 <script src="${prefix}assets/cn.js" defer></script>
 </body>

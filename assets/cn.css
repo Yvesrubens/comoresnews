@@ -81,6 +81,7 @@ a{color:inherit}
 .cn-footer-liens a{display:inline-block;margin-right:14px}
 #cn-legal-bar{background:var(--vert2);color:#9db39d;text-align:center;padding:18px 15px;font-size:13px;line-height:2}
 #cn-legal-bar a{color:#ddd;text-decoration:none;margin:0 6px}
+#cn-legal-bar .cn-credit{font-size:11px;opacity:.7;line-height:1.6}
 /* article */
 .cn-article .cn-h1{font-family:var(--serif);font-size:40px;line-height:1.12;margin:6px 0 14px}
 .cn-chapo{font-family:var(--serif);font-size:20px;line-height:1.5;color:#444;margin:0 0 18px}
