@@ -54,43 +54,28 @@ test('enDirectInner : message sans brève et liens des articles préfixés', () 
   assert.ok(h.includes('Aucune brève pour le moment.'));
   assert.ok(h.includes('../../../index.php/2026/10/12/vanille/index.html'));
   assert.ok(h.includes('../../../index.php/2026/10/11/ylang/index.html'));
+  assert.equal((h.match(/<article class="cn-carte grille"/g) || []).length, 2);
+  assert.ok(!h.includes('cn-direct-card'));
 });
 
-test('uneGridHtml : classes du thème 6 / 7 / 8 / 8 (1 grande, 1 large, 2 petites)', async () => {
-  const { uneGridHtml } = await import('../build/lib/en-direct.mjs');
-  const h = uneGridHtml(['a', 'b', 'c', 'd'].map((s, i) => art(s, String(10 + i))), cats);
-  const classes = [...h.matchAll(/td_module_flex_(\d) td-animation-stack td-big-grid-flex-post td-big-grid-flex-post-(\d)/g)].map((m) => m[1] + ':' + m[2]);
-  assert.deepEqual(classes, ['6:0', '7:1', '8:2', '8:3']);
-});
-
-test('aNePasManquer : articles de la veille hors une, 5 max, plus récents d\'abord', async () => {
+test('aNePasManquer : articles de la veille hors une, 6 max, plus récents d\'abord', async () => {
   const { aNePasManquer } = await import('../build/lib/en-direct.mjs');
   const v = (slug, h) => ({ ...art(slug, '20'), publishedAt: `2026-10-20T${h}:00:00Z` });
-  const list = [art('auj', '21'), v('v1', '08'), v('v2', '10'), v('v3', '12'), v('v4', '14'), v('v5', '15'), v('v6', '16'), art('vieux', '18')];
+  const list = [art('auj', '21'), v('v1', '08'), v('v2', '10'), v('v3', '12'), v('v4', '14'), v('v5', '15'), v('v6', '16'), v('v7', '17'), art('vieux', '18')];
   const une = [list[0], list[6]]; // aujourd'hui + v6 déjà à la une
   const r = aNePasManquer(list, une, '2026-10-21');
-  assert.deepEqual(r.map((a) => a.slug), ['v5', 'v4', 'v3', 'v2', 'v1']);
+  assert.deepEqual(r.map((a) => a.slug), ['v7', 'v5', 'v4', 'v3', 'v2', 'v1']);
 });
 
 test('aNePasManquer : veille trop maigre → complété par les plus récents hors une', async () => {
   const { aNePasManquer } = await import('../build/lib/en-direct.mjs');
-  const list = [art('auj1', '21'), art('auj2', '21'), art('veille', '20'), art('a19', '19'), art('a18', '18'), art('a17', '17'), art('a16', '16')];
+  const list = [art('auj1', '21'), art('auj2', '21'), art('veille', '20'), art('a19', '19'), art('a18', '18'), art('a17', '17'), art('a16', '16'), art('a15', '15'), art('a14', '14')];
   const r = aNePasManquer(list, [list[0]], '2026-10-21');
   assert.equal(r[0].slug, 'veille');
-  assert.equal(r.length, 5);
+  assert.equal(r.length, 6);
   assert.ok(!r.some((a) => a.slug === 'auj1'));
-  assert.equal(new Set(r.map((a) => a.slug)).size, 5);
+  assert.equal(new Set(r.map((a) => a.slug)).size, 6);
   assert.deepEqual(aNePasManquer([], [], '2026-10-21'), []);
-});
-
-test('aNePasManquerHtml : balisage du thème, 1 grand + colonne', async () => {
-  const { aNePasManquerHtml } = await import('../build/lib/en-direct.mjs');
-  const l = [{ ...art('x', '20'), excerpt: 'Chapô <x>' }, art('y', '20')];
-  const html = aNePasManquerHtml(l, cats);
-  assert.ok(html.includes('td_module_flex_1') && html.includes('td_module_column') && html.includes('td_module_flex_3'));
-  assert.ok(html.includes('index.php/2026/10/20/x/index.html'));
-  assert.ok(html.includes('Chapô &lt;x&gt;'));
-  assert.equal(aNePasManquerHtml([], cats), '');
 });
 
 test('titresDuJour : articles publiés le jour même, récents d\'abord ; sinon la une', async () => {
@@ -111,8 +96,25 @@ test('pourraitInteresser : 4 articles hors exclus, une rubrique différente d\'a
   assert.deepEqual(pourraitInteresser([], []), []);
 });
 
-test('pourraitHtml : cartes du thème avec rubrique et titre', async () => {
-  const { pourraitHtml } = await import('../build/lib/en-direct.mjs');
-  const html = pourraitHtml([art('x', '20')], cats);
-  assert.ok(html.includes('td_module_flex_1') && html.includes('Économie') && html.includes('index.php/2026/10/20/x/index.html'));
+test('plusRecents : exclut, trie, limite', async () => {
+  const { plusRecents } = await import('../build/lib/en-direct.mjs');
+  const list = ['10', '11', '12', '13', '14', '15'].map((j) => art('r' + j, j));
+  assert.deepEqual(plusRecents(list, [list[5]]).map((a) => a.slug), ['r14', 'r13', 'r12', 'r11']);
+  assert.deepEqual(plusRecents(list, [], 2).map((a) => a.slug), ['r15', 'r14']);
+  assert.deepEqual(plusRecents([], []), []);
+});
+
+test('aLireAussi : même rubrique d\'abord, complété, sans l\'article', async () => {
+  const { aLireAussi } = await import('../build/lib/en-direct.mjs');
+  const c = (slug, jour, category) => ({ ...art(slug, jour), category });
+  const cur = c('cur', '10', 'sport');
+  const list = [cur, c('s1', '11', 'sport'), c('e1', '19', 'economie'), c('s2', '12', 'sport'), c('e2', '18', 'economie'), c('e3', '17', 'economie')];
+  assert.deepEqual(aLireAussi(cur, list).map((x) => x.slug), ['s2', 's1', 'e1', 'e2']);
+  assert.deepEqual(aLireAussi(cur, list, 2).map((x) => x.slug), ['s2', 's1']);
+});
+
+test('aLireAussi : un seul article → []', async () => {
+  const { aLireAussi } = await import('../build/lib/en-direct.mjs');
+  const cur = art('seul', '10');
+  assert.deepEqual(aLireAussi(cur, [cur]), []);
 });

@@ -61,19 +61,10 @@ if(document.readyState!=='loading')check();else document.addEventListener('DOMCo
 var n=0,t=setInterval(function(){check();if(++n>=10)clearInterval(t);},1000);
 })();</script>`;
 
-// Déplace le Pavé 1 juste APRÈS le bloc "Ça pourrait vous intéresser" (colonne
-// droite). Le HTML du thème est trop imbriqué pour viser sa fermeture par texte :
-// on l'injecte dans le bloc puis on le relocalise via le DOM.
-export const AD_RELOCATE = `<script>(function(){
-var MOVES=[['cn-ad-capourrait','tdi_64'],['cn-ad-hero','tdi_51']];
-function mv(){MOVES.forEach(function(m){var a=document.getElementById(m[0]),t=document.querySelector('[data-td-block-uid="'+m[1]+'"]');if(a&&t&&a.parentNode===t)t.insertAdjacentElement('afterend',a);});}
-if(document.readyState!=='loading')mv();else document.addEventListener('DOMContentLoaded',mv);
-})();</script>`;
-
 // Insère une pub dans le corps d'un article, après le 2e paragraphe (ou le 1er
 // s'il n'y en a qu'un). Ne fait rien hors des pages article.
 export function insertInArticle(html, adHtml, afterParagraph = 2) {
-  const start = html.indexOf('td-post-content');
+  let start = html.indexOf('class="cn-article-body"');
   if (start === -1) return html;
   let pos = start;
   let found = -1;
@@ -87,50 +78,28 @@ export function insertInArticle(html, adHtml, afterParagraph = 2) {
   return html.slice(0, found) + '\n' + adHtml + '\n' + html.slice(found);
 }
 
-// Ancres des blocs du thème sur la home (placement ciblé des pubs de colonne).
-const ANCHOR_AFTER_SUIVEZ = '<div class="td_block_wrap td_flex_block_1 tdi_64'; // "Ça pourrait vous intéresser" (suit "Suivez nous")
-const ANCHOR_CAPOURRAIT_INNER = 'data-td-block-uid="tdi_64" >'; // ouverture du bloc "Ça pourrait vous intéresser"
-
 // Injecte la régie et les emplacements dans une page HTML complète.
 // Idempotent : ne fait rien si des emplacements sont déjà présents.
 export function injectAds(html, cfg = SAS) {
   if (/id="sas_/.test(html)) return html;
   html = html.replace('</head>', `${adsSetup(cfg)}\n${AD_CSS}\n</head>`);
 
-  // MegaBanniere 1 (leaderboard) juste après <body>.
-  // MegaBanniere 1 : juste APRÈS la grille "À la une" (tdi_51) sur la home
-  // (injectée dans le bloc puis relocalisée), sinon tout en haut après <body>.
-  let heroPlaced = false;
-  const ANCHOR_HERO_INNER = 'data-td-block-uid="tdi_51" >';
-  if (html.includes(ANCHOR_HERO_INNER)) {
-    const mb1 = `<div id="cn-ad-hero" class="cn-ad cn-ad--empty cn-ad-desktop"><span class="cn-ad-tag">Publicité</span>${adSlot(45656)}</div>`;
-    html = html.replace(ANCHOR_HERO_INNER, `${ANCHOR_HERO_INNER}\n${mb1}`);
-    heroPlaced = true;
-  } else if (html.includes('class="td-post-header"') && html.includes('<div class="td-crumb-container">')) {
-    // Page article : juste avant le fil d'Ariane / titre (pleine largeur du contenu).
-    html = html.replace('<div class="td-crumb-container">', `${labeled('cn-ad-desktop', adSlot(45656))}\n<div class="td-crumb-container">`);
+  // MegaBanniere 1 : à la place de cn-ad-top, sinon en tête de main, sinon après <body>.
+  const MAIN_OPEN = '<main id="cn-main">';
+  if (html.includes('<div id="cn-ad-top"></div>')) {
+    html = html.replace('<div id="cn-ad-top"></div>', () => labeled('cn-ad-desktop', adSlot(45656)));
+  } else if (html.includes(MAIN_OPEN)) {
+    html = html.replace(MAIN_OPEN, () => `${MAIN_OPEN}\n${labeled('cn-ad-desktop', adSlot(45656))}`);
   } else {
     html = html.replace(/(<body[^>]*>)/i, `$1\n${labeled('cn-ad-desktop', adSlot(45656))}`);
   }
 
-  // GrandAngle (300x600) sous "Suivez nous" = avant le bloc tdi_64.
   let gaPlaced = false;
-  if (html.includes(ANCHOR_AFTER_SUIVEZ)) {
-    html = html.replace(ANCHOR_AFTER_SUIVEZ, `${labeled('', adSlot(45654))}\n${ANCHOR_AFTER_SUIVEZ}`);
-    gaPlaced = true;
-  }
-  // Pavé 1 (300x250) sous "Ça pourrait vous intéresser" (colonne droite) :
-  // injecté dans le bloc tdi_64 puis déplacé juste après lui par AD_RELOCATE.
   let p1Placed = false;
-  if (html.includes(ANCHOR_CAPOURRAIT_INNER)) {
-    const pave1 = `<div id="cn-ad-capourrait" class="cn-ad cn-ad--empty"><span class="cn-ad-tag">Publicité</span>${adSlot(45655)}</div>`;
-    html = html.replace(ANCHOR_CAPOURRAIT_INNER, `${ANCHOR_CAPOURRAIT_INNER}\n${pave1}`);
-    p1Placed = true;
-  }
 
-  // Pages article : GrandAngle puis Pavé 1 dans la colonne de droite, sous « Suivez nous ».
+  // GrandAngle puis Pavé 1 dans la colonne de droite, sous « Suivez-nous ».
   const SIDEBAR_MARK = '<div id="cn-sidebar-ads"></div>';
-  if (html.includes(SIDEBAR_MARK) && !gaPlaced && !p1Placed) {
+  if (html.includes(SIDEBAR_MARK)) {
     html = html.replace(SIDEBAR_MARK, () => `<div id="cn-sidebar-ads">${labeled('', adSlot(45654))}${labeled('', adSlot(45655))}</div>`);
     gaPlaced = true;
     p1Placed = true;
@@ -154,6 +123,6 @@ export function injectAds(html, cfg = SAS) {
 
   // Floor fixe (overlay bas d'écran) + script de révélation.
   const floor = `<div class="cn-ad cn-ad--empty cn-ad-floor"><button class="cn-ad-close" aria-label="Fermer" onclick="this.parentNode.style.display='none'">&times;</button><span class="cn-ad-tag">Publicité</span>${adSlot(94320)}</div>`;
-  html = html.replace('</body>', `${floor}\n${p1Placed || heroPlaced ? AD_RELOCATE + '\n' : ''}${AD_REVEAL}\n</body>`);
+  html = html.replace('</body>', `${floor}\n${AD_REVEAL}\n</body>`);
   return html;
 }

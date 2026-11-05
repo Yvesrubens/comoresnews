@@ -10,101 +10,141 @@ import { injectAnalytics } from './lib/analytics.mjs';
 import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
-import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
-import { injectMenu } from './lib/menu.mjs';
-import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml, aNePasManquer, aNePasManquerHtml, breveDayKey, titresDuJour, pourraitInteresser, pourraitHtml } from './lib/en-direct.mjs';
+import { renderMarkdown, sourceLine } from './lib/render.mjs';
+import { habillerPageFixe } from './lib/pages-fixes.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents, aLireAussi } from './lib/en-direct.mjs';
+import { page, colonneDroite, titreSection } from './lib/gabarit.mjs';
+import { carte, grille, etiquettes, dateFr, estPhotoBanque, tempsLecture } from './lib/cartes.mjs';
 import { injectDate } from './lib/date-bandeau.mjs';
-import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
 
 const ROOT = process.cwd();
-const TPL = (n) => fs.readFileSync(path.join(ROOT, 'templates', n), 'utf8');
 const AUTHOR_PAGE = 'index.php/author/lewistifosi/index.html'; // URL historique préservée
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-function setTitle(html, title) {
-  return html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)} | Comoresnews</title>`);
-}
 
-export function buildArticlePage(a, catsCfg) {
+export function buildArticlePage(a, catsCfg, articles = [a], jour = breveDayKey(new Date().toISOString())) {
   const rel = articlePath(a.date, a.slug);
   const P = relPrefix(rel);
+  const url = `${BASE}/${rel}`;
+  const opts = { prefix: P, catsCfg };
   const catName = catsCfg[a.category].name;
-  const img = a.image
-    ? `<img src="${resolveImg(P, a.image)}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async" style="width:100%;height:auto;margin:0 0 24px;border-radius:3px;">`
+  const suite = aLireAussi(a, articles);
+  const pourrait = pourraitInteresser(articles, [a, ...suite]).map((x) => carte(x, { ...opts, variante: 'mini' })).join('');
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(a.title);
+  const partage = [
+    ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${u}`],
+    ['X', `https://twitter.com/intent/tweet?url=${u}&text=${t}`],
+    ['WhatsApp', `https://wa.me/?text=${t}%20${u}`],
+    ['E-mail', `mailto:?subject=${t}&body=${u}`],
+  ].map(([n, h]) => `<a href="${esc(h)}" target="_blank" rel="noopener" aria-label="Partager sur ${n}">${n}</a>`).join('');
+  const figure = a.image
+    ? `<figure><img src="${esc(resolveImg(P, a.image))}" alt="${esc(a.title)}" loading="eager" fetchpriority="high" decoding="async">${estPhotoBanque(a.image) ? "<figcaption>Photo d'illustration</figcaption>" : ''}</figure>`
     : '';
-  const breadcrumb = `<span><a class="entry-crumb" href="${P}index.html">Accueil</a></span> <i class="td-icon-right td-bread-sep"></i> <span><a class="entry-crumb" href="${P}${categoryPath(a.category)}">${catName}</a></span>`;
-  let html = applyTemplate(TPL('article.html'), {
-    TITLE: esc(a.title),
-    BREADCRUMB: breadcrumb,
-    CATEGORY: catName,
-    AUTHOR: esc(a.author),
-    DATE: a.date,
-    IMAGE: img,
-    BODY: renderMarkdown(a.body, P) + sourceLine(a),
-    SEO: metaTags(a, `${BASE}/${rel}`) + '\n' + jsonLdArticle(a, `${BASE}/${rel}`),
+  const newsletter = `<div class="cn-nl-encart"><h3>Newsletter</h3><p>Les articles de la semaine, chaque vendredi.</p><a class="cn-btn" href="${P}index.html#cn-newsletter">S'inscrire gratuitement</a></div>`;
+  const contenu = `<div id="cn-ad-top"></div>
+<div class="cn-article cn-deux"><article>
+<nav class="cn-fil"><a href="${P}index.html">Accueil</a> › <a href="${P}${categoryPath(a.category)}">${esc(catName)}</a></nav>
+${etiquettes(a, catsCfg, P)}<h1 class="cn-h1">${esc(a.title)}</h1>
+${a.excerpt ? `<p class="cn-chapo">${esc(a.excerpt)}</p>` : ''}<div class="cn-byline"><span class="cn-initiales">CN</span><span class="cn-auteur">${esc(a.author || 'Comoresnews')}</span><span>${dateFr(a.date)}</span><span>⏱ ${tempsLecture(a.body)} min de lecture</span><span class="cn-partage">${partage}</span></div>
+${figure}<div class="cn-article-body">${renderMarkdown(a.body, P) + sourceLine(a)}</div>
+</article>${colonneDroite({ avant: newsletter, pourrait })}</div>
+${suite.length ? titreSection('À lire aussi') + grille(suite, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : ''}`;
+  return page({
+    titre: a.seoTitle || a.title, prefix: P, contenu, jour, catsCfg, actif: a.category,
+    head: `<link rel="canonical" href="${esc(url)}">\n` + metaTags(a, url) + '\n' + jsonLdArticle(a, url),
+    titres: titresDuJour(articles, jour, pickUne(articles, 4)),
   });
-  return setTitle(html, a.seoTitle || a.title);
 }
 
-export function buildCategoryPage(slug, articles, catsCfg) {
-  const P = relPrefix(categoryPath(slug));
+const pluriel = (n) => `${n} article${n > 1 ? 's' : ''}`;
+
+// Fil d'Ariane et titre communs aux pages rubrique, auteur et « En direct ».
+function enTete(titre, prefix) {
+  return `<nav class="cn-fil"><a href="${prefix}index.html">Accueil</a> › <span>${esc(titre)}</span></nav><h1 class="cn-h1">${esc(titre)}</h1>`;
+}
+
+function pageListe({ titre, prefix, head = '', articles, tous, catsCfg, jour, actif = '' }) {
+  const opts = { prefix, catsCfg };
+  const list = [...articles].sort(byRecent);
+  const pourrait = pourraitInteresser(tous, list).map((a) => carte(a, { ...opts, variante: 'mini' })).join('');
+  const contenu = `${enTete(titre, prefix)}<p class="cn-compte">${pluriel(list.length)}</p>
+<div class="cn-deux"><div class="cn-principal">${grille(list, opts)}</div>${colonneDroite({ pourrait })}</div>`;
+  return page({ titre, prefix, head, contenu, jour, titres: titresDuJour(tous, jour, pickUne(tous, 4)), catsCfg, actif });
+}
+
+export function buildCategoryPage(slug, articles, catsCfg, jour = breveDayKey(new Date().toISOString()), tous = articles) {
   const catName = catsCfg[slug].name;
-  const list = [...articles].sort((x, y) => y.date.localeCompare(x.date));
-  const inner = list.length
-    ? list.map(a => articleCard(a, P, catsCfg[a.category].name)).join('')
-    : `<p style="padding:22px 4px;color:#999;font-style:italic;margin:0;">Aucun article pour le moment.</p>`;
-  let html = applyTemplate(TPL('category.html'), {
-    TITLE: catName,
-    BREADCRUMB: `<span class="td-bred-no-url-last">${catName}</span>`,
-    ARTICLES: inner,
+  const urlRubrique = `${BASE}/${categoryPath(slug)}`;
+  return pageListe({
+    titre: catName, prefix: relPrefix(categoryPath(slug)), actif: slug,
+    head: [
+      `<link rel="canonical" href="${esc(urlRubrique)}">`,
+      `<meta name="description" content="Toute l'actualité ${esc(catName)} des Comores — Comoresnews">`,
+      `<meta property="og:title" content="${esc(catName)} – Comoresnews">`,
+      '<meta property="og:type" content="website">',
+      '<meta property="og:site_name" content="Comoresnews">',
+      `<meta property="og:url" content="${esc(urlRubrique)}">`,
+    ].join('\n'),
+    articles, tous, catsCfg, jour,
   });
-  return setTitle(html, catName);
 }
 
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
-const HOME_SECTION_MAX = 4;
+const HOME_SECTION_MAX = 3;
+
+const HOME_HEAD = `<link rel="canonical" href="index.html"/>
+<meta name="description" content="L'actualité des Comores et de la diaspora comorienne">
+<meta property="og:description" content="L'actualité des Comores et de la diaspora comorienne">
+<meta property="og:site_name" content="Comoresnews">
+<meta property="og:locale" content="fr-FR">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Comoresnews">
+<meta property="og:url" content="index.html">
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', '@id': `${BASE}/#organization`, legalName: 'Comoresnews', name: 'Comoresnews', url: `${BASE}/` },
+    { '@type': 'WebSite', '@id': `${BASE}/#website`, url: `${BASE}/`, name: 'Comoresnews',
+      potentialAction: { '@type': 'SearchAction', target: `${BASE}/index.php/pages/recherche/index.html?s={search_term_string}`, 'query-input': 'required name=search_term_string' } },
+  ],
+}).replace(/</g, '\\u003c')}</script>`;
 
 // `jour` : date du build (AAAA-MM-JJ, heure des Comores) ; « À ne pas manquer » montre la veille.
 export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  const opts = { prefix: '', catsCfg };
   const une = homeUne(articles, 4);
   const manquer = aNePasManquer(articles, une, jour);
-  let html = TPL('home.html')
-    .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
-    .replace('{{UNE_TICKER}}', () => uneTickerHtml(titresDuJour(articles, jour, une)))
-    .replace('{{A_NE_PAS_MANQUER}}', () => aNePasManquerHtml(manquer, catsCfg))
-    .replace('{{POURRAIT_INTERESSER}}', () => pourraitHtml(pourraitInteresser(articles, une.concat(manquer)), catsCfg));
-  for (const slug of Object.keys(catsCfg)) {
-    const tous = articles.filter(a => a.category === slug).sort(byRecent);
-    const list = tous.slice(0, HOME_SECTION_MAX);
-    const voirTout = tous.length > HOME_SECTION_MAX
-      ? `<p style="margin:10px 0 0;text-align:right;"><a href="${categoryPath(slug)}" class="cn-voir-tout" style="font-weight:600;font-size:13px;">Tous les articles ${catsCfg[slug].name} →</a></p>`
-      : '';
-    const inner = list.length
-      ? `<div style="padding:4px 0;">${list.map(a => articleCard(a, '', catsCfg[a.category].name)).join('')}</div>${voirTout}`
-      : `<p style="padding:22px 4px;color:#999;font-style:italic;margin:0;">Aucun article pour le moment.</p>`;
-    html = replaceSection(html, slug, inner);
-  }
-  return html;
+  const pourrait = pourraitInteresser(articles, une.concat(manquer));
+  const recents = plusRecents(articles, une.concat(manquer, pourrait));
+  const [premiere, ...autres] = une;
+  const uneHtml = une.length
+    ? `<div class="cn-une">${carte(premiere, { ...opts, variante: 'grande' })}<div class="cn-une-pile">${autres.map((a) => carte(a, { ...opts, variante: 'ligne' })).join('')}</div></div>`
+    : '';
+  const rubriques = Object.entries(catsCfg).sort(([, x], [, y]) => x.order - y.order).map(([slug, c]) => {
+    const tous = articles.filter((a) => a.category === slug).sort(byRecent);
+    const lien = tous.length > HOME_SECTION_MAX ? { lien: categoryPath(slug), libelleLien: `Tous les articles ${c.name} →` } : {};
+    return titreSection('Actu ' + c.name, lien) + grille(tous.slice(0, HOME_SECTION_MAX), opts);
+  }).join('');
+  const contenu = `${uneHtml}<div id="cn-ad-top"></div>
+<div class="cn-deux"><div class="cn-principal">${manquer.length ? titreSection('À ne pas manquer') + grille(manquer, opts) : ''}${rubriques}</div>${colonneDroite({ pourrait: pourrait.map((a) => carte(a, { ...opts, variante: 'mini' })).join('') })}</div>
+${recents.length ? titreSection('Les plus récents') + grille(recents, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : ''}`;
+  return page({ prefix: '', head: HOME_HEAD, contenu, jour, titres: titresDuJour(articles, jour, une), catsCfg });
 }
 
 export const EN_DIRECT_PAGE = 'index.php/pages/en-direct/index.html';
 
-export function buildEnDirectPage(articles, breves, catsCfg) {
-  const html = applyTemplate(TPL('category.html'), {
-    TITLE: 'En direct',
-    BREADCRUMB: '<span class="td-bred-no-url-last">En direct</span>',
-    ARTICLES: enDirectInner(pickUne(articles, 8), breves, relPrefix(EN_DIRECT_PAGE), catsCfg),
-  });
-  return setTitle(html, 'En direct');
+export function buildEnDirectPage(articles, breves, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  const prefix = relPrefix(EN_DIRECT_PAGE);
+  const une = pickUne(articles, 8);
+  const contenu = `${enTete('En direct', prefix)}${enDirectInner(une, breves, prefix, catsCfg)}`;
+  return page({ titre: 'En direct', prefix, contenu, jour, titres: titresDuJour(articles, jour, une), catsCfg });
 }
 
-export function buildAuthor(articles, catsCfg) {
-  const P = relPrefix(AUTHOR_PAGE);
-  const list = [...articles].sort((x, y) => y.date.localeCompare(x.date));
-  const inner = list.map(a => articleCard(a, P, catsCfg[a.category].name)).join('');
-  return applyTemplate(TPL('author.html'), { AUTHOR: 'Comoresnews', ARTICLES: inner });
+export function buildAuthor(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  return pageListe({ titre: 'Comoresnews', prefix: relPrefix(AUTHOR_PAGE), articles, tous: articles, catsCfg, jour });
 }
 
 export function buildSearchIndex(articles, catsCfg) {
@@ -115,7 +155,7 @@ export function buildSearchIndex(articles, catsCfg) {
 }
 
 // --- assets & pages statiques à recopier tels quels dans _site ---
-const PASSTHROUGH = ['wp-content', 'wp-includes', '_external', '.nojekyll', 'admin',
+const PASSTHROUGH = ['wp-content', 'wp-includes', 'assets', '_external', '.nojekyll', 'admin',
   'index.php/pages/contact', 'index.php/pages/recherche',
   'index.php/pages/mentions-legales', 'index.php/pages/politique-confidentialite',
   'index.php/pages/desinscription'];
@@ -152,18 +192,18 @@ export async function main({ now, jour = now, outDir = '_site' }) {
   const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
   // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
-  const deco = (h) => injectDate(injectMenu(consent(analytics(ads(newsletter(h))))), jour);
-  // Pages statiques recopiées telles quelles : menu et date du bandeau seulement.
+  const deco = (h) => injectDate(consent(analytics(ads(newsletter(h)))), jour);
+  // Pages statiques recopiées : habillage commun et date du bandeau (ni pubs ni Analytics).
   for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
     const p = path.join(outDir, rel, 'index.html');
-    if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(injectMenu(fs.readFileSync(p, 'utf8')), jour));
+    if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(habillerPageFixe(fs.readFileSync(p, 'utf8'), { prefix: relPrefix(`${rel}/index.html`), jour, catsCfg: cats }), jour));
   }
-  for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
+  for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats, all, jour)));
   for (const slug of validCats)
-    write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
+    write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats, jour, all)));
   write(outDir, 'index.html', deco(buildHome(all, cats, jour)));
-  write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats)));
-  write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats)));
+  write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats, jour)));
+  write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats, jour)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
   const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }, { loc: `${BASE}/${EN_DIRECT_PAGE}`, lastmod: now }]
     .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))
