@@ -93,7 +93,7 @@ export function buildCategoryPage(slug, articles, catsCfg, jour = breveDayKey(ne
 }
 
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
-const HOME_SECTION_MAX = 4;
+const HOME_SECTION_MAX = 3;
 
 const HOME_HEAD = `<link rel="canonical" href="index.html"/>
 <meta name="description" content="L'actualité des Comores et de la diaspora comorienne">

@@ -14,7 +14,7 @@ a{color:inherit}
 .cn-ticker button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:4px;width:22px;height:22px;line-height:1;cursor:pointer;padding:0}
 /* en-tête */
 .cn-header{background:var(--vert);border-top:3px solid var(--jaune);display:flex;align-items:center;gap:24px;padding:14px 28px;position:relative}
-.cn-logo img{height:38px;background:#fff;border-radius:6px;padding:3px 8px;display:block}
+.cn-logo img{height:40px;display:block}
 .cn-menu{display:flex;gap:20px;flex:1;flex-wrap:wrap}
 .cn-menu a{color:#fff;font-weight:600;font-size:14px;text-decoration:none}
 .cn-menu a.actif{color:var(--jaune)}
@@ -34,7 +34,12 @@ a{color:inherit}
 .cn-h1{font-size:32px;line-height:1.15;margin:0 0 4px}.cn-compte{color:#777;font-size:14px;margin:0 0 18px}
 .cn-grille{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .cn-grille.trois{grid-template-columns:repeat(3,1fr)}
+@media (min-width:1019px){.cn-grille{grid-template-columns:repeat(3,1fr)}}
 .cn-grille.quatre{grid-template-columns:repeat(4,1fr)}
+.cn-grille .cn-carte img,.cn-grille .cn-carte span.cn-carte-vide{height:140px}
+.cn-grille .cn-carte .cn-carte-in{padding:10px 12px}
+.cn-grille .cn-carte h3{font-size:15px;margin-bottom:6px}
+.cn-grille .cn-carte p{font-size:13px;margin-bottom:8px}
 .cn-une{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:18px;align-items:start}
 .cn-une-pile{display:flex;flex-direction:column;gap:14px}
 .cn-une-pile .cn-carte.ligne img,.cn-une-pile .cn-carte.ligne span.cn-carte-vide{width:130px;min-height:96px}
@@ -75,7 +80,7 @@ a{color:inherit}
 /* pied */
 .cn-footer{background:var(--vert);color:#d8e5d8;margin-top:30px}
 .cn-footer-in{max-width:1180px;margin:0 auto;padding:30px 20px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px}
-.cn-footer-col img{height:38px;background:#fff;border-radius:6px;padding:3px 8px}
+.cn-footer-col img{height:40px}
 .cn-footer-col h4{color:var(--jaune);margin:0 0 10px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase}
 .cn-footer-col a{display:block;color:#fff;text-decoration:none;font-size:14px;margin:5px 0}
 .cn-footer-liens a{display:inline-block;margin-right:14px}
@@ -108,6 +113,7 @@ a{color:inherit}
 .cn-top{padding:6px 14px;flex-direction:column;align-items:flex-start;gap:4px}
 .cn-ticker-titres{max-width:70vw}
 .cn-header{padding:12px 14px;gap:12px;flex-wrap:wrap}
+.cn-logo img,.cn-footer-col img{height:32px}
 .cn-btn{padding:8px 10px;font-size:13px;margin-left:auto}
 .cn-burger{display:block}
 .cn-menu{display:none;order:10;width:100%;flex-direction:column;gap:12px;flex-basis:100%;padding:8px 0}

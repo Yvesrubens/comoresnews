@@ -85,7 +85,7 @@ function veilleDe(jour) {
 // Bloc « À ne pas manquer » : les articles publiés la veille de `jour` (heure des Comores),
 // hors ceux déjà à la une, les plus récents d'abord ; si la veille en compte moins de `n`,
 // on complète avec les plus récents qui ne sont pas à la une.
-export function aNePasManquer(articles, une, jour, n = 5) {
+export function aNePasManquer(articles, une, jour, n = 6) {
   const pris = new Set(une.map((a) => a.slug));
   const dispo = [...articles].sort(byRecent).filter((a) => !pris.has(a.slug));
   const veille = veilleDe(jour);

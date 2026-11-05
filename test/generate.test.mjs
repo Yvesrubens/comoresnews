@@ -141,13 +141,13 @@ test('buildHome : « À ne pas manquer » = veille hors une', () => {
   assert.ok(!bloc.includes('Art auj'));
 });
 
-test('buildHome : rubrique de 6 articles = 4 cartes + lien ; rubrique vide = message', () => {
+test('buildHome : rubrique de 6 articles = 3 cartes + lien ; rubrique vide = message', () => {
   const mk = (i) => ({ ...a, category: 'sport', title: `T-sport-${i}`, slug: `sport-${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` });
   const html = buildHome([0, 1, 2, 3, 4, 5].map(mk), cats);
   const i = html.indexOf('Actu Sport');
   const fin = html.indexOf('Actu ', i + 5);
   const bloc = html.slice(i, fin > 0 ? fin : html.indexOf('Les plus récents'));
-  assert.equal((bloc.match(/<article class="cn-carte grille"/g) || []).length, 4);
+  assert.equal((bloc.match(/<article class="cn-carte grille"/g) || []).length, 3);
   assert.ok(bloc.includes('Tous les articles Sport →') && bloc.includes('href="index.php/category/sport/index.html"'));
   assert.ok(html.includes('Aucun article pour le moment.'));
   assert.ok(!buildHome([mk(0), mk(1)], cats).includes('Tous les articles Sport'));
