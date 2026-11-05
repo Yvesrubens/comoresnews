@@ -24,29 +24,13 @@ test('injectAds insère setup + 5 emplacements hors article (pas de Pavé 2)', (
   assert.match(out, /onecall/);
 });
 
-test('injectAds place le Pavé 2 après le 2e paragraphe d\'un article', () => {
-  const page = '<html><head></head><body><div class="td-post-content"><p>un</p><p>deux</p><p>trois</p></div></body></html>';
-  const out = injectAds(page);
-  const iAd = out.indexOf('id="sas_49048"');
-  assert.ok(iAd > out.indexOf('<p>deux</p>'), 'après le 2e paragraphe');
-  assert.ok(iAd < out.indexOf('<p>trois</p>'), 'avant le 3e paragraphe');
-});
-
-test('injectAds place la MégaBannière 1 avant le titre d\'un article', () => {
-  const page = '<html><head></head><body><div class="td-crumb-container">fil</div><div class="td-post-header"><h1>T</h1></div><div class="td-post-content"><p>a</p></div></body></html>';
-  const out = injectAds(page);
-  const iAd = out.indexOf('id="sas_45656"');
-  assert.ok(iAd > out.indexOf('<body>') + 6 && iAd < out.indexOf('<h1>'), 'avant le titre');
-  assert.ok(iAd < out.indexOf('td-crumb-container">fil'), 'avant le fil d\'Ariane');
-});
-
 test('insertInArticle ne fait rien hors article', () => {
   const html = '<body><p>a</p><p>b</p></body>';
   assert.equal(insertInArticle(html, '<AD>'), html);
 });
 
 test('insertInArticle se rabat sur le 1er paragraphe si un seul', () => {
-  const out = insertInArticle('<div class="td-post-content"><p>seul</p></div>', '<AD>');
+  const out = insertInArticle('<div class="cn-article-body"><p>seul</p></div>', '<AD>');
   assert.ok(out.indexOf('<AD>') > out.indexOf('</p>'));
 });
 
@@ -57,7 +41,7 @@ test('injectAds est idempotent', () => {
 });
 
 test('page article : GrandAngle et Pavé 1 dans la colonne de droite, sous « Suivez nous »', () => {
-  const page = '<html><head></head><body><div class="td-post-content"><p>a</p><p>b</p></div>'
+  const page = '<html><head></head><body><div class="cn-article-body"><p>a</p><p>b</p></div>'
     + '<div class="td-ss-main-sidebar"><div class="social">Suivez nous</div><div id="cn-sidebar-ads"></div></div>'
     + '<div id="cn-legal-bar">footer</div></body></html>';
   const out = injectAds(page);

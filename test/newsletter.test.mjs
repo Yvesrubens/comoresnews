@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { newsletterBand, injectNewsletter } from '../build/lib/newsletter.mjs';
 
 const CFG = { url: 'https://projet.supabase.co', anonKey: 'cle-publique' };
-const PAGE = '<html><head></head><body><header>menu</header><div class="td-main-content-wrap td-container-wrap">contenu</div>'
+const PAGE = '<html><head></head><body><header>menu</header><main id="cn-main" class="cn-main">contenu</main>'
   + '<div id="cn-legal-bar">footer</div></body></html>';
 
 test('newsletterBand : formulaire email, consentement, lien confidentialité, piège à robots, appel RPC', () => {
@@ -21,7 +21,7 @@ test('newsletterBand : formulaire email, consentement, lien confidentialité, pi
 test('injectNewsletter place le bandeau juste avant le contenu, une seule fois', () => {
   const out = injectNewsletter(PAGE, CFG);
   assert.ok(out.indexOf('id="cn-newsletter"') > out.indexOf('</header>'));
-  assert.ok(out.indexOf('id="cn-newsletter"') < out.indexOf('td-main-content-wrap'));
+  assert.ok(out.indexOf('id="cn-newsletter"') < out.indexOf('<main id="cn-main"'));
   assert.equal(injectNewsletter(out, CFG), out);
 });
 

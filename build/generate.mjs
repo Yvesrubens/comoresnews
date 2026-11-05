@@ -11,7 +11,7 @@ import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, sourceLine } from './lib/render.mjs';
-import { injectMenu } from './lib/menu.mjs';
+import { habillerPageFixe } from './lib/pages-fixes.mjs';
 import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents, aLireAussi } from './lib/en-direct.mjs';
 import { page, colonneDroite, titreSection } from './lib/gabarit.mjs';
 import { carte, grille, etiquettes, dateFr, estPhotoBanque, tempsLecture } from './lib/cartes.mjs';
@@ -176,11 +176,11 @@ export async function main({ now, jour = now, outDir = '_site' }) {
   const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
   // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
-  const deco = (h) => injectDate(injectMenu(consent(analytics(ads(newsletter(h))))), jour);
-  // Pages statiques recopiées telles quelles : menu et date du bandeau seulement.
+  const deco = (h) => injectDate(consent(analytics(ads(newsletter(h)))), jour);
+  // Pages statiques recopiées : habillage commun et date du bandeau (ni pubs ni Analytics).
   for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
     const p = path.join(outDir, rel, 'index.html');
-    if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(injectMenu(fs.readFileSync(p, 'utf8')), jour));
+    if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(habillerPageFixe(fs.readFileSync(p, 'utf8'), { prefix: relPrefix(`${rel}/index.html`), jour, catsCfg: cats }), jour));
   }
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats, all, jour)));
   for (const slug of validCats)

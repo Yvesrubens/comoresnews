@@ -9,7 +9,6 @@ export const SUPABASE_PUBLIC = {
 };
 
 const MAIN_ANCHOR = '<main id="cn-main"';
-const ANCHOR ='<div class="td-main-content-wrap';
 const PRIVACY = '/index.php/pages/politique-confidentialite/index.html';
 
 export function newsletterBand(cfg = SUPABASE_PUBLIC) {
@@ -68,8 +67,7 @@ f.addEventListener('submit',function(e){
 // Insère le bandeau juste avant le contenu (sous le menu du site). Idempotent.
 export function injectNewsletter(html, cfg = SUPABASE_PUBLIC) {
   if (html.includes('id="cn-newsletter"')) return html;
-  const anchor = html.includes(MAIN_ANCHOR) ? MAIN_ANCHOR : ANCHOR;
-  if (!html.includes(anchor)) return html;
-  const i = html.indexOf(anchor);
+  const i = html.indexOf(MAIN_ANCHOR);
+  if (i === -1) return html;
   return html.slice(0, i) + newsletterBand(cfg) + '\n' + html.slice(i);
 }
