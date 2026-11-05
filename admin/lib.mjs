@@ -69,12 +69,24 @@ export function nextStatus(action) {
   return 'brouillon';
 }
 
+// Îles d'un article : copie de build/lib/iles.mjs (admin/ est servi seul au navigateur),
+// égalité vérifiée par test/admin-lib.test.mjs.
+export const ILES_ADMIN = Object.freeze({
+  ngazidja: 'Ngazidja',
+  ndzuani: 'Ndzuani',
+  mwali: 'Mwali',
+  maore: 'Maoré',
+  diaspora: 'Diaspora',
+});
+
 // Construit la ligne `articles` à écrire selon l'action et l'auteur.
 export function formToRow(f, auteurId) {
   const statut = nextStatus(f.action);
   const une = f.a_la_une === undefined ? {} : { a_la_une: !!f.a_la_une }; // champ réservé aux admins
+  const ile = f.ile === undefined ? {} : { ile: f.ile || null }; // absent → valeur en base conservée
   return {
     ...une,
+    ...ile,
     titre: f.titre,
     slug: f.slug,
     categorie: f.categorie,

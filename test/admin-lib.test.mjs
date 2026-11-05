@@ -108,3 +108,16 @@ test('breveButtons : sur une brève publiée, un admin ne peut que la garder en 
   assert.deepEqual(breveButtons('en_attente', true), { brouillon: true, soumettre: true, publier: true, renvoyer: true, depublier: false, supprimer: true, publierLabel: 'Publier' });
   assert.deepEqual(breveButtons(null, false), { brouillon: true, soumettre: true, publier: false, renvoyer: false, depublier: false, supprimer: false, publierLabel: 'Publier' });
 });
+
+test('ILES_ADMIN identique à la liste canonique', async () => {
+  const { ILES_ADMIN } = await import('../admin/lib.mjs');
+  const { ILES } = await import('../build/lib/iles.mjs');
+  assert.deepEqual(ILES_ADMIN, ILES);
+});
+
+test('formToRow : ile transmise, vide → null, absente → non écrite', () => {
+  const fiche = { action: 'brouillon', titre: 'T', slug: 's', categorie: 'sport', corps: 'b' };
+  assert.equal(formToRow({ ...fiche, ile: 'maore' }, 'u').ile, 'maore');
+  assert.equal(formToRow({ ...fiche, ile: '' }, 'u').ile, null);
+  assert.ok(!('ile' in formToRow(fiche, 'u')));
+});
