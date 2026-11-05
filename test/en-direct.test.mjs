@@ -92,3 +92,27 @@ test('aNePasManquerHtml : balisage du thème, 1 grand + colonne', async () => {
   assert.ok(html.includes('Chapô &lt;x&gt;'));
   assert.equal(aNePasManquerHtml([], cats), '');
 });
+
+test('titresDuJour : articles publiés le jour même, récents d\'abord ; sinon la une', async () => {
+  const { titresDuJour } = await import('../build/lib/en-direct.mjs');
+  const list = [art('h1', '20'), { ...art('j1', '21'), publishedAt: '2026-10-21T06:00:00Z' }, { ...art('j2', '21'), publishedAt: '2026-10-21T09:00:00Z' }];
+  assert.deepEqual(titresDuJour(list, '2026-10-21', [list[0]]).map((a) => a.slug), ['j2', 'j1']);
+  assert.deepEqual(titresDuJour(list, '2026-10-25', [list[0]]).map((a) => a.slug), ['h1']);
+  const dix = Array.from({ length: 12 }, (_, i) => ({ ...art('d' + i, '21'), publishedAt: `2026-10-21T${String(i + 10)}:00:00Z` }));
+  assert.equal(titresDuJour(dix, '2026-10-21', []).length, 10);
+});
+
+test('pourraitInteresser : 4 articles hors exclus, une rubrique différente d\'abord', async () => {
+  const { pourraitInteresser } = await import('../build/lib/en-direct.mjs');
+  const c = (slug, jour, category) => ({ ...art(slug, jour), category });
+  const list = [c('e1', '19', 'economie'), c('e2', '18', 'economie'), c('s1', '17', 'sport'), c('p1', '16', 'politique'), c('e3', '15', 'economie'), c('x', '20', 'culture')];
+  const r = pourraitInteresser(list, [list[5]]);
+  assert.deepEqual(r.map((a) => a.slug), ['e1', 's1', 'p1', 'e2']);
+  assert.deepEqual(pourraitInteresser([], []), []);
+});
+
+test('pourraitHtml : cartes du thème avec rubrique et titre', async () => {
+  const { pourraitHtml } = await import('../build/lib/en-direct.mjs');
+  const html = pourraitHtml([art('x', '20')], cats);
+  assert.ok(html.includes('td_module_flex_1') && html.includes('Économie') && html.includes('index.php/2026/10/20/x/index.html'));
+});
