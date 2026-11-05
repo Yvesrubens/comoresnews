@@ -47,8 +47,13 @@ test('buildHome : grille et bandeau À la une suivent la case, ancre pub intacte
   assert.ok(grille.indexOf('Une coche') < grille.indexOf('Une a2'));
   assert.ok(!grille.slice(0, grille.indexOf('tdi_52')).includes('Une a5'));
   assert.ok(!grille.slice(0, grille.indexOf('tdi_52')).includes('Le Grand Mariage aux Comores'));
-  const ticker = html.slice(html.indexOf('<div class="td-trending-now-display-area">'), html.indexOf('<div class="td-trending-now-display-area">') + 3000);
-  assert.ok(ticker.includes('Une coche') && ticker.includes('Une a3') && !ticker.includes('Une a4') && !ticker.includes('Le Grand Mariage'));
+  const bandeau = (h) => h.slice(h.indexOf('<div class="td-trending-now-display-area">'), h.indexOf('<div class="td-next-prev-wrap">', h.indexOf('<div class="td-trending-now-display-area">')));
+  // Bandeau : titres publiés le jour du build…
+  const jour = bandeau(buildHome(list, cats, '2026-10-15'));
+  assert.ok(jour.includes('Une a2') && !jour.includes('Une coche') && !jour.includes('Une a3'));
+  // … et, si rien n'a été publié ce jour-là, les articles de la une.
+  const vide = bandeau(buildHome(list, cats, '2026-10-30'));
+  assert.ok(vide.includes('Une coche') && vide.includes('Une a4') && !vide.includes('Une a5') && !vide.includes('Le Grand Mariage'));
   assert.doesNotThrow(() => buildHome([], cats));
 });
 

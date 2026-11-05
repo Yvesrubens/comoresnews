@@ -168,6 +168,44 @@ export function aNePasManquerHtml(list, catsCfg) {
 <div class="td_module_column">${rest.map((a) => manquerPost(a, false, catsCfg)).join('\n')}</div>`;
 }
 
+// Bandeau « À la une » : titres des articles publiés le jour `jour` (10 max) ;
+// aucun ce jour-là → les articles de la grille à la une.
+export function titresDuJour(articles, jour, une, max = 10) {
+  const auj = articles.filter((a) => a.date === jour).sort(byRecent).slice(0, max);
+  return auj.length ? auj : une;
+}
+
+// Bloc latéral « Ça pourrait vous intéresser » : `n` articles absents des autres blocs
+// (`exclus`), une rubrique différente par article d'abord, complétés par les plus récents.
+export function pourraitInteresser(articles, exclus, n = 4) {
+  const pris = new Set(exclus.map((a) => a.slug));
+  const dispo = [...articles].sort(byRecent).filter((a) => !pris.has(a.slug));
+  const rubriques = new Set();
+  const choix = [];
+  for (const a of dispo) {
+    if (choix.length < n && !rubriques.has(a.category)) { rubriques.add(a.category); choix.push(a); }
+  }
+  const vus = new Set(choix.map((a) => a.slug));
+  return choix.concat(dispo.filter((a) => !vus.has(a.slug))).slice(0, n);
+}
+
+export function pourraitHtml(list, catsCfg) {
+  return list.map((a) => {
+    const url = articlePath(a.date, a.slug);
+    const t = esc(a.title);
+    const img = a.image ? resolveImg('', a.image) : '';
+    const thumb = img
+      ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
+      : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
+    return `<div class="td_module_flex td_module_flex_1 td_module_wrap td-animation-stack td-cpt-post">
+  <div class="td-module-container td-category-pos-image">
+    <div class="td-image-container"><a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a><div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
+    <div class="td-module-meta-info"><h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3></div>
+  </div>
+</div>`;
+  }).join('\n');
+}
+
 export function uneTickerHtml(list) {
   return list.map((a, i) => {
     const t = esc(a.title);

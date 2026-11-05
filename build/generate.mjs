@@ -12,7 +12,8 @@ import { injectConsent } from './lib/consent.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
-import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml, aNePasManquer, aNePasManquerHtml, breveDayKey } from './lib/en-direct.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml, aNePasManquer, aNePasManquerHtml, breveDayKey, titresDuJour, pourraitInteresser, pourraitHtml } from './lib/en-direct.mjs';
+import { injectDate } from './lib/date-bandeau.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
@@ -68,10 +69,12 @@ const HOME_SECTION_MAX = 4;
 // `jour` : date du build (AAAA-MM-JJ, heure des Comores) ; « À ne pas manquer » montre la veille.
 export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
   const une = homeUne(articles, 4);
+  const manquer = aNePasManquer(articles, une, jour);
   let html = TPL('home.html')
     .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
-    .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)))
-    .replace('{{A_NE_PAS_MANQUER}}', () => aNePasManquerHtml(aNePasManquer(articles, une, jour), catsCfg));
+    .replace('{{UNE_TICKER}}', () => uneTickerHtml(titresDuJour(articles, jour, une)))
+    .replace('{{A_NE_PAS_MANQUER}}', () => aNePasManquerHtml(manquer, catsCfg))
+    .replace('{{POURRAIT_INTERESSER}}', () => pourraitHtml(pourraitInteresser(articles, une.concat(manquer)), catsCfg));
   for (const slug of Object.keys(catsCfg)) {
     const tous = articles.filter(a => a.category === slug).sort(byRecent);
     const list = tous.slice(0, HOME_SECTION_MAX);
@@ -149,11 +152,11 @@ export async function main({ now, jour = now, outDir = '_site' }) {
   const consent = process.env.CMP === 'off' ? (h) => h : injectConsent;
   // CMP tout en haut du <head> (après <head>), pub + GA4 avant </head>
   const newsletter = process.env.NEWSLETTER === 'off' ? (h) => h : injectNewsletter;
-  const deco = (h) => injectMenu(consent(analytics(ads(newsletter(h)))));
-  // Pages statiques recopiées telles quelles : menu seulement.
+  const deco = (h) => injectDate(injectMenu(consent(analytics(ads(newsletter(h))))), jour);
+  // Pages statiques recopiées telles quelles : menu et date du bandeau seulement.
   for (const rel of PASSTHROUGH.filter((r) => r.startsWith('index.php/pages/'))) {
     const p = path.join(outDir, rel, 'index.html');
-    if (fs.existsSync(p)) fs.writeFileSync(p, injectMenu(fs.readFileSync(p, 'utf8')));
+    if (fs.existsSync(p)) fs.writeFileSync(p, injectDate(injectMenu(fs.readFileSync(p, 'utf8')), jour));
   }
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
