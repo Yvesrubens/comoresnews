@@ -48,3 +48,8 @@ test('colonneDroite : réseaux sans chiffres et ancre pub', () => {
   assert.ok(h.indexOf('<p>N</p>') < h.indexOf('Suivez'));
   assert.ok(titreSection('T', { lien: 'x.html', libelleLien: 'Voir' }).includes('href="x.html"'));
 });
+
+test('colonneDroite : pas de titre « Ça pourrait vous intéresser » si vide', () => {
+  assert.ok(!colonneDroite({ pourrait: '' }).includes('Ça pourrait vous intéresser'));
+  assert.ok(!colonneDroite().includes('Ça pourrait vous intéresser'));
+});

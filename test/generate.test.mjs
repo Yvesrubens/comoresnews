@@ -157,3 +157,44 @@ test('buildHome : « Les plus récents » en fin de page', () => {
   const html = buildHome(Array.from({ length: 20 }, (_, i) => i).map((i) => ({ ...a, title: `P${i}`, slug: `p${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` })), cats, '2026-10-30');
   assert.ok(html.includes('Les plus récents') && html.includes('cn-grille quatre'));
 });
+
+const mkN = (n) => Array.from({ length: n }, (_, i) => ({ ...a, title: `N${i}`, slug: `n${i}`, date: `2026-10-${10 + i}`, publishedAt: `2026-10-${10 + i}T09:00:00Z` }));
+
+test('buildHome : pas de « Les plus récents » ni de grille vide quand tout est déjà affiché', () => {
+  const html = buildHome(mkN(10), cats, '2026-10-30');
+  assert.ok(!html.includes('Les plus récents'));
+  const fin = html.slice(html.lastIndexOf('</main>') - 200);
+  assert.ok(!fin.includes('Aucun article pour le moment.'));
+});
+
+test('buildHome : « À ne pas manquer » omis si vide ; « Les plus récents » présent avec >= 14 articles', () => {
+  assert.ok(!buildHome([a], cats, '2026-10-30').includes('À ne pas manquer'));
+  assert.ok(buildHome(mkN(20), cats, '2026-10-30').includes('Les plus récents'));
+});
+
+test('buildAuthor : pas de titre « Ça pourrait vous intéresser » vide', async () => {
+  const { buildAuthor } = await import('../build/generate.mjs');
+  assert.ok(!buildAuthor(mkN(3), cats, '2026-10-15').includes('Ça pourrait vous intéresser'));
+});
+
+test('buildArticlePage : une seule balise canonical absolue', () => {
+  const html = buildArticlePage(a, cats);
+  assert.equal((html.match(/rel="canonical"/g) || []).length, 1);
+  assert.ok(html.includes('<link rel="canonical" href="https://comoresnews.com/index.php/2026/06/12/s/index.html">'));
+});
+
+test('buildCategoryPage : canonical et og absolus', () => {
+  const html = buildCategoryPage('economie', [mkA('x', '10')], cats, '2026-10-15');
+  assert.equal((html.match(/rel="canonical"/g) || []).length, 1);
+  for (const s of ['<link rel="canonical" href="https://comoresnews.com/index.php/category/economie/index.html">', '<meta property="og:title" content="Économie – Comoresnews">', '<meta property="og:type" content="website">', '<meta property="og:site_name" content="Comoresnews">', '<meta property="og:url" content="https://comoresnews.com/index.php/category/economie/index.html">']) assert.ok(html.includes(s), s);
+});
+
+test('buildHome : JSON-LD Organization/WebSite avec URLs absolues', () => {
+  const html = buildHome([a], cats);
+  const m = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)];
+  assert.equal(m.length, 1);
+  const d = JSON.parse(m[0][1]);
+  const graph = d['@graph'] || [d];
+  assert.ok(graph.some((x) => x['@type'] === 'Organization' && x.url === 'https://comoresnews.com/'));
+  assert.ok(graph.some((x) => x['@type'] === 'WebSite' && x.url === 'https://comoresnews.com/'));
+});

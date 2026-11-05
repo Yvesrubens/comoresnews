@@ -21,7 +21,7 @@ export function titreSection(texte, { lien = '', libelleLien = '' } = {}) {
 
 export function colonneDroite({ pourrait = '', avant = '' } = {}) {
   const reseaux = RESEAUX.map((r) => `<a class="cn-reseau" href="${r.url}" rel="noopener" target="_blank"><b>${r.nom}</b><span>${r.action}</span></a>`).join('');
-  return `<aside class="cn-rail">${avant}<div class="cn-suivez"><h3>Suivez-nous</h3>${reseaux}</div><div id="cn-sidebar-ads"></div>${titreSection('Ça pourrait vous intéresser')}${pourrait}</aside>`;
+  return `<aside class="cn-rail">${avant}<div class="cn-suivez"><h3>Suivez-nous</h3>${reseaux}</div><div id="cn-sidebar-ads"></div>${pourrait ? titreSection('Ça pourrait vous intéresser') + pourrait : ''}</aside>`;
 }
 
 function bandeau(titres, prefix) {

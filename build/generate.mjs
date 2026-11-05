@@ -54,7 +54,7 @@ ${figure}<div class="cn-article-body">${renderMarkdown(a.body, P) + sourceLine(a
 ${suite.length ? titreSection('À lire aussi') + grille(suite, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : ''}`;
   return page({
     titre: a.seoTitle || a.title, prefix: P, contenu, jour, catsCfg, actif: a.category,
-    head: metaTags(a, url) + '\n' + jsonLdArticle(a, url),
+    head: `<link rel="canonical" href="${esc(url)}">\n` + metaTags(a, url) + '\n' + jsonLdArticle(a, url),
     titres: titresDuJour(articles, jour, pickUne(articles, 4)),
   });
 }
@@ -77,9 +77,17 @@ function pageListe({ titre, prefix, head = '', articles, tous, catsCfg, jour, ac
 
 export function buildCategoryPage(slug, articles, catsCfg, jour = breveDayKey(new Date().toISOString()), tous = articles) {
   const catName = catsCfg[slug].name;
+  const urlRubrique = `${BASE}/${categoryPath(slug)}`;
   return pageListe({
     titre: catName, prefix: relPrefix(categoryPath(slug)), actif: slug,
-    head: `<meta name="description" content="Toute l'actualité ${esc(catName)} des Comores — Comoresnews">`,
+    head: [
+      `<link rel="canonical" href="${esc(urlRubrique)}">`,
+      `<meta name="description" content="Toute l'actualité ${esc(catName)} des Comores — Comoresnews">`,
+      `<meta property="og:title" content="${esc(catName)} – Comoresnews">`,
+      '<meta property="og:type" content="website">',
+      '<meta property="og:site_name" content="Comoresnews">',
+      `<meta property="og:url" content="${esc(urlRubrique)}">`,
+    ].join('\n'),
     articles, tous, catsCfg, jour,
   });
 }
@@ -94,7 +102,15 @@ const HOME_HEAD = `<link rel="canonical" href="index.html"/>
 <meta property="og:locale" content="fr-FR">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Comoresnews">
-<meta property="og:url" content="index.html">`;
+<meta property="og:url" content="index.html">
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', '@id': `${BASE}/#organization`, legalName: 'Comoresnews', name: 'Comoresnews', url: `${BASE}/` },
+    { '@type': 'WebSite', '@id': `${BASE}/#website`, url: `${BASE}/`, name: 'Comoresnews',
+      potentialAction: { '@type': 'SearchAction', target: `${BASE}/index.php/pages/recherche/index.html?s={search_term_string}`, 'query-input': 'required name=search_term_string' } },
+  ],
+}).replace(/</g, '\\u003c')}</script>`;
 
 // `jour` : date du build (AAAA-MM-JJ, heure des Comores) ; « À ne pas manquer » montre la veille.
 export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
@@ -113,8 +129,8 @@ export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISO
     return titreSection('Actu ' + c.name, lien) + grille(tous.slice(0, HOME_SECTION_MAX), opts);
   }).join('');
   const contenu = `${uneHtml}<div id="cn-ad-top"></div>
-<div class="cn-deux"><div class="cn-principal">${titreSection('À ne pas manquer')}${grille(manquer, opts)}${rubriques}</div>${colonneDroite({ pourrait: pourrait.map((a) => carte(a, { ...opts, variante: 'mini' })).join('') })}</div>
-${titreSection('Les plus récents')}${recents.length ? grille(recents, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : grille([], opts)}`;
+<div class="cn-deux"><div class="cn-principal">${manquer.length ? titreSection('À ne pas manquer') + grille(manquer, opts) : ''}${rubriques}</div>${colonneDroite({ pourrait: pourrait.map((a) => carte(a, { ...opts, variante: 'mini' })).join('') })}</div>
+${recents.length ? titreSection('Les plus récents') + grille(recents, opts).replace('class="cn-grille"', 'class="cn-grille quatre"') : ''}`;
   return page({ prefix: '', head: HOME_HEAD, contenu, jour, titres: titresDuJour(articles, jour, une), catsCfg });
 }
 
