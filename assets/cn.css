@@ -30,6 +30,8 @@ a{color:inherit}
 .cn-section-titre h2{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin:0;border-left:4px solid var(--rouge);padding-left:8px}
 .cn-section-lien{font-size:13px;color:var(--bleu);font-weight:600;text-decoration:none}
 /* cartes et grilles */
+.cn-fil{font-size:13px;color:#777;margin:18px 0 6px}.cn-fil a{color:#777;text-decoration:none}.cn-fil a:hover{text-decoration:underline}
+.cn-h1{font-size:32px;line-height:1.15;margin:0 0 4px}.cn-compte{color:#777;font-size:14px;margin:0 0 18px}
 .cn-grille{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .cn-grille.trois{grid-template-columns:repeat(3,1fr)}
 .cn-grille.quatre{grid-template-columns:repeat(4,1fr)}

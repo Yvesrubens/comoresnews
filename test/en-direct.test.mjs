@@ -54,6 +54,8 @@ test('enDirectInner : message sans brève et liens des articles préfixés', () 
   assert.ok(h.includes('Aucune brève pour le moment.'));
   assert.ok(h.includes('../../../index.php/2026/10/12/vanille/index.html'));
   assert.ok(h.includes('../../../index.php/2026/10/11/ylang/index.html'));
+  assert.equal((h.match(/<article class="cn-carte grille"/g) || []).length, 2);
+  assert.ok(!h.includes('cn-direct-card'));
 });
 
 test('aNePasManquer : articles de la veille hors une, 5 max, plus récents d\'abord', async () => {

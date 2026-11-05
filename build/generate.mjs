@@ -10,7 +10,7 @@ import { injectAnalytics } from './lib/analytics.mjs';
 import { injectConsent } from './lib/consent.mjs';
 
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
-import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
+import { renderMarkdown, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
 import { byRecent, homeUne, pickUne, enDirectInner, aNePasManquer, breveDayKey, titresDuJour, pourraitInteresser, plusRecents } from './lib/en-direct.mjs';
 import { page, colonneDroite, titreSection } from './lib/gabarit.mjs';
@@ -50,19 +50,29 @@ export function buildArticlePage(a, catsCfg) {
   return setTitle(html, a.seoTitle || a.title);
 }
 
-export function buildCategoryPage(slug, articles, catsCfg) {
-  const P = relPrefix(categoryPath(slug));
+const pluriel = (n) => `${n} article${n > 1 ? 's' : ''}`;
+
+// Fil d'Ariane et titre communs aux pages rubrique, auteur et « En direct ».
+function enTete(titre, prefix) {
+  return `<nav class="cn-fil"><a href="${prefix}index.html">Accueil</a> › <span>${esc(titre)}</span></nav><h1 class="cn-h1">${esc(titre)}</h1>`;
+}
+
+function pageListe({ titre, prefix, head = '', articles, tous, catsCfg, jour, actif = '' }) {
+  const opts = { prefix, catsCfg };
+  const list = [...articles].sort(byRecent);
+  const pourrait = pourraitInteresser(tous, list).map((a) => carte(a, { ...opts, variante: 'mini' })).join('');
+  const contenu = `${enTete(titre, prefix)}<p class="cn-compte">${pluriel(list.length)}</p>
+<div class="cn-deux"><div class="cn-principal">${grille(list, opts)}</div>${colonneDroite({ pourrait })}</div>`;
+  return page({ titre, prefix, head, contenu, jour, titres: titresDuJour(tous, jour, pickUne(tous, 4)), catsCfg, actif });
+}
+
+export function buildCategoryPage(slug, articles, catsCfg, jour = breveDayKey(new Date().toISOString()), tous = articles) {
   const catName = catsCfg[slug].name;
-  const list = [...articles].sort((x, y) => y.date.localeCompare(x.date));
-  const inner = list.length
-    ? list.map(a => articleCard(a, P, catsCfg[a.category].name)).join('')
-    : `<p style="padding:22px 4px;color:#999;font-style:italic;margin:0;">Aucun article pour le moment.</p>`;
-  let html = applyTemplate(TPL('category.html'), {
-    TITLE: catName,
-    BREADCRUMB: `<span class="td-bred-no-url-last">${catName}</span>`,
-    ARTICLES: inner,
+  return pageListe({
+    titre: catName, prefix: relPrefix(categoryPath(slug)), actif: slug,
+    head: `<meta name="description" content="Toute l'actualité ${esc(catName)} des Comores — Comoresnews">`,
+    articles, tous, catsCfg, jour,
   });
-  return setTitle(html, catName);
 }
 
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
@@ -101,20 +111,15 @@ ${titreSection('Les plus récents')}${recents.length ? grille(recents, opts).rep
 
 export const EN_DIRECT_PAGE = 'index.php/pages/en-direct/index.html';
 
-export function buildEnDirectPage(articles, breves, catsCfg) {
-  const html = applyTemplate(TPL('category.html'), {
-    TITLE: 'En direct',
-    BREADCRUMB: '<span class="td-bred-no-url-last">En direct</span>',
-    ARTICLES: enDirectInner(pickUne(articles, 8), breves, relPrefix(EN_DIRECT_PAGE), catsCfg),
-  });
-  return setTitle(html, 'En direct');
+export function buildEnDirectPage(articles, breves, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  const prefix = relPrefix(EN_DIRECT_PAGE);
+  const une = pickUne(articles, 8);
+  const contenu = `${enTete('En direct', prefix)}${enDirectInner(une, breves, prefix, catsCfg)}`;
+  return page({ titre: 'En direct', prefix, contenu, jour, titres: titresDuJour(articles, jour, une), catsCfg });
 }
 
-export function buildAuthor(articles, catsCfg) {
-  const P = relPrefix(AUTHOR_PAGE);
-  const list = [...articles].sort((x, y) => y.date.localeCompare(x.date));
-  const inner = list.map(a => articleCard(a, P, catsCfg[a.category].name)).join('');
-  return applyTemplate(TPL('author.html'), { AUTHOR: 'Comoresnews', ARTICLES: inner });
+export function buildAuthor(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
+  return pageListe({ titre: 'Comoresnews', prefix: relPrefix(AUTHOR_PAGE), articles, tous: articles, catsCfg, jour });
 }
 
 export function buildSearchIndex(articles, catsCfg) {
@@ -170,10 +175,10 @@ export async function main({ now, jour = now, outDir = '_site' }) {
   }
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
-    write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
+    write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats, jour, all)));
   write(outDir, 'index.html', deco(buildHome(all, cats, jour)));
-  write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats)));
-  write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats)));
+  write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats, jour)));
+  write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats, jour)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
   const sitemapEntries = [{ loc: `${BASE}/`, lastmod: now }, { loc: `${BASE}/${EN_DIRECT_PAGE}`, lastmod: now }]
     .concat(validCats.map(s => ({ loc: `${BASE}/${categoryPath(s)}`, lastmod: now })))

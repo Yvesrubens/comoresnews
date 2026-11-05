@@ -15,28 +15,47 @@ test('buildArticlePage injecte titre, corps, categorie et <title>', () => {
   assert.match(html, /<title>Mon titre \| Comoresnews<\/title>/);
 });
 
-test('buildCategoryPage: tri desc et message si vide', () => {
-  const arts = [
-    { title:'ZarticleAncien', slug:'a', category:'sport', date:'2026-06-10', image:'i.png' },
-    { title:'ZarticleRecent', slug:'b', category:'sport', date:'2026-06-12', image:'j.png' },
-  ];
-  const html = buildCategoryPage('sport', arts, cats);
-  assert.ok(html.indexOf('ZarticleRecent') < html.indexOf('ZarticleAncien'), 'recent avant ancien');
-  assert.match(buildCategoryPage('monde', [], cats), /Aucun article pour le moment/);
+const mkS = (slug, jour, category = 'sport') => ({ ...a, category, title: 'T-' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T09:00:00Z` });
+
+test('buildCategoryPage : fil, h1, compte, cartes récentes en premier, lien actif, colonne', () => {
+  const arts = [mkS('ancien', '10'), mkS('recent', '12'), mkS('milieu', '11')];
+  const autres = [mkS('eco1', '13', 'economie'), mkS('eco2', '14', 'economie')];
+  const html = buildCategoryPage('sport', arts, cats, '2026-10-15', arts.concat(autres));
+  assert.match(html, /<h1[^>]*>Sport<\/h1>/);
+  assert.ok(html.includes('Accueil') && html.includes('<p class="cn-compte">3 articles</p>'));
+  assert.ok(html.indexOf('T-recent') < html.indexOf('T-milieu') && html.indexOf('T-milieu') < html.indexOf('T-ancien'));
+  assert.ok(html.includes('cn-carte grille'));
+  assert.match(html, /<a href="[^"]*category\/sport\/index.html" class="actif">Sport<\/a>/);
+  assert.ok(html.includes('cn-sidebar-ads') && html.includes('cn-carte mini'));
+  assert.ok(html.includes("Toute l'actualité Sport des Comores — Comoresnews"));
+  assert.ok(html.includes('<title>Sport | Comoresnews</title>'));
+});
+
+test('buildCategoryPage : singulier et rubrique vide', () => {
+  assert.ok(buildCategoryPage('sport', [mkS('x', '10')], cats).includes('>1 article</p>'));
+  const vide = buildCategoryPage('monde', [], cats);
+  assert.ok(vide.includes('>0 article</p>') && vide.includes('Aucun article pour le moment.'));
+});
+
+test('buildEnDirectPage : brèves, cartes, liens à la bonne profondeur', async () => {
+  const { buildEnDirectPage } = await import('../build/generate.mjs');
+  const html = buildEnDirectPage([{ ...a, aLaUne: true, publishedAt: '2026-06-12T09:00:00Z' }], [{ id: 'b', texte: 'Le ferry reprend demain.', publishedAt: '2026-10-21T08:00:00Z' }], cats);
+  assert.match(html, /<h1[^>]*>En direct<\/h1>/);
+  assert.ok(html.includes('Le ferry reprend demain.') && html.includes('cn-carte grille') && html.includes('cn-menu'));
+  assert.ok(html.includes('../../../index.php/2026/06/12/s/index.html'));
+});
+
+test('buildAuthor : toutes les cartes, profondeur ../../../', async () => {
+  const { buildAuthor } = await import('../build/generate.mjs');
+  const html = buildAuthor([mkS('p', '10'), mkS('q', '11', 'economie')], cats, '2026-10-15');
+  assert.equal((html.match(/<article class="cn-carte grille"/g) || []).length, 2);
+  assert.ok(html.includes('../../../index.php/2026/10/11/q/index.html') && html.includes('<p class="cn-compte">2 articles</p>'));
 });
 
 test('buildSearchIndex', () => {
   const idx = buildSearchIndex([a], cats);
   assert.equal(idx[0].catSlug, 'economie');
   assert.equal(idx[0].url, 'index.php/2026/06/12/s/index.html');
-});
-
-test('buildEnDirectPage : brèves et articles à la une, liens à la bonne profondeur', async () => {
-  const { buildEnDirectPage } = await import('../build/generate.mjs');
-  const html = buildEnDirectPage([{ ...a, aLaUne: true, publishedAt: '2026-06-12T09:00:00Z' }], [{ id: 'b', texte: 'Le ferry reprend demain.', publishedAt: '2026-10-21T08:00:00Z' }], cats);
-  assert.match(html, /En direct/);
-  assert.ok(html.includes('Le ferry reprend demain.'));
-  assert.ok(html.includes('../../../index.php/2026/06/12/s/index.html'));
 });
 
 const unePart = (h) => h.slice(h.indexOf('<div class="cn-une">'), h.indexOf('id="cn-ad-top"'));
