@@ -122,6 +122,52 @@ export function uneGridHtml(list, catsCfg) {
 <div class="td-big-grid-flex-scroll-holder">${rest.map((a, i) => gridPost(a, i + 1, catsCfg)).join('\n')}</div>`;
 }
 
+// Jour précédent (AAAA-MM-JJ) d'un jour AAAA-MM-JJ.
+function veilleDe(jour) {
+  return new Date(Date.parse(jour + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
+}
+
+// Bloc « À ne pas manquer » : les articles publiés la veille de `jour` (heure des Comores),
+// hors ceux déjà à la une, les plus récents d'abord ; si la veille en compte moins de `n`,
+// on complète avec les plus récents qui ne sont pas à la une.
+export function aNePasManquer(articles, une, jour, n = 5) {
+  const pris = new Set(une.map((a) => a.slug));
+  const dispo = [...articles].sort(byRecent).filter((a) => !pris.has(a.slug));
+  const veille = veilleDe(jour);
+  const hier = dispo.filter((a) => a.date === veille).slice(0, n);
+  const vus = new Set(hier.map((a) => a.slug));
+  return hier.concat(dispo.filter((a) => !vus.has(a.slug))).slice(0, n);
+}
+
+// Balisage du thème (td_flex_block_3) : un grand article puis une colonne de petits.
+function manquerPost(a, grand, catsCfg) {
+  const url = articlePath(a.date, a.slug);
+  const t = esc(a.title);
+  const img = a.image ? resolveImg('', a.image) : '';
+  const thumb = img
+    ? `<span class="entry-thumb td-thumb-css" data-type="css_image" data-img-url="${esc(img)}" style="background-image:url('${esc(img)}')"></span>`
+    : '<span class="entry-thumb td-thumb-css" style="background:#dcdcdc"></span>';
+  const date = `<span class="td-post-date"><time class="entry-date updated td-module-date" datetime="${esc(stamp(a))}">${MOIS.format(new Date(a.date + 'T12:00:00Z'))}</time></span>`;
+  const cat = grand ? `<a href="index.php/category/${esc(a.category)}/index.html" class="td-post-category">${esc(catsCfg[a.category]?.name || '')}</a>` : '';
+  return `<div class="td_module_flex td_module_flex_${grand ? 1 : 3} td_module_wrap td-animation-stack td-cpt-post">
+  <div class="td-module-container td-category-pos-${grand ? 'image' : ''}">
+    <div class="td-image-container">${cat}<div class="td-module-thumb"><a href="${url}" rel="bookmark" class="td-image-wrap " title="${t}">${thumb}</a></div></div>
+    <div class="td-module-meta-info">
+      <h3 class="entry-title td-module-title"><a href="${url}" rel="bookmark" title="${t}">${t}</a></h3>
+      <div class="td-editor-date"><span class="td-author-date">${date}</span></div>
+      ${grand && a.excerpt ? `<div class="td-excerpt">${esc(a.excerpt)}</div>` : ''}
+    </div>
+  </div>
+</div>`;
+}
+
+export function aNePasManquerHtml(list, catsCfg) {
+  if (!list.length) return '';
+  const [first, ...rest] = list;
+  return `${manquerPost(first, true, catsCfg)}
+<div class="td_module_column">${rest.map((a) => manquerPost(a, false, catsCfg)).join('\n')}</div>`;
+}
+
 export function uneTickerHtml(list) {
   return list.map((a, i) => {
     const t = esc(a.title);

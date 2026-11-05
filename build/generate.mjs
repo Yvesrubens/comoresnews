@@ -12,7 +12,7 @@ import { injectConsent } from './lib/consent.mjs';
 const BASE = (process.env.SITE_BASE_URL || 'https://comoresnews.com').replace(/\/$/, '');
 import { renderMarkdown, articleCard, sourceLine } from './lib/render.mjs';
 import { injectMenu } from './lib/menu.mjs';
-import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml } from './lib/en-direct.mjs';
+import { byRecent, homeUne, pickUne, enDirectInner, uneGridHtml, uneTickerHtml, aNePasManquer, aNePasManquerHtml, breveDayKey } from './lib/en-direct.mjs';
 import { applyTemplate, replaceSection } from './lib/templates.mjs';
 import { articlePath, categoryPath, relPrefix, resolveImg } from './lib/paths.mjs';
 import { optimizeImages } from './lib/images.mjs';
@@ -65,11 +65,13 @@ export function buildCategoryPage(slug, articles, catsCfg) {
 // Rubriques de l'accueil limitées (la suite est sur la page de la rubrique).
 const HOME_SECTION_MAX = 4;
 
-export function buildHome(articles, catsCfg) {
+// `jour` : date du build (AAAA-MM-JJ, heure des Comores) ; « À ne pas manquer » montre la veille.
+export function buildHome(articles, catsCfg, jour = breveDayKey(new Date().toISOString())) {
   const une = homeUne(articles, 4);
   let html = TPL('home.html')
     .replace('{{UNE_GRID}}', () => uneGridHtml(une, catsCfg))
-    .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)));
+    .replace('{{UNE_TICKER}}', () => uneTickerHtml(une.slice(0, 3)))
+    .replace('{{A_NE_PAS_MANQUER}}', () => aNePasManquerHtml(aNePasManquer(articles, une, jour), catsCfg));
   for (const slug of Object.keys(catsCfg)) {
     const tous = articles.filter(a => a.category === slug).sort(byRecent);
     const list = tous.slice(0, HOME_SECTION_MAX);
@@ -131,7 +133,7 @@ function write(outDir, rel, content) {
   fs.writeFileSync(p, content);
 }
 
-export async function main({ now, outDir = '_site' }) {
+export async function main({ now, jour = now, outDir = '_site' }) {
   const validCats = Object.keys(cats);
   const all = process.env.CONTENT_SOURCE === 'supabase'
     ? await loadArticlesFromSupabase(makeClient(), now)
@@ -156,7 +158,7 @@ export async function main({ now, outDir = '_site' }) {
   for (const a of all) write(outDir, articlePath(a.date, a.slug), deco(buildArticlePage(a, cats)));
   for (const slug of validCats)
     write(outDir, categoryPath(slug), deco(buildCategoryPage(slug, all.filter(a => a.category === slug), cats)));
-  write(outDir, 'index.html', deco(buildHome(all, cats)));
+  write(outDir, 'index.html', deco(buildHome(all, cats, jour)));
   write(outDir, AUTHOR_PAGE, deco(buildAuthor(all, cats)));
   write(outDir, EN_DIRECT_PAGE, deco(buildEnDirectPage(all, breves, cats)));
   write(outDir, 'articles-index.json', JSON.stringify(buildSearchIndex(all, cats), null, 1));
@@ -170,7 +172,10 @@ export async function main({ now, outDir = '_site' }) {
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('generate.mjs')) {
   const nowArg = (process.argv.find(a => a.startsWith('--now=')) || '').split('=')[1];
-  main({ now: nowArg || new Date().toISOString().slice(0, 10) }).catch((e) => {
+  main({
+    now: nowArg || new Date().toISOString().slice(0, 10),
+    jour: nowArg || breveDayKey(new Date().toISOString()), // jour aux Comores (UTC+3)
+  }).catch((e) => {
     console.error(e);
     process.exit(1);
   });

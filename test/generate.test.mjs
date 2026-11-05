@@ -70,3 +70,13 @@ test('buildHome : chaque rubrique limitée à 4 articles + lien vers la rubrique
     assert.ok(html.includes(`href="index.php/category/${c}/index.html" class="cn-voir-tout"`), c + ' : lien');
   }
 });
+
+test('buildHome : « À ne pas manquer » affiche la veille hors une, plus de contenu figé', () => {
+  const mk = (slug, jour, h = '09') => ({ ...a, title: 'Art ' + slug, slug, date: `2026-10-${jour}`, publishedAt: `2026-10-${jour}T${h}:00:00Z` });
+  const list = ['1', '2', '3', '4'].map((x) => mk('auj' + x, '21', '0' + x)).concat([mk('hier1', '20', '10'), mk('hier2', '20', '11'), mk('vieux', '15')]);
+  const html = buildHome(list, cats, '2026-10-21');
+  assert.doesNotMatch(html, /\{\{A_NE_PAS_MANQUER\}\}/);
+  const bloc = html.slice(html.indexOf('<div id=tdi_56'), html.indexOf('data-td-block-uid="tdi_57"'));
+  assert.ok(bloc.indexOf('Art hier2') < bloc.indexOf('Art hier1') && bloc.includes('Art vieux'));
+  assert.ok(!bloc.includes('Art auj') && !bloc.includes('Le Grand Mariage') && !bloc.includes('next-page-tdi_56'));
+});
