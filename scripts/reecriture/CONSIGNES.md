@@ -34,7 +34,7 @@ de la presse comorienne (Habari Za Comores, La Gazette des Comores, Masiwa). Pou
   diaspora, monde, tourisme si elle est manifestement fausse.
 - `ile` : l'île concernée — `ngazidja` (Grande Comore), `ndzuani` (Anjouan), `mwali` (Mohéli), `maore` (Mayotte) ou `diaspora` — seulement si le sujet se passe clairement sur une île ou concerne la diaspora ; sinon `null` (sujet national, international, ou doute).
 - `photo` : une clé de la banque ci-dessous qui illustre honnêtement le sujet (lieu concerné ou thème
-  général). Choisis-en toujours une : à défaut de mieux, `drapeau` pour un sujet comorien. `null` seulement si aucune ne convient sans tromper le lecteur. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
+  général). Choisis-en toujours une, la plus précise possible ; `drapeau` seulement en tout dernier recours. `null` seulement si aucune ne convient sans tromper le lecteur. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
   `drapeau` convient aux sujets institutionnels/diplomatiques sans lieu précis.
 
 ## Banque de photos (clé → ce qu'elle montre)
@@ -49,7 +49,16 @@ ruban-rose → ruban rose (cancer du sein) · justice → marteau de juge (affai
 archives → boîtes d'archives · radio → studio de radio (médias, journalistes) · athletisme → piste d'athlétisme (sport, JIOI) ·
 corail-moheli → coraux de Mohéli (environnement, biodiversité, mer) · europe → drapeau de l'Union européenne ·
 salle-de-classe → élèves en classe · billet-comorien → ancien billet de 100 francs comoriens (économie, banque, budget) ·
-mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé) · prison → barreaux de prison (détention, détenus, prison)
+mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé) · prison → barreaux de prison (détention, détenus, prison) ·
+azali-portrait → portrait d'Azali Assoumani (articles centrés sur le président) · azali-poutine → Azali Assoumani et Vladimir Poutine au sommet Russie-Afrique 2026 (relations russo-comoriennes uniquement) ·
+palais-peuple → Palais du peuple de Moroni · urne → urnes électorales (élections, vie politique, communes) · kofia → homme portant le kofia (culture, tradition, personnalités) ·
+livres → livres en librairie (édition, littérature, propriété intellectuelle) · carte-comores → carte de l'archipel (unité nationale, histoire, Mayotte) ·
+kaaba → la Kaaba pendant le hadj (pèlerinage, religion) · cimetiere → tombe musulmane (inhumation, décès) · mbeni → la ville de Mbeni ·
+ebola → virus Ebola au microscope (épidémies) · passeport → tampon d'entrée aux Comores (passeports, visas, frontières) ·
+avion-ethiopian → avion d'Ethiopian Airlines (transport aérien) · cargo → navire cargo (marine marchande, pavillon comorien) · fregate → frégate française (sécurité maritime) ·
+volailles → élevage de volailles (élevage) · savon → savons artisanaux (cosmétiques, artisanat) · reseaux-sociaux → réseaux sociaux sur smartphone (numérique, cybercriminalité) ·
+paris → tour Eiffel (France, diaspora en France) · oman → drapeau d'Oman · abidjan → Abidjan · formation → atelier de formation ·
+violences-femmes → campagne contre les violences faites aux femmes · football → match de football (football, CAN, Cœlacanthes)
 
 ## Sortie
 Écris un fichier JSON (UTF-8) : un tableau d'objets

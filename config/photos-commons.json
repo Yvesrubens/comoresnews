@@ -194,5 +194,173 @@
   "auteur": "Michael Coghlan from Adelaide, Australia",
   "licence": "CC BY-SA 2.0",
   "page": "https://commons.wikimedia.org/wiki/File:Prison_Bars_(5997920696).jpg"
+ },
+ "azali-portrait": {
+  "legende": "Azali Assoumani à New York en septembre 2023 (photo d’archive)",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/azali-portrait.jpg",
+  "auteur": "U.S. Department of State",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Azali_Assoumani_in_New_York_City_on_September_19,_2023_-_53199606411_(cropped).jpg"
+ },
+ "azali-poutine": {
+  "legende": "Vladimir Poutine et Azali Assoumani au troisième sommet Russie-Afrique, en octobre 2026",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/azali-poutine.jpg",
+  "auteur": "Russian Presidential Executive Office",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Vladimir_Putin_and_Azali_Assoumani_at_the_Third_Russia-Africa_Summit_(October_2026).jpg"
+ },
+ "palais-peuple": {
+  "legende": "Le Palais du peuple, à Moroni",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/palais-peuple.jpg",
+  "auteur": "Coca269",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Grande_mosqu%C3%A9e_du_palais_du_peuple_Comores.jpg"
+ },
+ "avion-ethiopian": {
+  "legende": "Un Boeing 787 d’Ethiopian Airlines",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/avion-ethiopian.jpg",
+  "auteur": "Aminul Islam Shifat",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Ethiopian_Airlines_Boeing_787_8.jpg"
+ },
+ "kaaba": {
+  "legende": "La Kaaba, à La Mecque, pendant le hadj",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/kaaba.jpg",
+  "auteur": "Adli Wahid",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:The_Kaaba_during_Hajj_-_edited.jpg"
+ },
+ "livres": {
+  "legende": "Des livres en librairie",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/livres.jpg",
+  "auteur": "Fredericknoronha",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Books_at_a_bookshop.jpg"
+ },
+ "carte-comores": {
+  "legende": "Carte de l’archipel des Comores",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/carte-comores.png",
+  "auteur": "Directorate of Intelligence, CIA",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Comoros-CIA_WFB_Map_(09).png"
+ },
+ "ebola": {
+  "legende": "Le virus Ebola vu au microscope électronique",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/ebola.jpg",
+  "auteur": "CDC/Cynthia Goldsmith",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Ebola_virus_virion.jpg"
+ },
+ "passeport": {
+  "legende": "Un tampon d’entrée aux Comores sur un passeport",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/passeport.jpg",
+  "auteur": "Botev",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Comoros_entry_stamp.jpg"
+ },
+ "cargo": {
+  "legende": "Un navire cargo en mer",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/cargo.jpg",
+  "auteur": "Cavernia",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:9358060_Sea_Cargo_Express.jpg"
+ },
+ "fregate": {
+  "legende": "La frégate française Floréal dans l’océan Indien",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/fregate.jpg",
+  "auteur": "franek2",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:French_Navy_frigate_Floreal_approaching_Crozet_-_panoramio.jpg"
+ },
+ "volailles": {
+  "legende": "Un petit élevage de volailles",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/volailles.jpg",
+  "auteur": "Umar2z",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:A_small_poultry_farm.jpg"
+ },
+ "reseaux-sociaux": {
+  "legende": "Des applications de réseaux sociaux sur un smartphone",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/reseaux-sociaux.jpg",
+  "auteur": "mikemacmarketing",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Social_Media_App_Icons_On_The_Screen_of_A_Smartphone.jpg"
+ },
+ "paris": {
+  "legende": "La tour Eiffel, à Paris",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/paris.jpg",
+  "auteur": "Benh LIEU SONG",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Tour_Eiffel_Wikimedia_Commons.jpg"
+ },
+ "oman": {
+  "legende": "Le drapeau du sultanat d’Oman",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/oman.jpg",
+  "auteur": "Ryan Lackey from San Francisco, CA, US",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Oman_flag_(1).jpg"
+ },
+ "urne": {
+  "legende": "Des urnes électorales",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/urne.jpg",
+  "auteur": "Robert1847",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Ballot_boxex.jpg"
+ },
+ "abidjan": {
+  "legende": "Le quartier du Plateau, à Abidjan",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/abidjan.jpg",
+  "auteur": "Edison McCullen",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg"
+ },
+ "cimetiere": {
+  "legende": "Une tombe musulmane",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/cimetiere.jpg",
+  "auteur": "Vysotsky",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Muslim_grave_in_Cape_Town.jpg"
+ },
+ "formation": {
+  "legende": "Participants à un atelier de formation",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/formation.png",
+  "auteur": "Nwonwu Uchechukwu P",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:AWW_Skill_Up_Workshop_Participants.png"
+ },
+ "violences-femmes": {
+  "legende": "Campagne « Orange the World » contre les violences faites aux femmes",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/violences-femmes.jpg",
+  "auteur": "European Parliament from EU",
+  "licence": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Orange_the_World_Parliament_stands_against_rape_(49123424842).jpg"
+ },
+ "mbeni": {
+  "legende": "Mbeni, dans la région de Hamahamet",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/mbeni.jpg",
+  "auteur": "Boina Hadji",
+  "licence": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mbeni,Hamahamet.jpg"
+ },
+ "kofia": {
+  "legende": "Un homme portant le kofia comorien",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/kofia.jpg",
+  "auteur": "Benomar01",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Homme_portant_le_kofia_comorien.jpg"
+ },
+ "football": {
+  "legende": "Un match de football (photo d’illustration)",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/football.jpg",
+  "auteur": "Fédération Guinéenne Football",
+  "licence": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:24A2LR_(53494652360).jpg"
+ },
+ "savon": {
+  "legende": "Des savons artisanaux",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/savon.jpg",
+  "auteur": "Malene Thyssen",
+  "licence": "CC BY 2.5",
+  "page": "https://commons.wikimedia.org/wiki/File:Handmade_soap.jpg"
  }
 }
