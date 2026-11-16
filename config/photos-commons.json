@@ -187,5 +187,12 @@
   "auteur": "Wellcome Collection",
   "licence": "CC BY 4.0",
   "page": "https://commons.wikimedia.org/wiki/File:Johannesburg_Hospital,_South_Africa;_hospital_ward_with_male_Wellcome_V0029351.jpg"
+ },
+ "prison": {
+  "legende": "Des barreaux de prison",
+  "url": "https://flednhvntwyxirepijyn.supabase.co/storage/v1/object/public/medias/commons/prison.jpg",
+  "auteur": "Michael Coghlan from Adelaide, Australia",
+  "licence": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Prison_Bars_(5997920696).jpg"
  }
 }

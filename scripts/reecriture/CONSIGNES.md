@@ -49,7 +49,7 @@ ruban-rose → ruban rose (cancer du sein) · justice → marteau de juge (affai
 archives → boîtes d'archives · radio → studio de radio (médias, journalistes) · athletisme → piste d'athlétisme (sport, JIOI) ·
 corail-moheli → coraux de Mohéli (environnement, biodiversité, mer) · europe → drapeau de l'Union européenne ·
 salle-de-classe → élèves en classe · billet-comorien → ancien billet de 100 francs comoriens (économie, banque, budget) ·
-mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé)
+mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé) · prison → barreaux de prison (détention, détenus, prison)
 
 ## Sortie
 Écris un fichier JSON (UTF-8) : un tableau d'objets
