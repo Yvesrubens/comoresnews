@@ -77,3 +77,10 @@ test("mapRow expose l'île (null par défaut)", () => {
   assert.equal(mapRow({ ...ligne, ile: 'ndzuani' }).ile, 'ndzuani');
   assert.equal(mapRow(ligne).ile, null);
 });
+
+test('mapRow : tous les articles sont signés Comoresnews, quel que soit le compte auteur', () => {
+  const base = { titre: 'T', slug: 's', categorie: 'sport', statut: 'publie', date_publication: '2026-11-18T08:00:00Z' };
+  assert.equal(mapRow({ ...base, profiles: { nom: 'Yves' } }).author, 'Comoresnews');
+  assert.equal(mapRow({ ...base, profiles: { nom: 'Agi Rod' } }).author, 'Comoresnews');
+  assert.equal(mapRow(base).author, 'Comoresnews');
+});

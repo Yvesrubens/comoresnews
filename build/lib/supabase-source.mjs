@@ -16,7 +16,7 @@ export function mapRow(row) {
     title: String(row.titre),
     slug: String(row.slug),
     category: String(row.categorie),
-    author: String(row.profiles?.nom || 'Comoresnews'),
+    author: 'Comoresnews', // signature éditoriale unique, quel que soit le compte qui a rédigé
     date: String(rawDate).slice(0, 10),
     image: row.image_couverture || '',
     excerpt: row.excerpt || '',
