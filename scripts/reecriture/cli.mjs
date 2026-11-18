@@ -105,7 +105,7 @@ async function chercher(requete) {
 
 async function doublons() {
   const db = sb();
-  const { data, error } = await db.from('articles').select('id,titre,excerpt,categorie,ile,statut,date_publication,cree_le,image_couverture');
+  const { data, error } = await db.from('articles').select('id,titre,excerpt,categorie,ile,statut,date_publication,cree_le,image_couverture,corps');
   if (error) throw new Error(error.message);
   const liste = aRemplacer(data.map((a) => ({ ...a, date_publication: a.date_publication || a.cree_le })))
     .map(({ id, titre, excerpt, categorie, ile, statut }) => ({ article_id: id, titre, excerpt, categorie, ile, statut }));
@@ -120,10 +120,9 @@ async function doublons() {
 // choix-*.json : [{ article_id, fichier, legende }] ; fichier null → l'article perd sa photo partagée.
 async function photos(dir) {
   const db = sb();
-  const choix = fs.readdirSync(dir).filter((f) => /^choix-d+.json$/.test(f)).flatMap((f) => lireJson(path.join(dir, f)));
-  const utilisees = await imagesUtilisees(db);
-  // Les images à remplacer ne comptent plus comme « utilisées » par ces articles.
-  for (const c of choix) for (const [k, v] of utilisees) if (v === c.article_id) utilisees.delete(k);
+  const choix = fs.readdirSync(dir).filter((f) => /^choix-\d+\.json$/.test(f)).flatMap((f) => lireJson(path.join(dir, f)));
+  // Les images actuelles des articles à changer ne comptent plus ; celles des autres articles restent réservées.
+  const utilisees = await imagesUtilisees(db, new Set(choix.map((c) => c.article_id)));
   let n = 0, sans = 0, publie = false;
   for (const c of choix) {
     const { data: a } = await db.from('articles').select('id,titre,corps,statut').eq('id', c.article_id).single();

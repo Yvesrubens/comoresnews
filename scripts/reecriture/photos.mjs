@@ -22,14 +22,20 @@ export function cheminStockage(fichier) {
 
 // Articles dont l'image est partagée : on garde le plus ancien de chaque image, les autres sont à changer.
 export function aRemplacer(articles) {
+  // Clé : la photo Commons citée en légende si elle existe (même photo stockée sous deux noms), sinon l'image stockée.
   const parImage = {};
-  for (const a of articles) if (a.image_couverture) (parImage[a.image_couverture] ??= []).push(a);
+  for (const a of articles) {
+    const p = pageCommons(a.corps);
+    const cle = p ? decodeURI(p) : a.image_couverture;
+    if (cle) (parImage[cle] ??= []).push(a);
+  }
   return Object.values(parImage).filter((g) => g.length > 1)
     .flatMap((g) => [...g].sort((x, y) => String(x.date_publication).localeCompare(String(y.date_publication))).slice(1));
 }
 
 export function pageCommons(corps) {
-  const m = String(corps ?? '').match(/^\*Photo d'illustration :[^\n]*\[Wikimedia Commons\]\((https:\/\/commons\.wikimedia\.org\/wiki\/[^)\s]+)\)/);
+  // La légende se termine par « (page).* » : le nom du fichier peut lui-même contenir des parenthèses.
+  const m = String(corps ?? '').match(/^\*Photo d'illustration :[^\n]*\[Wikimedia Commons\]\((https:\/\/commons\.wikimedia\.org\/wiki\/\S+?)\)\.\*/);
   return m ? m[1] : null;
 }
 
@@ -84,12 +90,15 @@ export async function preparerPhoto(db, articleId, { fichier, legende }, utilise
   return { url, legende: legendePhoto({ legende, auteur: info.auteur, licence: info.licence, page: info.page }) };
 }
 
-export async function imagesUtilisees(db) {
+// `sauf` : articles dont la photo va être remplacée (leurs images actuelles ne comptent pas,
+// mais celles des autres articles qui partagent la même image restent réservées).
+export async function imagesUtilisees(db, sauf = new Set()) {
   // Clés : adresse de l'image stockée ET page Commons citée en légende (une même photo peut avoir été stockée sous deux noms).
   const { data, error } = await db.from('articles').select('id,image_couverture,corps');
   if (error) throw new Error(error.message);
   const m = new Map();
   for (const a of data) {
+    if (sauf.has(a.id)) continue;
     if (a.image_couverture) m.set(a.image_couverture, a.id);
     const p = pageCommons(a.corps);
     if (p) m.set(decodeURI(p), a.id);

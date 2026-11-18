@@ -37,3 +37,28 @@ test('pageCommons : lit la page Wikimedia Commons citée dans la légende en tê
   assert.equal(pageCommons("*Photo d'illustration : X — Y, CC0, via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Moroni_beach.jpg).*\n\nT"), 'https://commons.wikimedia.org/wiki/File:Moroni_beach.jpg');
   assert.equal(pageCommons('Texte sans légende'), null);
 });
+
+test('cli photos : lit bien les fichiers choix-N.json', async () => {
+  const fs = await import('node:fs');
+  const src = fs.readFileSync(new URL('../scripts/reecriture/cli.mjs', import.meta.url), 'utf8');
+  const m = src.match(/filter\(\(f\) => (\/\^choix-[^/]+\/)\.test\(f\)\)/);
+  assert.ok(m, 'filtre choix introuvable');
+  const re = eval(m[1]);
+  assert.ok(re.test('choix-1.json') && re.test('choix-12.json') && !re.test('choix-a.json') && !re.test('choixd.json'));
+});
+
+test('pageCommons : noms de fichiers avec parenthèses', async () => {
+  const { pageCommons } = await import('../scripts/reecriture/photos.mjs');
+  assert.equal(pageCommons("*Photo d'illustration : X — Y, CC BY 2.0, via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Prison_Bars_(5997920696).jpg).*\n\nT"),
+    'https://commons.wikimedia.org/wiki/File:Prison_Bars_(5997920696).jpg');
+});
+
+test('aRemplacer : regroupe aussi par photo Commons (même photo stockée sous deux noms)', async () => {
+  const leg = (f) => `*Photo d'illustration : X — Y, CC0, via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:${f}).*\n\nT`;
+  const arts = [
+    { id: 'a', image_couverture: 'commons/prison.jpg', corps: leg('Prison_Bars_(1).jpg'), date_publication: '2026-11-01' },
+    { id: 'b', image_couverture: 'commons/u-prison-bars-1.jpg', corps: leg('Prison_Bars_(1).jpg'), date_publication: '2026-11-03' },
+    { id: 'c', image_couverture: 'commons/u-autre.jpg', corps: leg('Autre.jpg'), date_publication: '2026-11-03' },
+  ];
+  assert.deepEqual(aRemplacer(arts).map((x) => x.id), ['b']);
+});
