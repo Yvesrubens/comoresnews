@@ -100,3 +100,12 @@ test('injectAds : bas de page avant cn-legal-bar, idempotent', () => {
   assert.ok(once.indexOf('id="sas_49046"') < once.indexOf('<div id="cn-legal-bar"'));
   assert.equal(injectAds(once), once);
 });
+
+test('injectAds : MegaBannière 2 avant le pied de page de la refonte, pas dedans', async () => {
+  const { page } = await import('../build/lib/gabarit.mjs');
+  const catsCfg = (await import('../config/categories.json', { with: { type: 'json' } })).default;
+  const out = injectAds(page({ titre: 'T', contenu: '<p>x</p>', prefix: '', catsCfg, jour: '2026-11-18' }));
+  const iPub = out.indexOf('id="sas_49046"');
+  assert.ok(iPub > 0);
+  assert.ok(iPub < out.indexOf('<footer class="cn-footer">'), 'la bannière doit précéder <footer>');
+});

@@ -115,7 +115,10 @@ export function injectAds(html, cfg = SAS) {
   // Pavé 2 : uniquement dans le corps des articles (après le 2e paragraphe).
   html = insertInArticle(html, labeled('', adSlot(49048)));
   const bottom = bottomParts.join('\n');
-  if (html.includes('id="cn-legal-bar"')) {
+  if (html.includes('<footer class="cn-footer">')) {
+    // Gabarit de la refonte : le pied de page entier suit les publicités.
+    html = html.replace('<footer class="cn-footer">', `${bottom}\n<footer class="cn-footer">`);
+  } else if (html.includes('id="cn-legal-bar"')) {
     html = html.replace('<div id="cn-legal-bar"', `${bottom}\n<div id="cn-legal-bar"`);
   } else {
     html = html.replace('</body>', `${bottom}\n</body>`);
