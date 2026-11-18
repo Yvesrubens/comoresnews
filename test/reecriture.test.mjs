@@ -56,3 +56,8 @@ test("champIle : n'envoie la colonne que pour une île renseignée", async () =>
   assert.deepEqual(champIle({ ile: null }), {});
   assert.deepEqual(champIle({}), {});
 });
+
+test('controler : photo Commons propre à l’article (fichier + légende)', () => {
+  assert.deepEqual(controler({ ...ok, photo: undefined, commons: { fichier: 'Moroni beach.jpg', legende: 'Le front de mer de Moroni' } }, 'x', { pool: POOL, liens: LIENS }), []);
+  assert.ok(controler({ ...ok, photo: undefined, commons: { fichier: 'Moroni beach.jpg' } }, 'x', { pool: POOL, liens: LIENS }).some((p) => p.includes('commons')));
+});

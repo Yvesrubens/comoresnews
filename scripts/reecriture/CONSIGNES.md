@@ -33,34 +33,20 @@ de la presse comorienne (Habari Za Comores, La Gazette des Comores, Masiwa). Pou
 - `categorie` : garde celle fournie, ou corrige parmi politique, economie, societe, culture, sport,
   diaspora, monde, tourisme si elle est manifestement fausse.
 - `ile` : l'île concernée — `ngazidja` (Grande Comore), `ndzuani` (Anjouan), `mwali` (Mohéli), `maore` (Mayotte) ou `diaspora` — seulement si le sujet se passe clairement sur une île ou concerne la diaspora ; sinon `null` (sujet national, international, ou doute).
-- `photo` : une clé de la banque ci-dessous qui illustre honnêtement le sujet (lieu concerné ou thème
-  général). Choisis-en toujours une, la plus précise possible ; `drapeau` seulement en tout dernier recours. `null` seulement si aucune ne convient sans tromper le lecteur. Ne choisis jamais une photo qui laisserait croire qu'elle montre l'événement.
-  `drapeau` convient aux sujets institutionnels/diplomatiques sans lieu précis.
+- `commons` : la photo d'illustration, **propre à cet article** — `{ "fichier": "<nom exact du fichier Wikimedia Commons>", "legende": "<ce que montre réellement la photo>" }`, ou `null`. Voir « Photos » ci-dessous.
 
-## Banque de photos (clé → ce qu'elle montre)
-moroni-mosquee → la mosquée du vendredi de Moroni · moroni-plage → le front de mer de Moroni ·
-moroni-fete-nationale → fête de l'indépendance à Moroni (foule, défilé) · mutsamudu-port → port de Mutsamudu (Anjouan) ·
-mutsamudu-rue → une rue de Mutsamudu · anjouan-vue → paysage d'Anjouan · moheli-plage → plage de Mohéli ·
-drapeau → drapeau des Comores · pecheurs → pêcheurs et pirogues sur une plage d'Anjouan ·
-grande-comore-cote → littoral de Grande Comore · route-grande-comore → route en Grande Comore ·
-ecole → une école aux Comores · marche-poisson → étal de poissons d'un marché comorien ·
-marche-moroni → marché de Moroni · kremlin → le Kremlin à Moscou · mamoudzou → Mamoudzou (Mayotte) ·
-ruban-rose → ruban rose (cancer du sein) · justice → marteau de juge (affaires judiciaires, plaintes, procès) ·
-archives → boîtes d'archives · radio → studio de radio (médias, journalistes) · athletisme → piste d'athlétisme (sport, JIOI) ·
-corail-moheli → coraux de Mohéli (environnement, biodiversité, mer) · europe → drapeau de l'Union européenne ·
-salle-de-classe → élèves en classe · billet-comorien → ancien billet de 100 francs comoriens (économie, banque, budget) ·
-mobile-money → point de transfert d'argent par mobile (télécoms, paiements) · hopital → salle d'hôpital (santé) · prison → barreaux de prison (détention, détenus, prison) ·
-azali-portrait → portrait d'Azali Assoumani (articles centrés sur le président) · azali-poutine → Azali Assoumani et Vladimir Poutine au sommet Russie-Afrique 2026 (relations russo-comoriennes uniquement) ·
-palais-peuple → Palais du peuple de Moroni · urne → urnes électorales (élections, vie politique, communes) · kofia → homme portant le kofia (culture, tradition, personnalités) ·
-livres → livres en librairie (édition, littérature, propriété intellectuelle) · carte-comores → carte de l'archipel (unité nationale, histoire, Mayotte) ·
-kaaba → la Kaaba pendant le hadj (pèlerinage, religion) · cimetiere → tombe musulmane (inhumation, décès) · mbeni → la ville de Mbeni ·
-ebola → virus Ebola au microscope (épidémies) · passeport → tampon d'entrée aux Comores (passeports, visas, frontières) ·
-avion-ethiopian → avion d'Ethiopian Airlines (transport aérien) · cargo → navire cargo (marine marchande, pavillon comorien) · fregate → frégate française (sécurité maritime) ·
-volailles → élevage de volailles (élevage) · savon → savons artisanaux (cosmétiques, artisanat) · reseaux-sociaux → réseaux sociaux sur smartphone (numérique, cybercriminalité) ·
-paris → tour Eiffel (France, diaspora en France) · oman → drapeau d'Oman · abidjan → Abidjan · formation → atelier de formation ·
-violences-femmes → campagne contre les violences faites aux femmes · football → match de football (football, CAN, Cœlacanthes)
+## Photos (une photo différente pour chaque article)
+Chaque article a sa propre photo : **jamais une image déjà utilisée par un autre article du site**.
+1. Cherche depuis le dossier du projet (C:UsersyvesCLAUDE PROJETcomoresnews-clone) :
+   `node --env-file=.env scripts/reecriture/cli.mjs chercher "<requête en anglais ou en français>"`
+   Chaque ligne : `libre` ou `DÉJÀ UTILISÉE` | licence | taille | nom du fichier | auteur.
+2. Choisis une ligne `libre`, licence CC BY, CC BY-SA, CC0 ou Public domain (jamais NC, ND, « Attribution » seul ni inconnue), largeur ≥ 800 px.
+3. La photo doit illustrer honnêtement le sujet : le lieu (île, ville, quartier), l'institution, le thème (santé, école, port, football…). Jamais une personne réelle autre que celle dont parle l'article ; jamais une image qui laisserait croire qu'elle montre l'événement raconté. Essaie plusieurs requêtes (lieu précis, thème, version anglaise) avant d'abandonner.
+4. `legende` : ce que montre la photo, en français, sans inventer (ex. « Le port de Mutsamudu, à Anjouan », « Une salle de classe au Kenya »). Indique « (photo d'archive) » pour une personne photographiée à une autre occasion.
+5. Si rien ne convient honnêtement : `"commons": null` (l'article reste sans photo plutôt qu'avec une image hors sujet ou déjà prise). Deux articles du même lot ne doivent pas choisir le même fichier.
+Le script vérifie licence, taille et unicité ; une photo refusée laisse l'article sans image.
 
 ## Sortie
 Écris un fichier JSON (UTF-8) : un tableau d'objets
-`{ "article_id", "titre", "excerpt", "corps", "seo_titre", "seo_description", "mots_cles": [..], "categorie", "ile", "photo" }`,
+`{ "article_id", "titre", "excerpt", "corps", "seo_titre", "seo_description", "mots_cles": [..], "categorie", "ile", "commons" }`,
 un par article du lot, dans le même ordre. Vérifie que le JSON est valide (relis-le avec node : `node -e "JSON.parse(require('fs').readFileSync(F,'utf8'))"`).

@@ -30,6 +30,7 @@ export function controler(a, texteSource, { pool, liens }) {
   if (/^#\s/m.test(a.corps || '')) p.push('titre # dans le corps');
   for (const m of String(a.corps ?? '').matchAll(/\]\(([^)]+)\)/g)) if (!liens.has(m[1])) p.push('lien non autorisé ' + m[1]);
   if (a.photo !== null && a.photo !== undefined && !pool[a.photo]) p.push('photo inconnue ' + a.photo);
+  if (a.commons && (!a.commons.fichier || !String(a.commons.legende ?? '').trim())) p.push('commons : fichier et légende requis');
   if (!CATEGORIES.includes(a.categorie)) p.push('categorie ' + a.categorie);
   try { normaliserIle(a.ile); } catch { p.push('ile ' + a.ile); }
   const r = reprises(a.corps, texteSource);
